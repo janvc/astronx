@@ -1,0 +1,61 @@
+\documentclass[a4paper,twoside,12pt]{book}
+\usepackage[latin1]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath}
+\usepackage[dvips]{graphicx}
+\usepackage{siunitx}
+
+
+\begin{document}
+
+\begin{titlepage}
+\begin{center}
+
+\vspace*{\stretch{1}}
+
+{\huge \bfseries AstronX}
+
+\vspace*{\stretch{1}}
+
+{\LARGE User Manual}
+
+\vspace*{\stretch{1}}
+
+Jan von Cosel
+
+\vspace*{\stretch{1}}
+
+\end{center}
+\end{titlepage}
+
+\tableofcontents
+
+\chapter{Introduction}
+
+\section{What is AstronX?}
+
+\textit{AstronX} is a program for the simulation of the dynamics of many-body-systems consisting of mass-centres influencing each other by gravity. It provides a trajectory by integrating the Newtonian equations of motion. The integration is performed with either the Bulirsch-Stoer algorithm or the Runge-Kutta Algorithm of fourth order. The stepsize is dynamically adjusted to the required accuracy.
+
+\chapter{Theory}
+
+\chapter{using the program}
+
+\section{input parameters}
+
+The details of the propagation can be controlled by various parameters in the input file. The following parameters are mandatory for the calculation and must be present in the input file:
+
+%\begin{itemize}
+%\item[name_dir] The name of the directory where the results of the calculation are being saved to.
+%
+%\item[tfinal] This is the total simulation time. The calculation always starts at time zero and proceeds until \verb+tfinal+ or until the stepsize underflows.
+%
+%\item[n_obj] The number of objects in the system.
+%
+%\item[tout] The time interval between successive points to be written to the trajectory file.
+%\end{itemize}
+
+Additionally, the behaviour of the program can be influenced in more detail by specifying the following parameters. Every parameter, that is not present in the input file will be set to its default value (given in parentheses):
+
+\chapter{evaluation}
+
+\end{document}
