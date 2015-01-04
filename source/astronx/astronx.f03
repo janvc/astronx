@@ -24,10 +24,10 @@ program astronx
 !
 use types
 use shared_data, only: bin_trj, elapsed_time, output, steps, trajectory
-use input_module, only: N_obj, mass, mass_2, total_mass, do_steps, do_texttrj, do_bs, name_directory, shift_cog, shift_mom, &
-                        read_input, process_cmd_arguments
-use common_utils, only: centre_of_gravity, linear_momentum, angular_momentum
-use astronx_utils, only: show_input_parameters, shiftcog, shiftmom
+use input_module, only: mass, total_mass, do_steps, do_texttrj, name_directory, shift_cog, shift_mom, read_input, &
+                        process_cmd_arguments
+!use common_utils, only: centre_of_gravity, linear_momentum, angular_momentum
+use astronx_utils, only: show_input_parameters, shiftcog, shiftmom, centre_of_gravity, linear_momentum, angular_momentum
 use propagate, only: propagate_bs
 implicit none
 

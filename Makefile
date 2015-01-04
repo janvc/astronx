@@ -40,7 +40,6 @@ VPATH = $(SRC_DIR)/astronx:   \
 ASTRONX_OBJS = $(addprefix $(OBJ_DIR)/,\
                  modules.o        \
                  read_input.o     \
-                 common_utils.o   \
                  astronx_utils.o  \
                  bulirsch_stoer.o \
                  propagate.o      \
@@ -62,7 +61,7 @@ GENERAT_OBJS = $(addprefix $(OBJ_DIR)/,\
                  generator.o \
                  )
 
-all: directories $(ASTRONX) $(EXTRACTOR) $(GENERATOR)
+all: directories $(ASTRONX) #$(EXTRACTOR) $(GENERATOR)
 
 directories: $(OBJ_DIR) $(MOD_DIR) $(BIN_DIR)
 
