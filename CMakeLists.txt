@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 2.8.11)
 
-project(astronx)
+enable_language(Fortran)
+project(astronx Fortran)
 
 # Do not allow in-source builds:
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR)
@@ -13,3 +14,4 @@ if(NOT CMAKE_BUILD_TYPE MATCHES "Debug")
 endif()
 
 add_subdirectory(source)
+#set_target_properties(astronx PROPERTIES LINKER_LANGUAGE Fortran)
