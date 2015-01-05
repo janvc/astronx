@@ -13,5 +13,7 @@ if(NOT CMAKE_BUILD_TYPE MATCHES "Debug")
     add_definitions(-DQT_NO_DEBUG_OUTPUT)
 endif()
 
+set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
+
 add_subdirectory(source)
 #set_target_properties(astronx PROPERTIES LINKER_LANGUAGE Fortran)
