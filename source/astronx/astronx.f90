@@ -26,7 +26,6 @@ use types
 use shared_data, only: bin_trj, elapsed_time, output, steps, trajectory
 use input_module, only: mass, total_mass, do_steps, do_texttrj, name_directory, shift_cog, shift_mom, read_input, &
                         process_cmd_arguments
-!use common_utils, only: centre_of_gravity, linear_momentum, angular_momentum
 use astronx_utils, only: show_input_parameters, shiftcog, shiftmom, centre_of_gravity, linear_momentum, angular_momentum
 use propagate, only: propagate_bs
 implicit none
@@ -96,7 +95,7 @@ write(output,*) "|                                  ** AstronX **               
 write(output,*) "|                                                                               |"
 write(output,*) "|                A program for the simulation of celestial mechanics            |"
 write(output,*) "|      /\                                                              \\    // |"
-write(output,*) "|     //\\                Copyright 2012-2014 Jan von Cosel             \\  //  |"
+write(output,*) "|     //\\                Copyright 2012-2015 Jan von Cosel             \\  //  |"
 write(output,*) "|    //  \\                                                              \\//   |"
 write(output,*) "|   //====\\                  Astronx is free software.                  //\\   |"
 write(output,*) "|  //      \\    You can redistribute it and/or modify it under the     //  \\  |"
@@ -209,11 +208,7 @@ elapsed_time = 0.0_dp
 flush(output)
 
 ! here comes the actual simulation (either rk or bs):
-!if (do_bs) then
-    call propagate_bs(X, V)
-!else
-!    call propagate_rk(X, V)
-!endif
+call propagate_bs(X, V)
 
 !#####################################################################
 ! TO DO:  react to the "underflow" flag from the propagation

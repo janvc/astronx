@@ -44,7 +44,6 @@ subroutine centre_of_gravity(X, cog, mass, total_mass)
 ! the purpose of this subroutine is to calculate the position of the centre of gravity of the system
 !
 use types
-!use input_module, only: mass, total_mass
 implicit none
 
 
@@ -77,7 +76,6 @@ subroutine linear_momentum(V, mom, mass)
 ! the purpose of this subroutine is to calculate the overall linear momentum of the system
 !
 use types
-!use input_module, only: N_obj, mass
 implicit none
 
 
@@ -108,7 +106,6 @@ subroutine angular_momentum(X, V, angmom, mass)
 ! This subroutine will calculate the total angular momentum of the system.
 !
 use types
-!use input_module, only: N_obj, mass
 implicit none
 
 
@@ -141,7 +138,6 @@ subroutine acceleration(X, A, mass, mass_2)
 !  delivers the acceleration in terms of xyz-components.
 !
 use types
-!use input_module, only: N_obj, mass, mass_2
 use shared_data, only: G
 implicit none
 
@@ -236,8 +232,6 @@ subroutine scale_error(X_new, V_new, dX, dV, delta)
 ! for the size of the system.
 !
 use types
-!use shared_data, only: small
-!use common_utils, only: centre_of_gravity, radius_of_gyration
 implicit none
 
 
@@ -390,7 +384,6 @@ subroutine shiftcog(X)
 !
 use types
 use input_module, only: mass, total_mass
-!use common_utils, only: centre_of_gravity
 implicit none
 
 
@@ -421,7 +414,6 @@ subroutine shiftmom(V)
 !
 use types
 use input_module, only: mass, total_mass
-!use common_utils, only: linear_momentum
 implicit none
 
 

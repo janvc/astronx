@@ -129,7 +129,6 @@ subroutine bs_onestep(h_try, h_did, X_old, V_old, X_new, V_new, nsteps, delta, N
 use types
 use shared_data, only: steps, output, elapsed_time, underflow
 use input_module, only: eps, maxsubstep, min_step, redmin, redmax, do_steps, mass, mass_2
-!use common_utils, only: acceleration, radius_of_gyration
 use astronx_utils, only: scale_error, acceleration, radius_of_gyration
 implicit none
 
