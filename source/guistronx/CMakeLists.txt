@@ -23,6 +23,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 set(SOURCES
     guistronx.cpp
     guistronx_window.cpp
+    object.cpp
 )
 
 set(MOC_HEADERS
