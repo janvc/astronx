@@ -56,7 +56,6 @@ subroutine process_cmd_arguments
 ! sets the flags accordingly
 !
 use types
-!use input_module, only: do_overwrite
 implicit none
 
 ! internal variables:
@@ -102,7 +101,8 @@ real(dp),dimension(:,:),allocatable,intent(out) :: X  ! spatial coordinates of a
 real(dp),dimension(:,:),allocatable,intent(out) :: V  ! velocity components of all objects (m/s)
 
 ! internal variables:
-character(len=20) :: keyword            ! dummy variable for the first column of the input file
+character(len=40) :: keyword            ! dummy variable for the first column of the input file
+character(len=40) :: paraValue          ! the value of the parameter to be read
 character(len=100) :: input_buffer      ! one line of the input file, that is checked for keywords
 character(len=100) :: raw_buffer        ! input buffer without comments removed
 integer(st) :: input_status             ! IO status of the input file ( if /= 0 -> trouble!!)
@@ -163,67 +163,75 @@ do i=1 , number_of_lines
         input_buffer = raw_buffer
     endif
 
-    ! get the parameters:
-    if (index(input_buffer,"name_dir") /= 0) then
-        test_name = .true.
-        read(input_buffer,*) keyword, name_directory
-    else if (index(input_buffer,"n_obj") /= 0) then
-        test_N_obj = .true.
-        read(input_buffer,*) keyword, N_obj
-    else if (index(input_buffer,"eps") /= 0 .and. index(input_buffer,"steps") == 0) then
-        read(input_buffer,*) keyword, eps
-    else if (index(input_buffer,"tfinal") /= 0) then
-        test_tfinal = .true.
-        read(input_buffer,*) keyword, tfinal
-    else if (index(input_buffer,"tout") /= 0) then
-        test_tout = .true.
-        read(input_buffer,*) keyword, write_step
-    else if (index(input_buffer,"init_step") /= 0) then
-        test_tinit = .true.
-        read(input_buffer,*) keyword, init_step
-    else if (index(input_buffer,"maxsubstep") /= 0) then
-        read(input_buffer,*) keyword, maxsubstep
-    else if (index(input_buffer,"inc_thres") /= 0) then
-        read(input_buffer,*) keyword, thres
-    else if (index(input_buffer,"min_step") /= 0) then
-        read(input_buffer,*) keyword, min_step
-    else if (index(input_buffer,"maxinc") /= 0) then
-        read(input_buffer,*) keyword, maxinc
-    else if (index(input_buffer,"redmin") /= 0) then
-        read(input_buffer,*) keyword, redmin
-    else if (index(input_buffer,"redmax") /= 0) then
-        read(input_buffer,*) keyword, redmax
-    else if (index(input_buffer,"shift_cog") /= 0 .and. index(input_buffer,"yes") /= 0) then
-        shift_cog = .true.
-    else if (index(input_buffer,"shift_mom") /= 0 .and. index(input_buffer,"yes") /= 0) then
-        shift_mom = .true.
-    else if (index(input_buffer,"restart") /= 0 .and. index(input_buffer,"yes") /= 0) then
-        do_restart = .true.
-    else if (index(input_buffer,"steps") /= 0 .and. index(input_buffer,"yes") /= 0) then
-        do_steps = .true.
-    else if (index(input_buffer,"text_trj") /= 0 .and. index(input_buffer,"yes") /= 0) then
-        do_texttrj = .true.
-    else if (index(input_buffer,"prop_type") /= 0) then
-        if (index(input_buffer,"unrestricted") /= 0) then
-            do_unrestrictedprop = .true.
-        else if (index(input_buffer,"normal") /= 0) then
-            do_unrestrictedprop = .false.
-        else
-            write(output,*) "Invalid value for 'prop_type', using default: normal"
-            do_unrestrictedprop = .false.
+    ! check whether we have a boolean keyword or a parameter specification:
+    if (index(input_buffer, "=") /= 0) then     ! parameter
+        keyword = trim(input_buffer(1:index(input_buffer, "=") - 1))
+        paraValue = trim(input_buffer(index(input_buffer, "=") + 1:))
+
+        ! get the parameters:
+        if (index(keyword, "name_dir") /= 0) then
+            test_name = .true.
+            read(paraValue,*) name_directory
+        else if (index(keyword, "n_obj") /= 0) then
+            test_N_obj = .true.
+            read(paraValue,*) N_obj
+        else if (index(keyword, "tfinal") /= 0) then
+            test_tfinal = .true.
+            read(paraValue,*) tfinal
+        else if (index(keyword, "tout") /= 0) then
+            test_tout = .true.
+            read(paraValue,*) write_step
+        else if (index(keyword, "eps") /= 0) then
+            read(paraValue,*) eps
+        else if (index(keyword, "init_step") /= 0) then
+            test_tinit = .true.
+            read(paraValue,*) init_step
+        else if (index(keyword, "maxsubstep") /= 0) then
+            read(paraValue,*) maxsubstep
+        else if (index(keyword, "inc_thres") /= 0) then
+            read(paraValue,*) thres
+        else if (index(keyword, "min_step") /= 0) then
+            read(paraValue,*) min_step
+        else if (index(keyword, "maxinc") /= 0) then
+            read(paraValue,*) maxinc
+        else if (index(keyword, "redmin") /= 0) then
+            read(paraValue,*) redmin
+        else if (index(keyword, "redmax") /= 0) then
+            read(paraValue,*) redmax
+        else if (index(keyword, "prop_type") /= 0) then
+            if (index(paraValue, "unrestricted") /= 0) then
+                do_unrestrictedprop = .true.
+            else if (index(paraValue, "normal") /= 0) then
+                do_unrestrictedprop = .false.
+            else
+                write(output,*) "Invalid value for 'prop_type', using default: normal"
+                do_unrestrictedprop = .false.
+            endif
+        else if (index(keyword, "integrator") /= 0) then
+            if (index(paraValue, "bs") /= 0) then
+                do_bs = .true.
+            else if (index(paraValue, "rk") /= 0) then
+                do_bs = .false.
+            else
+                write(output,*) "Invalid value for 'integrator', using default: bs"
+                do_bs = .true.
+            endif
         endif
-    else if (index(input_buffer,"integrator") /= 0) then
-        if (index(input_buffer,"bs") /= 0) then
-            do_bs = .true.
-        else if (index(input_buffer,"rk") /= 0) then
-            do_bs = .false.
-        else
-            write(output,*) "Invalid value for 'integrator', using default: bs"
-            do_bs = .true.
+    else    ! boolean
+        keyword = trim(input_buffer)
+        if (index(keyword, "shift_cog") /= 0) then
+            shift_cog = .true.
+        else if (index(keyword, "shift_mom") /= 0) then
+            shift_mom = .true.
+        else if (index(keyword, "restart") /= 0) then
+            do_restart = .true.
+        else if (index(keyword, "steps") /= 0) then
+            do_steps = .true.
+        else if (index(keyword, "text_trj") /= 0) then
+            do_texttrj = .true.
         endif
-!    else   !  need to improve this!
-!        write(*,*) "Warning: unrecognized keyword in line ", i, " : ", input_buffer
     endif
+
 enddo
 rewind(input)
 
