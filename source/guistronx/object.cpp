@@ -60,6 +60,12 @@ Object::Object(const std::string &init_name, const double &init_mass, const Eige
 }
 
 
+Object::Object(const Object &oldObject)
+    : d(new ObjectPrivate(oldObject.name(), oldObject.mass(), oldObject.position(), oldObject.velocity()))
+{
+}
+
+
 std::string Object::name() const
 {
     return d->name;

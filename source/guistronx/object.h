@@ -33,6 +33,7 @@ class Object
 public:
     Object();
     Object(const std::string &init_name, const double &init_mass, const Eigen::Vector3d &init_pos, const Eigen::Vector3d &init_vel);
+    Object(const Object &oldObject);
 
     std::string name() const;
     double mass() const;
