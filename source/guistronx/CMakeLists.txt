@@ -24,6 +24,7 @@ set(SOURCES
     guistronx.cpp
     guistronx_window.cpp
     object.cpp
+    system.cpp
 )
 
 set(MOC_HEADERS
