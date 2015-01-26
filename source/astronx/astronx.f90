@@ -24,7 +24,7 @@ program astronx
 !
 use types
 use shared_data, only: bin_trj, elapsed_time, output, steps, trajectory
-use input_module, only: mass, total_mass, do_steps, do_texttrj, name_directory, shift_cog, shift_mom, read_input, &
+use input_module, only: names, mass, total_mass, do_steps, do_texttrj, name_directory, shift_cog, shift_mom, read_input, &
                         process_cmd_arguments
 use astronx_utils, only: show_input_parameters, shiftcog, shiftmom, centre_of_gravity, linear_momentum, angular_momentum
 use propagate, only: propagate_bs
@@ -187,11 +187,11 @@ write(output,*) "----------------------------------"
 write(output,*) "INITIAL COORDINATES AND VELOCITIES"
 write(output,*) "----------------------------------"
 write(output,*) ""
-write(output,*) "mass (kg)    X (m)      Y (m)      Z (m)    V_x (m/s)  V_y (m/s)  V_z (m/s)"
+write(output,*) "    name      mass (kg)       X (m)      Y (m)      Z (m)     V_x (m/s)  V_y (m/s)  V_z (m/s)"
 write(output,*) ""
 do i = 1, size(mass)
-    write(output,107) mass(i), X(i,1), X(i,2), X(i,3), V(i,1), V(i,2), V(i,3)
-    107 format (' ',es9.3,6es11.3)
+    write(output,107) trim(names(i)), mass(i), X(i,1), X(i,2), X(i,3), V(i,1), V(i,2), V(i,3)
+    107 format (' ',a10,'  ',es11.3,'  ',3es11.3,'  ',3es11.3)
 enddo
 write(output,*) ""
 write(output,*) ""
@@ -221,10 +221,10 @@ write(output,*) "--------------------------------"
 write(output,*) "FINAL COORDINATES AND VELOCITIES"
 write(output,*) "--------------------------------"
 write(output,*) ""
-write(output,*) "mass (kg)    X (m)      Y (m)      Z (m)    V_x (m/s)  V_y (m/s)  V_z (m/s)"
+write(output,*) "    name      mass (kg)       X (m)      Y (m)      Z (m)     V_x (m/s)  V_y (m/s)  V_z (m/s)"
 write(output,*) ""
 do i = 1, size(mass)
-    write(output,107) mass(i), X(i,1), X(i,2), X(i,3), V(i,1), V(i,2), V(i,3)
+    write(output,107) trim(names(i)), mass(i), X(i,1), X(i,2), X(i,3), V(i,1), V(i,2), V(i,3)
 enddo
 write(output,*) ""
 write(output,*) ""

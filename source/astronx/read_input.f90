@@ -23,30 +23,31 @@ implicit none
 
 
 ! first the data to be declared:
-integer(st),protected :: N_obj                          ! number of objects to be simulated
-integer(st),protected :: maxsubstep                     ! maximum number of substeps in one BS-step
-integer(st),protected :: thres                          ! number of substeps below which the stepsize will be increased
-real(dp),protected :: tfinal                            ! the total length of the simulation (s)
-real(dp),protected :: write_step                        ! intervall of successive writes to the trajectory
-real(dp),protected :: eps                               ! the error tolerance for the propagation
-real(dp),protected :: min_step                          ! minimum timestep
-real(dp),protected :: maxinc                            ! max. factor by which to increase stepsize
-real(dp),protected :: redmin                            ! minimum factor for stepsize reduction
-real(dp),protected :: redmax                            ! maximum reduction factor
-real(dp),protected :: init_step                         ! the initial value for the timestep
-real(dp),protected :: total_mass                        ! the total mass of the system (kg)
-real(dp),dimension(:),allocatable,protected :: mass     ! masses of the objects (kg)
-real(dp),dimension(:,:),allocatable,protected :: mass_2 ! mass-products of all object-pairs (kg^2)
-character(len=100),protected :: name_directory          ! directory that will be created for the output
-logical,protected :: do_restart                         ! create a restart file at every write step
-logical,protected :: do_steps                           ! create a file containing information about the steps
-logical,protected :: do_texttrj                         ! write a trajectory file in text form
-logical,protected :: do_unrestrictedprop                ! propagate without caring about the write step
-logical,protected :: do_bs                              ! use BS instead of RK as integrator
-logical,protected :: do_overwrite                       ! overwrite the contents of the name-directory
-logical,protected :: shift_cog                          ! wether or not to shift the cog at the beginning
-logical,protected :: shift_mom                          ! wether or not to compensate for cog motion
-logical,protected :: verbose                            ! wether of not to write info about the propagation to terminal
+integer(st),protected :: N_obj                                  ! number of objects to be simulated
+integer(st),protected :: maxsubstep                             ! maximum number of substeps in one BS-step
+integer(st),protected :: thres                                  ! number of substeps below which the stepsize will be increased
+real(dp),protected :: tfinal                                    ! the total length of the simulation (s)
+real(dp),protected :: write_step                                ! intervall of successive writes to the trajectory
+real(dp),protected :: eps                                       ! the error tolerance for the propagation
+real(dp),protected :: min_step                                  ! minimum timestep
+real(dp),protected :: maxinc                                    ! max. factor by which to increase stepsize
+real(dp),protected :: redmin                                    ! minimum factor for stepsize reduction
+real(dp),protected :: redmax                                    ! maximum reduction factor
+real(dp),protected :: init_step                                 ! the initial value for the timestep
+real(dp),protected :: total_mass                                ! the total mass of the system (kg)
+real(dp),dimension(:),allocatable,protected :: mass             ! masses of the objects (kg)
+character(len=50),dimension(:),allocatable,protected :: names   ! the names of the objects
+real(dp),dimension(:,:),allocatable,protected :: mass_2         ! mass-products of all object-pairs (kg^2)
+character(len=100),protected :: name_directory                  ! directory that will be created for the output
+logical,protected :: do_restart                                 ! create a restart file at every write step
+logical,protected :: do_steps                                   ! create a file containing information about the steps
+logical,protected :: do_texttrj                                 ! write a trajectory file in text form
+logical,protected :: do_unrestrictedprop                        ! propagate without caring about the write step
+logical,protected :: do_bs                                      ! use BS instead of RK as integrator
+logical,protected :: do_overwrite                               ! overwrite the contents of the name-directory
+logical,protected :: shift_cog                                  ! wether or not to shift the cog at the beginning
+logical,protected :: shift_mom                                  ! wether or not to compensate for cog motion
+logical,protected :: verbose                                    ! wether of not to write info about the propagation to terminal
 
 contains
 
@@ -103,8 +104,8 @@ real(dp),dimension(:,:),allocatable,intent(out) :: V  ! velocity components of a
 ! internal variables:
 character(len=40) :: keyword            ! dummy variable for the first column of the input file
 character(len=40) :: paraValue          ! the value of the parameter to be read
-character(len=100) :: input_buffer      ! one line of the input file, that is checked for keywords
-character(len=100) :: raw_buffer        ! input buffer without comments removed
+character(len=200) :: input_buffer      ! one line of the input file, that is checked for keywords
+character(len=200) :: raw_buffer        ! input buffer without comments removed
 integer(st) :: input_status             ! IO status of the input file ( if /= 0 -> trouble!!)
 integer(st) :: number_of_lines          ! number of lines in the input file
 integer(st) :: readstatus               ! IO status for the read operation
@@ -284,6 +285,7 @@ endif
 ! if everything is fine, read the initial coordinates:
 
 ! allocate the memory:
+allocate(names(N_obj))
 allocate(mass(N_obj))
 allocate(mass_2(N_obj,N_obj))
 allocate(X(N_obj,3))
@@ -296,7 +298,7 @@ enddo
 
 ! read coordinates:
 do i=1 , N_obj
-    read(input,*,iostat=readstatus) mass(i), X(i,1), X(i,2), X(i,3), V(i,1), V(i,2), V(i,3)
+    read(input,*,iostat=readstatus) names(i), mass(i), X(i,1), X(i,2), X(i,3), V(i,1), V(i,2), V(i,3)
     if (readstatus /= 0) then
         write(*,*) "Error reading coordinate no. ", i, " Exiting."
         stop
