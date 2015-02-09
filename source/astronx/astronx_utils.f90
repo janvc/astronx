@@ -285,8 +285,12 @@ integer(st) :: i                            ! loop index
 
 ! write to the text trajectory if requested:
 if (do_texttrj) then
-    write(trajectory,100) time, (X(i,1), X(i,2), X(i,3), i=1,size(X,1))
-    100 format (' ', 300es22.14)
+    write(trajectory,'(es18.10)',advance='no') time
+    do i = 1, size(X,1)
+        write(trajectory,'(3es18.10)',advance='no') X(i,1), X(i,2), X(i,3)
+    enddo
+    write(trajectory,*)
+!    100 format (' ', 300es22.14)
 endif
 
 

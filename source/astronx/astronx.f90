@@ -69,6 +69,18 @@ if (do_texttrj) then
         write(output,*) "ERROR: failed to open text trajectory file: ", traj_file, " status: ", output_status
         stop
     endif
+    write(trajectory,'("# trajectory in text form")')
+    write(trajectory,'("#")')
+    write(trajectory,'("# time          ")',advance='no')
+    do i = 1, size(mass)
+        write(trajectory,'(a54)',advance='no') names(i)
+    enddo
+    write(trajectory,*)
+    write(trajectory,'("#                   ")',advance='no')
+    do i = 1, size(mass)
+        write(trajectory,'("x [m]             y [m]             z [m]             ")',advance='no')
+    enddo
+    write(trajectory,*)
 endif
 
 ! open the steps file if requested:
