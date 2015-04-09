@@ -21,6 +21,7 @@ set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 set(SOURCES
+    graphicsview.cpp
     guistronx.cpp
     guistronx_window.cpp
     object.cpp
@@ -55,4 +56,4 @@ set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O2")
 
 
 add_executable(guistronx ${SOURCES} ${UI_SOURCES})
-target_link_libraries(guistronx Qt5::Widgets)
+target_link_libraries(guistronx Qt5::Widgets Qt5::OpenGL)
