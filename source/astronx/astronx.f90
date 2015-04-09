@@ -57,7 +57,7 @@ call chdir(name_directory)
 ! open the output file for writing:
 open(unit=output,file=output_file,status="new",action="write",iostat=output_status)
 if (output_status /= 0) then
-    write(*,*) "ERROR: failed to open output file: ", output_file, " status: ", output_status
+    write(*,'("ERROR: failed to open output file: ",a30," status: ",i3)') output_file, output_status
     stop
 endif
 
@@ -65,11 +65,11 @@ endif
 if (do_texttrj) then
     open(unit=trajectory,file=traj_file,status="new",action="write",iostat=output_status)
     if (output_status /= 0) then
-        write(*,*) "ERROR: failed to open text trajectory file: ", traj_file, " status: ", output_status
-        write(output,*) "ERROR: failed to open text trajectory file: ", traj_file, " status: ", output_status
+        write(*,'("ERROR: failed to open text trajectory file: ",a30," status: ",i3)') traj_file, output_status
+        write(output,'("ERROR: failed to open text trajectory file: ",a30," status: ",i3)') traj_file, output_status
         stop
     endif
-    write(trajectory,'("# trajectory in text form")')
+    write(trajectory,'("# trajectory in gnuplot-friendly text form")')
     write(trajectory,'("#")')
     write(trajectory,'("# time          ")',advance='no')
     do i = 1, size(mass)
@@ -87,7 +87,8 @@ endif
 if (do_steps) then
     open(unit=steps,file=steps_file,status="new",action="write",iostat=output_status)
     if (output_status /= 0 ) then
-        write(*,*) "ERROR: failed to open steps file. Exiting."
+        write(*,'("ERROR: failed to open steps file:",a30," status: ",i3)')  steps_file, output_status
+        write(output,'("ERROR: failed to open steps file:",a30," status: ",i3)')  steps_file, output_status
         stop
     endif
 endif
@@ -95,64 +96,64 @@ endif
 ! open the binary trajectory file:
 open(unit=bin_trj,file=bin_traj_file,status="new",action="write",iostat=output_status,form="unformatted")
 if (output_status /= 0) then
-    write(*,*) "ERROR: failed to open binary trajectory file: ", bin_traj_file, " status: ", output_status
-    write(output,*) "ERROR: failed to open binary trajectory file: ", bin_traj_file, " status: ", output_status
+    write(*,'("ERROR: failed to open binary trajectory file: ",a30," status: ",i3)') bin_traj_file, output_status
+    write(output,'("ERROR: failed to open binary trajectory file: ",a30," status: ",i3)') bin_traj_file, output_status
     stop
 endif
 
 
 ! write the header of the output file:
-write(output,*) "/-------------------------------------------------------------------------------\"
-write(output,*) "|                                  ** AstronX **                                |"
-write(output,*) "|                                                                               |"
-write(output,*) "|                A program for the simulation of celestial mechanics            |"
-write(output,*) "|      /\                                                              \\    // |"
-write(output,*) "|     //\\                Copyright 2012-2015 Jan von Cosel             \\  //  |"
-write(output,*) "|    //  \\                                                              \\//   |"
-write(output,*) "|   //====\\                  Astronx is free software.                  //\\   |"
-write(output,*) "|  //      \\    You can redistribute it and/or modify it under the     //  \\  |"
-write(output,*) "| //        \\   terms of the GNU General Public License as published  //    \\ |"
-write(output,*) "|                by the Free Software Foundation, either version 3 of           |"
-write(output,*) "|                the License, or (at your option) any later version.            |"
-write(output,*) "|                     Astronx comes with absolutely no warranty.                |"
-write(output,*) "\-------------------------------------------------------------------------------/"
-write(output,*) ""
-write(output,*) ""
-write(output,*) ""
+write(output,'("/-------------------------------------------------------------------------------\")')
+write(output,'("|                                  ** AstronX **                                |")')
+write(output,'("|                                                                               |")')
+write(output,'("|                A program for the simulation of celestial mechanics            |")')
+write(output,'("|      /\                                                              \\    // |")')
+write(output,'("|     //\\                Copyright 2012-2015 Jan von Cosel             \\  //  |")')
+write(output,'("|    //  \\                                                              \\//   |")')
+write(output,'("|   //====\\                  Astronx is free software.                  //\\   |")')
+write(output,'("|  //      \\    You can redistribute it and/or modify it under the     //  \\  |")')
+write(output,'("| //        \\   terms of the GNU General Public License as published  //    \\ |")')
+write(output,'("|                by the Free Software Foundation, either version 3 of           |")')
+write(output,'("|                the License, or (at your option) any later version.            |")')
+write(output,'("|                     Astronx comes with absolutely no warranty.                |")')
+write(output,'("\-------------------------------------------------------------------------------/")')
+write(output,*)
+write(output,*)
+write(output,*)
 
 ! write some information about the system to the output file:
-write(output,*) ""
-write(output,*) ""
-write(output,*) "------------------------------------"
-write(output,*) "GENERAL INFORMATION ABOUT THE SYSTEM"
-write(output,*) "------------------------------------"
-write(output,*) ""
-write(output,*) "Total mass:"
+write(output,*)
+write(output,*)
+write(output,'("------------------------------------")')
+write(output,'("GENERAL INFORMATION ABOUT THE SYSTEM")')
+write(output,'("------------------------------------")')
+write(output,*)
+write(output,'("Total mass:")')
 write(output,'(" m = ",es15.9," kg")') total_mass
-write(output,*) ""
+write(output,*)
 
 call centre_of_gravity(X, ct_of_grav, mass, total_mass)
-write(output,*) "Location of the centre of gravity:"
+write(output,'("Location of the centre of gravity:")')
 write(output,'(" x = ",es15.8," m")') ct_of_grav(1)
 write(output,'(" y = ",es15.8," m")') ct_of_grav(2)
 write(output,'(" z = ",es15.8," m")') ct_of_grav(3)
-write(output,*) ""
+write(output,*)
 
 call linear_momentum(V, lin_mom, mass)
-write(output,*) "Total linear momentum:"
+write(output,'("Total linear momentum:")')
 write(output,'(" x = ",es15.8," kg*m/s")') lin_mom(1)
 write(output,'(" y = ",es15.8," kg*m/s")') lin_mom(2)
 write(output,'(" z = ",es15.8," kg*m/s")') lin_mom(3)
-write(output,*) ""
+write(output,*)
 
 call angular_momentum(X, V, ang_mom, mass)
-write(output,*) "Total angular momentum:"
+write(output,'("Total angular momentum:")')
 write(output,'(" x = ",es15.8," kg*m^2/s")') ang_mom(1)
 write(output,'(" y = ",es15.8," kg*m^2/s")') ang_mom(2)
 write(output,'(" z = ",es15.8," kg*m^2/s")') ang_mom(3)
-write(output,*) ""
-write(output,*) ""
-write(output,*) ""
+write(output,*)
+write(output,*)
+write(output,*)
 
 
 ! write the values of all parameters to the output file:
@@ -160,53 +161,53 @@ call show_input_parameters
 
 ! shift the cog if requested:
 if (shift_cog) then
-    write(output,*) "--------------------------------------------"
-    write(output,*) "SHIFTING THE CENTRE OF GRAVITY TO THE ORIGIN"
-    write(output,*) "--------------------------------------------"
     call shiftcog(X)
-    write(output,*) ""
-    write(output,*) "Centre of gravity after shifting:"
     call centre_of_gravity(X, ct_of_grav, mass, total_mass)
+    write(output,'("--------------------------------------------")')
+    write(output,'("SHIFTING THE CENTRE OF GRAVITY TO THE ORIGIN")')
+    write(output,'("--------------------------------------------")')
+    write(output,*)
+    write(output,'("Centre of gravity after shifting:")')
     write(output,'(" x = ",es15.8," m")') ct_of_grav(1)
     write(output,'(" y = ",es15.8," m")') ct_of_grav(2)
     write(output,'(" z = ",es15.8," m")') ct_of_grav(3)
-    write(output,*) ""
-    write(output,*) ""
-    write(output,*) ""
+    write(output,*)
+    write(output,*)
+    write(output,*)
 endif
 
 ! shift the momentum if requested:
 if (shift_mom) then
-    write(output,*) "--------------------------------------------"
-    write(output,*) "ELIMINATING THE TOTAL MOMENTUM OF THE SYSTEM"
-    write(output,*) "--------------------------------------------"
     call shiftmom(V)
-    write(output,*) ""
-    write(output,*) "Residual linear momentum:"
     call linear_momentum(V, lin_mom, mass)
+    write(output,'("--------------------------------------------")')
+    write(output,'("ELIMINATING THE TOTAL MOMENTUM OF THE SYSTEM")')
+    write(output,'("--------------------------------------------")')
+    write(output,*)
+    write(output,'("Residual linear momentum:")')
     write(output,'(" x = ",es15.8," kg*m/s")') lin_mom(1)
     write(output,'(" y = ",es15.8," kg*m/s")') lin_mom(2)
     write(output,'(" z = ",es15.8," kg*m/s")') lin_mom(3)
-    write(output,*) ""
-    write(output,*) ""
-    write(output,*) ""
+    write(output,*)
+    write(output,*)
+    write(output,*)
 endif
 
 
 
 ! write the initial positions and velocities to the output file:
-write(output,*) "----------------------------------"
-write(output,*) "INITIAL COORDINATES AND VELOCITIES"
-write(output,*) "----------------------------------"
-write(output,*) ""
-write(output,*) "    name      mass (kg)       X (m)      Y (m)      Z (m)     V_x (m/s)  V_y (m/s)  V_z (m/s)"
-write(output,*) ""
+write(output,'("----------------------------------")')
+write(output,'("INITIAL COORDINATES AND VELOCITIES")')
+write(output,'("----------------------------------")')
+write(output,*)
+write(output,'("    name      mass (kg)       X (m)      Y (m)      Z (m)     V_x (m/s)  V_y (m/s)  V_z (m/s)")')
+write(output,*)
 do i = 1, size(mass)
-    write(output,107) trim(names(i)), mass(i), X(i,1), X(i,2), X(i,3), V(i,1), V(i,2), V(i,3)
-    107 format (' ',a10,'  ',es11.3,'  ',3es11.3,'  ',3es11.3)
+    write(output,'(a10,"  ",es11.3,"  ",3es11.3,"  ",3es11.3)') &
+        & trim(names(i)), mass(i), X(i,1), X(i,2), X(i,3), V(i,1), V(i,2), V(i,3)
 enddo
-write(output,*) ""
-write(output,*) ""
+write(output,*)
+write(output,*)
 
 ! write the header of the binary trajectory file:
 write(bin_trj) size(mass)
@@ -229,48 +230,49 @@ call propagate_bs(X, V)
 
 
 ! and now the postproduction (coordinates of last frame):
-write(output,*) "--------------------------------"
-write(output,*) "FINAL COORDINATES AND VELOCITIES"
-write(output,*) "--------------------------------"
-write(output,*) ""
-write(output,*) "    name      mass (kg)       X (m)      Y (m)      Z (m)     V_x (m/s)  V_y (m/s)  V_z (m/s)"
-write(output,*) ""
+write(output,'("--------------------------------")')
+write(output,'("FINAL COORDINATES AND VELOCITIES")')
+write(output,'("--------------------------------")')
+write(output,*)
+write(output,'("    name      mass (kg)       X (m)      Y (m)      Z (m)     V_x (m/s)  V_y (m/s)  V_z (m/s)")')
+write(output,*)
 do i = 1, size(mass)
-    write(output,107) trim(names(i)), mass(i), X(i,1), X(i,2), X(i,3), V(i,1), V(i,2), V(i,3)
+    write(output,'(a10,"  ",es11.3,"  ",3es11.3,"  ",3es11.3)') &
+        & trim(names(i)), mass(i), X(i,1), X(i,2), X(i,3), V(i,1), V(i,2), V(i,3)
 enddo
-write(output,*) ""
-write(output,*) ""
-write(output,*) ""
+write(output,*)
+write(output,*)
+write(output,*)
 
-write(output,*) "----------------------------------------------------------"
-write(output,*) "CENTRE OF GRAVITY AND LINEAR MOMENTUM AFTER THE SIMULATION"
-write(output,*) "----------------------------------------------------------"
-write(output,*) ""
+write(output,'("----------------------------------------------------------")')
+write(output,'("CENTRE OF GRAVITY AND LINEAR MOMENTUM AFTER THE SIMULATION")')
+write(output,'("----------------------------------------------------------")')
+write(output,*)
 
 call centre_of_gravity(X, ct_of_grav, mass, total_mass)
 
-write(output,*) "Location of the centre of gravity:"
+write(output,'("Location of the centre of gravity:")')
 write(output,'(" x = ",es15.8," m")') ct_of_grav(1)
 write(output,'(" y = ",es15.8," m")') ct_of_grav(2)
 write(output,'(" z = ",es15.8," m")') ct_of_grav(3)
-write(output,*) ""
+write(output,*)
 
 call linear_momentum(V, lin_mom, mass)
 
-write(output,*) "Total linear momentum:"
+write(output,'("Total linear momentum:")')
 write(output,'(" x = ",es15.8," kg*m/s")') lin_mom(1)
 write(output,'(" y = ",es15.8," kg*m/s")') lin_mom(2)
 write(output,'(" z = ",es15.8," kg*m/s")') lin_mom(3)
-write(output,*) ""
+write(output,*)
 
 call angular_momentum(X, V, ang_mom, mass)
 
-write(output,*) "Total angular momentum:"
+write(output,'("Total angular momentum:")')
 write(output,'(" x = ",es15.8," kg*m^2/s")') ang_mom(1)
 write(output,'(" y = ",es15.8," kg*m^2/s")') ang_mom(2)
 write(output,'(" z = ",es15.8," kg*m^2/s")') ang_mom(3)
-write(output,*) ""
-write(output,*) ""
+write(output,*)
+write(output,*)
 
 
 end program astronx

@@ -67,17 +67,17 @@ N_fail_tot = 0
 N_bstotal = 0
 N_smalltotal = 0
 
-write(output,*) "                  ***************************************"
-write(output,*) "                  * USING THE BULIRSCH-STOER INTEGRATOR *"
-write(output,*) "                  ***************************************"
-write(output,*) ""
-write(output,*) ""
-write(output,*) "--------------------------"
-write(output,*) "DETAILS OF THE PROPAGATION"
-write(output,*) "--------------------------"
-write(output,*) ""
-write(output,*) "elapsed time    large steps    BS steps    small steps    cpu time [ms]"
-write(output,*) "                good    bad"
+write(output,'("                  ***************************************")')
+write(output,'("                  * USING THE BULIRSCH-STOER INTEGRATOR *")')
+write(output,'("                  ***************************************")')
+write(output,*)
+write(output,*)
+write(output,'("--------------------------")')
+write(output,'("DETAILS OF THE PROPAGATION")')
+write(output,'("--------------------------")')
+write(output,*)
+write(output,'("elapsed time    large steps    BS steps    small steps    cpu time [ms]")')
+write(output,'("                good    bad")')
 
 flush(output)
 
@@ -100,10 +100,8 @@ do
     if ((elapsed_time >= tfinal) .or. (tfinal - elapsed_time < 1.0_dp)) exit
 
     if (do_steps) then
-        write(steps,100) elapsed_time
-        100 format ("# elapsed time:    ", es16.9)
-        write(steps,101) timestep
-        101 format ("# trying propagation with step:   ", es16.9)
+        write(steps,'("# elapsed time:    ", es16.9)') elapsed_time
+        write(steps,'("# trying propagation with step:   ", es16.9)') timestep
     endif
 
     call cpu_time(start_stepcpu)
@@ -128,33 +126,33 @@ do
     if (verbose) then
     endif
 
-    write(output,102) elapsed_time, N_ok, N_fail, N_bssteps, N_smallsteps, (end_stepcpu-start_stepcpu)*1000.0_dp
-    102 format  (' ', es11.5, "   ", i5, "  ", i5, "     ", i5, "      ", i7, "       ", f8.1)
+    write(output,'(" ", es11.5, "   ", i5, "  ", i5, "     ", i5, "      ", i7, "       ", f8.1)') &
+        elapsed_time, N_ok, N_fail, N_bssteps, N_smallsteps, (end_stepcpu-start_stepcpu)*1000.0_dp
     flush(output)
 enddo
 
 call cpu_time(end_totcpu)
 
-write(output,*) ""
-write(output,*) ""
-write(output,*) ""
-write(output,*) "--------------------------"
-write(output,*) "SUMMARY OF THE CALCULATION"
-write(output,*) "--------------------------"
-write(output,*) ""
-write(output,*) "total time      large steps    BS steps    small steps    cpu time used [s]"
-write(output,*) "                good    bad"
+write(output,*)
+write(output,*)
+write(output,*)
+write(output,'("--------------------------")')
+write(output,'("SUMMARY OF THE CALCULATION")')
+write(output,'("--------------------------")')
+write(output,*)
+write(output,'("total time      large steps    BS steps    small steps    cpu time used [s]")')
+write(output,'("                good    bad")')
 
-write(output,131) elapsed_time, N_ok_tot, N_fail_tot, N_bstotal, N_smalltotal, (end_totcpu-start_totcpu)
-131 format (' ', es10.3, "   ", i7, i7, "  ", i8, "     ", i8, "     ", f12.3)
+write(output,'(" ", es10.3, "   ", i7, i7, "  ", i8, "     ", i8, "     ", f12.3)') &
+    elapsed_time, N_ok_tot, N_fail_tot, N_bstotal, N_smalltotal, (end_totcpu-start_totcpu)
 
-write(output,*) ""
-write(output,*) ""
-write(output,*) ""
+write(output,*)
+write(output,*)
+write(output,*)
 
 if (do_steps) then
-    write(steps,*) "# Simulation done!"
-    write(steps,*) "# Total number of successful / failed steps: ", N_ok_tot, N_fail_tot
+    write(steps,'("# Simulation done!")')
+    write(steps,'("# Total number of successful / failed steps: ",2i7)') N_ok_tot, N_fail_tot
 endif
 
 end subroutine propagate_bs

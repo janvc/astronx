@@ -290,7 +290,6 @@ if (do_texttrj) then
         write(trajectory,'(3es18.10)',advance='no') X(i,1), X(i,2), X(i,3)
     enddo
     write(trajectory,*)
-!    100 format (' ', 300es22.14)
 endif
 
 
@@ -317,64 +316,54 @@ use shared_data, only: output
 implicit none
 
 
-write(output,*) "---------------------"
-write(output,*) "SIMULATION PARAMETERS"
-write(output,*) "---------------------"
-write(output,*) ""
-write(output,111) eps
-111 format (' ', "eps         ", es11.3)
-write(output,112) tfinal
-112 format (' ', "tfinal      ", es11.3)
-write(output,113) write_step
-113 format (' ', "tout        ", es11.3)
-write(output,114) init_step
-114 format (' ', "init_step   ", es11.3)
-write(output,115) maxsubstep
-115 format (' ', "maxsubstep  ", i3)
-write(output,116) thres
-116 format (' ', "inc_thres   ", i3)
-write(output,117) min_step
-117 format (' ', "min_step    ", es11.3)
-write(output,118) maxinc
-118 format (' ', "maxinc      ", es11.3)
-write(output,119) redmin
-119 format (' ', "redmin      ", es11.3)
-write(output,120) redmax
-120 format (' ', "redmax      ", es11.3)
+write(output,'("---------------------")')
+write(output,'("SIMULATION PARAMETERS")')
+write(output,'("---------------------")')
+write(output,*)
+write(output,'("eps         ", es11.3)') eps
+write(output,'("tfinal      ", es11.3)') tfinal
+write(output,'("tout        ", es11.3)') write_step
+write(output,'("init_step   ", es11.3)') init_step
+write(output,'("maxsubstep  ", i3)') maxsubstep
+write(output,'("inc_thres   ", i3)') thres
+write(output,'("min_step    ", es11.3)') min_step
+write(output,'("maxinc      ", es11.3)') maxinc
+write(output,'("redmin      ", es11.3)') redmin
+write(output,'("redmax      ", es11.3)') redmax
 if (shift_cog) then
-    write(output,*) "shift_cog     yes"
+    write(output,'("shift_cog     yes")')
 else
-    write(output,*) "shift_cog     no"
+    write(output,'("shift_cog     no")')
 endif
 if (shift_mom) then
-    write(output,*) "shift_mom     yes"
+    write(output,'("shift_mom     yes")')
 else
-    write(output,*) "shift_mom     no"
+    write(output,'("shift_mom     no")')
 endif
 if (do_restart) then
-    write(output,*) "restart       yes"
+    write(output,'("restart       yes")')
 else
-    write(output,*) "restart       no"
+    write(output,'("restart       no")')
 endif
 if (do_steps) then
-    write(output,*) "steps         yes"
+    write(output,'("steps         yes")')
 else
-    write(output,*) "steps         no"
+    write(output,'("steps         no")')
 endif
 if (do_texttrj) then
-    write(output,*) "text_trj      yes"
+    write(output,'("text_trj      yes")')
 else
-    write(output,*) "text_trj      no"
+    write(output,'("text_trj      no")')
 endif
 if (do_unrestrictedprop) then
-    write(output,*) "prop_type     unrestricted"
+    write(output,'("prop_type     unrestricted")')
 else
-    write(output,*) "prop_type     normal"
+    write(output,'("prop_type     normal")')
 endif
 
-write(output,*) ""
-write(output,*) ""
-write(output,*) ""
+write(output,*)
+write(output,*)
+write(output,*)
 
 end subroutine show_input_parameters
 

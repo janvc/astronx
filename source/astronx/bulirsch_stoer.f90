@@ -194,8 +194,7 @@ main_loop: do
         nsteps = i
 
         if (do_steps) then
-            write(steps,100) i, h, delta, elapsed_time
-            100 format (' ', "   ", i2, "   ", es16.5, "  ", es16.5, "    ", es16.8)
+            write(steps,'("    ", i2, "   ", es16.5, "  ", es16.5, "    ", es16.8)') i, h, delta, elapsed_time
             flush(steps)
         endif
 
@@ -208,7 +207,7 @@ main_loop: do
     enddo
 
     if (h <= real(min_step,ep)) then
-        write(output,*) "WARNING: No convergence with minimum stepsize. Aborting!"
+        write(output,'("WARNING: No convergence with minimum stepsize. Aborting!")')
         underflow = .true.
         exit main_loop
     endif
