@@ -25,9 +25,9 @@ program astronx
 use types
 use shared_data, only: bin_trj, elapsed_time, output, steps, trajectory
 use input_module, only: names, mass, total_mass, do_steps, do_texttrj, name_directory, shift_cog, shift_mom, read_input, &
-                        process_cmd_arguments
+                        process_cmd_arguments, do_bs
 use astronx_utils, only: show_input_parameters, shiftcog, shiftmom, centre_of_gravity, linear_momentum, angular_momentum
-use propagate, only: propagate_bs
+use propagate
 implicit none
 
 
@@ -221,7 +221,11 @@ elapsed_time = 0.0_dp
 flush(output)
 
 ! here comes the actual simulation (either rk or bs):
-call propagate_bs(X, V)
+if (do_bs) then
+    call propagate_bs(X, V)
+else
+    call propagate_rk4(X, V)
+endif
 
 !#####################################################################
 ! TO DO:  react to the "underflow" flag from the propagation

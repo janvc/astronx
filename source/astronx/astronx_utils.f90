@@ -321,6 +321,7 @@ write(output,'("SIMULATION PARAMETERS")')
 write(output,'("---------------------")')
 write(output,*)
 write(output,'("eps         ", es11.3)') eps
+write(output,'("eps_thres   ", es11.3)') eps_thres
 write(output,'("tfinal      ", es11.3)') tfinal
 write(output,'("tout        ", es11.3)') write_step
 write(output,'("init_step   ", es11.3)') init_step

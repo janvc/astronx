@@ -29,6 +29,7 @@ integer(st),protected :: thres                                  ! number of subs
 real(dp),protected :: tfinal                                    ! the total length of the simulation (s)
 real(dp),protected :: write_step                                ! intervall of successive writes to the trajectory
 real(dp),protected :: eps                                       ! the error tolerance for the propagation
+real(dp),protected :: eps_thres                                 ! error scaling threshold for increasing the stepsize in rk-runs
 real(dp),protected :: min_step                                  ! minimum timestep
 real(dp),protected :: maxinc                                    ! max. factor by which to increase stepsize
 real(dp),protected :: redmin                                    ! minimum factor for stepsize reduction
@@ -139,6 +140,7 @@ rewind(input)
 maxsubstep = 12
 thres = 8
 eps = 1.0e-6_dp
+eps_thres = 0.9_dp
 min_step = 100.0_dp
 maxinc = 10.0_dp
 redmin = 0.9_dp
@@ -184,6 +186,8 @@ do i=1 , number_of_lines
             read(paraValue,*) write_step
         else if (index(keyword, "eps") /= 0) then
             read(paraValue,*) eps
+        else if (index(keyword, "eps_thres") /= 0) then
+            read(paraValue,*) eps_thres
         else if (index(keyword, "init_step") /= 0) then
             test_tinit = .true.
             read(paraValue,*) init_step
@@ -211,7 +215,7 @@ do i=1 , number_of_lines
         else if (index(keyword, "integrator") /= 0) then
             if (index(paraValue, "bs") /= 0) then
                 do_bs = .true.
-            else if (index(paraValue, "rk") /= 0) then
+            else if (index(paraValue, "rk4nr") /= 0) then
                 do_bs = .false.
             else
                 write(output,*) "Invalid value for 'integrator', using default: bs"
