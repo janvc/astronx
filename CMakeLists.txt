@@ -15,5 +15,11 @@ endif()
 
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
 
+set(CMAKE_MODULE_PATH
+    "${CMAKE_SOURCE_DIR}/cmake"
+    ${CMAKE_MODULE_PATH}
+)
+
 add_subdirectory(source)
+add_subdirectory(doc)
 #set_target_properties(astronx PROPERTIES LINKER_LANGUAGE Fortran)
