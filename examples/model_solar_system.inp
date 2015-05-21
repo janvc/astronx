@@ -1,0 +1,35 @@
+# a model solar system with one heavy object in the center and
+# 19 'planets' orbiting it
+#
+name_dir   = model_solar_system
+n_obj      = 20
+tfinal     = 1.0e10
+tout       = 1.0e7
+eps        = 1.0e-9
+shift_cog
+shift_mom
+steps
+text_trj
+
+begin_coords
+    object_01   1.0e30       0.0       0.0       0.0          0.0       0.0       0.0
+    object_02   1.0e26       1.0e11    0.0       0.0          0.0       2.5831e4  0.0
+    object_03   5.0e25       2.0e11    0.0       0.0          0.0       1.8266e4  0.0
+    object_04   2.0e25       3.0e11    0.0       0.0          0.0       1.4914e4  0.0
+    object_05   1.0e25       4.0e11    0.0       0.0          0.0       1.2916e4  0.0
+    object_06   5.0e24       5.0e11    0.0       0.0          0.0       1.1552e4  0.0
+    object_07   2.0e24       6.0e11    0.0       0.0          0.0       1.0546e4  0.0
+    object_08   1.0e24       7.0e11    0.0       0.0          0.0       9.7633e3  0.0
+    object_09   5.0e23       8.0e11    0.0       0.0          0.0       9.1328e3  0.0
+    object_10   2.0e23       9.0e11    0.0       0.0          0.0       8.6105e3  0.0
+    object_11   1.0e23       1.0e12    0.0       0.0          0.0       8.1686e3  0.0
+    object_12   5.0e22       1.1e12    0.0       0.0          0.0       7.7885e3  0.0
+    object_13   2.0e22       1.2e12    0.0       0.0          0.0       7.4569e3  0.0
+    object_14   1.0e22       1.3e12    0.0       0.0          0.0       7.1643e3  0.0
+    object_15   5.0e21       1.4e12    0.0       0.0          0.0       6.9037e3  0.0
+    object_16   2.0e21       1.5e12    0.0       0.0          0.0       6.6696e3  0.0
+    object_17   1.0e21       1.6e12    0.0       0.0          0.0       6.4578e3  0.0
+    object_18   5.0e20       1.7e12    0.0       0.0          0.0       6.2650e3  0.0
+    object_19   2.0e20       1.8e12    0.0       0.0          0.0       6.0885e3  0.0
+    object_20   1.0e20       1.9e12    0.0       0.0          0.0       5.9261e3  0.0
+end_coords
