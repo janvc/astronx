@@ -35,8 +35,8 @@ subroutine rk4nr_largestep(h_start, h_next, X, V, N_ok, N_fail, N_rktotal)
 ! It adjusts the stepsize and calls rk4nr_onestep.
 !
 use types
-use shared_data, only: elapsed_time, underflow, steps
-use input_module, only: do_unrestrictedprop, eps, maxinc, write_step, do_steps, eps_thres
+use shared_data, only: elapsed_time, underflow
+use input_module, only: do_unrestrictedprop, eps, maxinc, write_step, eps_thres
 implicit none
 
 ! arguments to the routine:
