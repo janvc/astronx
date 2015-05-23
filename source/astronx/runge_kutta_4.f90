@@ -223,7 +223,7 @@ subroutine rk4nr_smallstep(X_old, V_old, X_new, V_new, A_old, step)
 ! acceleration calculations.
 !
 use types
-use input_module, only: mass, mass_2
+use input_module, only: mass, mass_2, do_rk4mid
 use astronx_utils, only: acceleration
 implicit none
 
@@ -237,7 +237,10 @@ real(ep),intent(in) :: step                     ! the total timestep to be done 
 
 ! internal variables:
 real(ep) :: half_step                           ! half of the total step
+real(ep) :: third_step                          ! one third of the total step
+real(ep) :: twothird_step                       ! two thirds of the total step
 real(ep) :: sixth_step                          ! one sixth of the total step
+real(ep) :: eighth_step                         ! one eighth of the total step
 real(ep),dimension(size(X_old,1),3) :: X_tmp1   !\
 real(ep),dimension(size(X_old,1),3) :: X_tmp2   ! | temporary positions
 real(ep),dimension(size(X_old,1),3) :: X_tmp3   !/
@@ -249,32 +252,76 @@ real(ep),dimension(size(X_old,1),3) :: A_int2   ! | internal acceleration values
 real(ep),dimension(size(X_old,1),3) :: A_int3   !/
 
 half_step = step * 0.5_ep
+third_step = step / 3.0_ep
+twothird_step = third_step * 2.0_ep
 sixth_step = step / 6.0_ep
+eighth_step = step * 0.125_ep
 
-! do the first step:
-X_tmp1 = X_old + half_step * V_old
-V_tmp1 = V_old + half_step * A_old
+! choose the method of doing and combining the substeps:
+! the midpoint-method uses two half-sized steps to get the intermediate derivatives:
+!
+!        2
+! 1             4
+!        3
+!
+if (do_rk4mid) then
+    ! do the first step:
+    X_tmp1 = X_old + half_step * V_old
+    V_tmp1 = V_old + half_step * A_old
 
-! calculate the first temporary acceleration:
-call acceleration(X_tmp1, A_int1, mass, mass_2)
+    ! calculate the first temporary acceleration:
+    call acceleration(X_tmp1, A_int1, mass, mass_2)
 
-! do the second step:
-X_tmp2 = X_old + half_step * V_tmp1
-V_tmp2 = V_old + half_step * A_int1
+    ! do the second step:
+    X_tmp2 = X_old + half_step * V_tmp1
+    V_tmp2 = V_old + half_step * A_int1
 
-! calculate the second temporary acceleration:
-call acceleration(X_tmp2, A_int2, mass, mass_2)
+    ! calculate the second temporary acceleration:
+    call acceleration(X_tmp2, A_int2, mass, mass_2)
 
-! do the third step:
-X_tmp3 = X_old + step * V_tmp2
-V_tmp3 = V_old + step * A_int2
+    ! do the third step:
+    X_tmp3 = X_old + step * V_tmp2
+    V_tmp3 = V_old + step * A_int2
 
-! calculate the acceleration at the end:
-call acceleration(X_tmp3, A_int3, mass, mass_2)
+    ! calculate the acceleration at the end:
+    call acceleration(X_tmp3, A_int3, mass, mass_2)
 
-! do the final step:
-X_new = X_old + sixth_step * (V_old + V_tmp3 + 2.0_ep * (V_tmp1 + V_tmp2))
-V_new = V_old + sixth_step * (A_old + A_int3 + 2.0_ep * (A_int1 + A_int2))
+    ! do the final step:
+    X_new = X_old + sixth_step * (V_old + V_tmp3 + 2.0_ep * (V_tmp1 + V_tmp2))
+    V_new = V_old + sixth_step * (A_old + A_int3 + 2.0_ep * (A_int1 + A_int2))
+else
+    ! the thirds method uses two steps of different length to get the intermediate
+    ! derivatives:
+    !
+    !      2
+    ! 1              4
+    !           3
+    !
+    ! do the first step:
+    X_tmp1 = X_old + third_step * V_old
+    V_tmp1 = V_old + third_step * A_old
+
+    ! calculate the first temporary acceleration:
+    call acceleration(X_tmp1, A_int1, mass, mass_2)
+
+    ! do the second step:
+    X_tmp2 = X_old + twothird_step * V_tmp1
+    V_tmp2 = V_old + twothird_step * A_int1
+
+    ! calculate the second temporary acceleration:
+    call acceleration(X_tmp2, A_int2, mass, mass_2)
+
+    ! do the third step:
+    X_tmp3 = X_old + step * V_tmp2
+    V_tmp3 = V_old + step * A_int2
+
+    ! calculate the acceleration at the end:
+    call acceleration(X_tmp3, A_int3, mass, mass_2)
+
+    ! do the final step:
+    X_new = X_old + eighth_step * (V_old + V_tmp3 + 3.0_ep * (V_tmp1 + V_tmp2))
+    V_new = V_old + eighth_step * (A_old + A_int3 + 3.0_ep * (A_int1 + A_int2))
+endif
 
 end subroutine rk4nr_smallstep
 

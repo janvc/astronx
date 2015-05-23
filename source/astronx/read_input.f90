@@ -45,6 +45,7 @@ logical,protected :: do_steps                                   ! create a file 
 logical,protected :: do_texttrj                                 ! write a trajectory file in text form
 logical,protected :: do_unrestrictedprop                        ! propagate without caring about the write step
 logical,protected :: do_bs                                      ! use BS instead of RK as integrator
+logical,protected :: do_rk4mid                                  ! evaluate the derivative in the middle of the interval in rk4
 logical,protected :: do_overwrite                               ! overwrite the contents of the name-directory
 logical,protected :: shift_cog                                  ! wether or not to shift the cog at the beginning
 logical,protected :: shift_mom                                  ! wether or not to compensate for cog motion
@@ -152,6 +153,7 @@ do_steps = .false.
 do_texttrj = .false.
 do_unrestrictedprop = .false.
 do_bs = .true.
+do_rk4mid = .true.
 
 ! find and read the parameters from the input file and set the test-variables:
 do i=1 , number_of_lines
@@ -215,8 +217,12 @@ do i=1 , number_of_lines
         else if (index(keyword, "integrator") /= 0) then
             if (index(paraValue, "bs") /= 0) then
                 do_bs = .true.
-            else if (index(paraValue, "rk4nr") /= 0) then
+            else if (index(paraValue, "rk4mid") /= 0) then
                 do_bs = .false.
+                do_rk4mid = .true.
+            else if (index(paraValue, "rk43rd") /= 0) then
+                do_bs = .false.
+                do_rk4mid = .false.
             else
                 write(output,*) "Invalid value for 'integrator', using default: bs"
                 do_bs = .true.
