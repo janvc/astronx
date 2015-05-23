@@ -1,9 +1,10 @@
-\documentclass[a4paper,twoside,12pt]{book}
+\documentclass[paper=a4,pagesize,DIV=12,BCOR=12mm]{scrbook}
 \usepackage[latin1]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage{amsmath}
 \usepackage[dvips]{graphicx}
 \usepackage{siunitx}
+\usepackage{array}
 
 
 \begin{document}
@@ -34,7 +35,10 @@ Jan von Cosel
 
 \section{What is AstronX?}
 
-\textit{AstronX} is a program for the simulation of the dynamics of many-body-systems consisting of mass-centres influencing each other by gravity. It provides a trajectory by integrating the Newtonian equations of motion. The integration is performed with either the Bulirsch-Stoer algorithm or the Runge-Kutta Algorithm of fourth order. The stepsize is dynamically adjusted to the required accuracy.
+\textit{AstronX} is a program for the simulation of the dynamics of many-body-systems consisting of
+mass-centres influencing each other by gravity. It provides a trajectory by integrating the Newtonian
+equations of motion. The integration is performed with either the Bulirsch-Stoer algorithm or the Runge-Kutta
+Algorithm of fourth order. The stepsize is dynamically adjusted to the required accuracy.
 
 \chapter{Theory}
 
@@ -42,19 +46,66 @@ Jan von Cosel
 
 \section{input parameters}
 
-The details of the propagation can be controlled by various parameters in the input file. The following parameters are mandatory for the calculation and must be present in the input file:
+The details of the propagation can be controlled by various parameters in the input file. The following
+parameters are mandatory for the calculation and must be present in the input file:
 
-%\begin{itemize}
-%\item[name_dir] The name of the directory where the results of the calculation are being saved to.
-%
-%\item[tfinal] This is the total simulation time. The calculation always starts at time zero and proceeds until \verb+tfinal+ or until the stepsize underflows.
-%
-%\item[n_obj] The number of objects in the system.
-%
-%\item[tout] The time interval between successive points to be written to the trajectory file.
-%\end{itemize}
+\begin{tabular}{p{0.20\textwidth}p{0.7\textwidth}}
+    \verb+name_dir+ & The name of the directory where the results of the calculation are being saved to. \\
+    \verb+tfinal+   & This is the total simulation time. The calculation always starts at time zero and
+                      proceeds until \verb+tfinal+ or until the stepsize underflows.                     \\
+    \verb+n_obj+    & The number of objects in the system.                                               \\
+    \verb+tout+     & The time interval between successive points to be written to the trajectory file.  \\
+\end{tabular}
 
-Additionally, the behaviour of the program can be influenced in more detail by specifying the following parameters. Every parameter, that is not present in the input file will be set to its default value (given in parentheses):
+In addition, a number of options can be specified by keywords. If the keyword is present in the input
+file, the operation will be performed, if it is absent it will be omitted.
+
+\begin{tabular}{p{0.20\textwidth}p{0.7\textwidth}}
+    \verb+shift_cog+    & Prior to the propagation, shift the entire system so that the center of gravity
+                          coincides with the origin of the coordinate system. \\
+    \verb+shift_mom+    & Apply an offset to all initial velocities so that the linear momentum of the
+                          entire system is zero. \\
+    \verb+restart+      & In every output step, write the current positions and velocities to a text
+                          file in a format equivalent to that of the input file. There values can be
+                          pasted directly into the input file of a different calculation. \\
+    \verb+steps+        & Write detailed information about the integration's progress to an auxiliary
+                          file. \\
+    \verb+text_trj+     & In addition to the default binary trajectory, write the trajectory in a
+                          gnuplot-friendly format. \\
+\end{tabular}
+
+Additionally, the behaviour of the program can be influenced in more detail by specifying the following
+parameters. Every parameter, that is not present in the input file will be set to its default value
+(given in parentheses):
+
+\begin{tabular}{p{0.25\textwidth}p{0.67\textwidth}}
+    \verb+eps+ (\SI{e-6})            & The error tolerance of the propagation. \\
+    \verb+init_step+                 & Initial stepsize of the integrator. By default, \verb+tout+ will
+                                       be used here. \\
+    \verb+min_step+ (100)            & The minimum stepsize. If the integrator cannot converge with
+                                       this stepsize, the run will abort. \\
+    \verb+maxinc+ (10)               & The maximum factor by which the stepsize can be increased after
+                                       a successful step. \\
+    \verb+redmin+ (0.9)              & If a step failed, the stepsize will be reduced by at least this
+                                       factor. \\
+    \verb+redmax+ (0.01)             & The maximum possible stepsize reduction after a failed step. \\
+    \verb+eps_thres+ (0.9)           & Threshold for increasing the stepsize in the Runge-Kutta algorithm.
+                                       The stepsize will only be increased if the error is smaller than
+                                       \verb+eps * eps_thres+. \\
+    \verb+inc_thres+ (8)             & Threshold for increasing the stepsize in the Bulirsch-Stoer algorithm.
+                                       The stepsize will only be increased if it took no more than \verb+inc_thres+
+                                       steps to converge. \\
+    \verb+maxsubstep+ (12)           & Maximum number of substeps in one Bulirsch-Stoer step. \\
+    \verb+prop_type+ (\verb+normal+) & In a \verb+normal+ propagation, the positions and velocities
+                                       are printed to the trajectory file(s) exactly at intervals of
+                                       \verb+tout+. If \verb+prop_type+ is set to \verb+unrestricted+,
+                                       data will be printed after the first full integrator step that
+                                       exceeds \verb+tout+. \\
+    \verb+integrator+ (\verb+bs+)    & Choose the integration algorithm to be used. \verb+bs+ selects
+                                       the Bulirsch-Stoer algorithm, \verb+rk4nr+ selects the Runge-
+                                       Kutta algorithm of fourth order as described in \emph{Numerical
+                                       Recipes in Fortran}. \\
+\end{tabular}
 
 \chapter{evaluation}
 
