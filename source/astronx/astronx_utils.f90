@@ -323,10 +323,10 @@ write(output,*)
 write(output,'("eps         ", es11.3)') eps
 write(output,'("eps_thres   ", es11.3)') eps_thres
 write(output,'("tfinal      ", es11.3)') tfinal
-write(output,'("tout        ", es11.3)') write_step
+write(output,'("tout        ", es11.3)') tout
 write(output,'("init_step   ", es11.3)') init_step
 write(output,'("maxsubstep  ", i3)') maxsubstep
-write(output,'("inc_thres   ", i3)') thres
+write(output,'("inc_thres   ", i3)') inc_thres
 write(output,'("min_step    ", es11.3)') min_step
 write(output,'("maxinc      ", es11.3)') maxinc
 write(output,'("redmin      ", es11.3)') redmin

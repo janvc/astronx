@@ -35,7 +35,7 @@ subroutine bs_largestep(h_start, h_next, X, V, N_ok, N_fail, N_bstotal, N_smallt
 !
 use types
 use shared_data, only: elapsed_time, underflow
-use input_module, only: eps, write_step, maxinc, thres, do_unrestrictedprop
+use input_module, only: eps, tout, maxinc, inc_thres, do_unrestrictedprop
 implicit none
 
 
@@ -79,8 +79,8 @@ propagation: do
     ! for a normal propagation, the stepsize must not overshoot, so it
     ! will be reduced (adding 50 seconds to avoid numerical instabilities):
     if (.not. do_unrestrictedprop) then
-        if (internal_elapsed_time + timestep + 50.0_ep > real(write_step,ep)) then
-            timestep = real(write_step,ep) - internal_elapsed_time
+        if (internal_elapsed_time + timestep + 50.0_ep > real(tout,ep)) then
+            timestep = real(tout,ep) - internal_elapsed_time
         endif
     endif
 
@@ -92,7 +92,7 @@ propagation: do
     N_smalltotal = N_smalltotal + N_smallsteps
 
     if (h_did == timestep) then     ! did it converge with the attempted step?
-        if (nsteps <= thres) then   ! if it took less than 'thres' steps, then increase stepsize
+        if (nsteps <= inc_thres) then   ! if it took less than 'inc_thres' steps, then increase stepsize
             factor = (eps / delta)**(1.0_ep / real(nsteps,ep))
             timestep = h_did * min(factor,real(maxinc,ep))
         endif
@@ -107,7 +107,7 @@ propagation: do
     X_int = X_tmp
     V_int = V_tmp
 
-    if (internal_elapsed_time >= write_step) exit propagation
+    if (internal_elapsed_time >= tout) exit propagation
 enddo propagation
 
 X = real(X_int,dp)

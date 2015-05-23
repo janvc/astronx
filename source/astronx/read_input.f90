@@ -25,9 +25,9 @@ implicit none
 ! first the data to be declared:
 integer(st),protected :: N_obj                                  ! number of objects to be simulated
 integer(st),protected :: maxsubstep                             ! maximum number of substeps in one BS-step
-integer(st),protected :: thres                                  ! number of substeps below which the stepsize will be increased
+integer(st),protected :: inc_thres                              ! number of substeps below which the stepsize will be increased
 real(dp),protected :: tfinal                                    ! the total length of the simulation (s)
-real(dp),protected :: write_step                                ! intervall of successive writes to the trajectory
+real(dp),protected :: tout                                      ! intervall of successive writes to the trajectory
 real(dp),protected :: eps                                       ! the error tolerance for the propagation
 real(dp),protected :: eps_thres                                 ! error scaling threshold for increasing the stepsize in rk-runs
 real(dp),protected :: min_step                                  ! minimum timestep
@@ -138,7 +138,7 @@ rewind(input)
 
 ! set the default values for all input parameters:
 maxsubstep = 12
-thres = 8
+inc_thres = 8
 eps = 1.0e-6_dp
 eps_thres = 0.9_dp
 min_step = 100.0_dp
@@ -183,7 +183,7 @@ do i=1 , number_of_lines
             read(paraValue,*) tfinal
         else if (index(keyword, "tout") /= 0) then
             test_tout = .true.
-            read(paraValue,*) write_step
+            read(paraValue,*) tout
         else if (index(keyword, "eps") /= 0) then
             read(paraValue,*) eps
         else if (index(keyword, "eps_thres") /= 0) then
@@ -194,7 +194,7 @@ do i=1 , number_of_lines
         else if (index(keyword, "maxsubstep") /= 0) then
             read(paraValue,*) maxsubstep
         else if (index(keyword, "inc_thres") /= 0) then
-            read(paraValue,*) thres
+            read(paraValue,*) inc_thres
         else if (index(keyword, "min_step") /= 0) then
             read(paraValue,*) min_step
         else if (index(keyword, "maxinc") /= 0) then
@@ -258,9 +258,9 @@ if (.not. test_tout) then
     stop
 endif
 
-! if the initial step has not been specified, set to write_step as the default:
+! if the initial step has not been specified, set to tout as the default:
 if (.not. test_tinit) then
-    init_step = write_step
+    init_step = tout
 endif
 
 ! find the first and last line of the coordinate block:
