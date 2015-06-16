@@ -25,9 +25,9 @@ program astronx
 use types
 use shared_data, only: bin_trj, elapsed_time, output, steps, trajectory
 use input_module, only: names, mass, total_mass, do_steps, do_texttrj, name_directory, shift_cog, shift_mom, read_input, &
-                        process_cmd_arguments, do_bs
+                        process_cmd_arguments
 use astronx_utils, only: show_input_parameters, shiftcog, shiftmom, centre_of_gravity, linear_momentum, angular_momentum
-use propagate
+use propagation
 implicit none
 
 
@@ -44,6 +44,8 @@ real(dp),dimension(:,:),allocatable :: V        ! velocity components of all obj
 real(dp),dimension(3) :: ct_of_grav             ! the centre of gravity of the system (m)
 real(dp),dimension(3) :: lin_mom                ! the total linear momentum of the system (kg*m/s)
 real(dp),dimension(3) :: ang_mom                ! the total angular momentum of the system (kg*m^2/s)
+real(dp) :: start_propcpu                       ! cpu time at the start of the propagation
+real(dp) :: end_propcpu                         ! cpu time at the end of the propagation
 
 
 ! process the command line arguments:
@@ -221,11 +223,21 @@ elapsed_time = 0.0_dp
 flush(output)
 
 ! here comes the actual simulation (either rk or bs):
-if (do_bs) then
-    call propagate_bs(X, V)
-else
-    call propagate_rk4(X, V)
-endif
+write(output,'("  ----------------------------------------------------------------------------------")')
+write(output,'("                                  STARTING THE PROPAGATION")')
+write(output,'("  ----------------------------------------------------------------------------------")')
+write(output,*)
+
+call cpu_time(start_propcpu)
+call propagate(X, V)
+call cpu_time(end_propcpu)
+
+write(output,'("  ----------------------------------------------------------------------------------")')
+write(output,'("                                 FINISHED THE PROPAGATION")')
+write(output,'("                           total cpu time:", f12.3, " seconds")') end_propcpu - start_propcpu
+write(output,'("  ----------------------------------------------------------------------------------")')
+
+
 
 !#####################################################################
 ! TO DO:  react to the "underflow" flag from the propagation

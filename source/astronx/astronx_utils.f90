@@ -131,13 +131,14 @@ end subroutine angular_momentum
 !##################################################################################################
 !##################################################################################################
 
-subroutine acceleration(X, A, mass, mass_2)
+subroutine acceleration(X, A)
 !
 !  The purpose of this subroutine is the calculation of the accelerations based on the
 !  gravitational force. It takes the positions and masses of the objects as arguments and
 !  delivers the acceleration in terms of xyz-components.
 !
 use types
+use input_module, only: mass, mass_2, mass_acc, mass_2_acc
 use shared_data, only: G
 implicit none
 
@@ -145,8 +146,6 @@ implicit none
 !  arguments to the routine:
 real(ep),dimension(:,:),intent(in) :: X         ! position array (m)
 real(ep),dimension(:,:),intent(out) :: A        ! acceleration (m/s^2)
-real(dp),dimension(:),intent(in) :: mass        ! the masses of the objects (kg)
-real(dp),dimension(:,:),intent(in) :: mass_2    ! mass-products of all object-pairs (kg^2)
 
 ! internal variables:
 real(ep),dimension(size(mass),size(mass)) :: R   ! distances between objects (m)
@@ -171,15 +170,86 @@ do k = 1 , 3
     do i = 1 , size(mass)
         do j = 1 , size(mass)
             if (i /= j) then
-                A(i,k) = A(i,k) + ((mass_2(i,j) / R2(i,j)) * ((X(j,k) - X(i,k)) / R(i,j)))
+                A(i,k) = A(i,k) + ((mass_2_acc(i,j) / R2(i,j)) * ((X(j,k) - X(i,k)) / R(i,j)))
             endif
         enddo
-        A(i,k) = A(i,k) * (G / mass(i))
+        A(i,k) = A(i,k) * (G / mass_acc(i))
     enddo
 enddo
 
+!do i = 1, size(mass)-1
+!    do j = i+1, size(mass)
+!        write(*,*) i, j, R(i,j)
+!    enddo
+!enddo
+!do i = 1, size(mass)
+!    write(*,*) A(i,1)
+!    write(*,*) A(i,2)
+!    write(*,*) A(i,3)
+!    write(*,*) "------------------------------"
+!enddo
+!write(*,*) "=============================="
+
 
 end subroutine acceleration
+
+!##################################################################################################
+!##################################################################################################
+
+subroutine acceleration2(X, A)
+!
+!  The purpose of this subroutine is the calculation of the accelerations based on the
+!  gravitational force. It takes the positions and masses of the objects as arguments and
+!  delivers the acceleration in terms of xyz-components. This is an alternative implementation
+!  using explicit loops.
+!
+use types
+use input_module, only: mass, mass_2, mass_acc, mass_2_acc
+use shared_data, only: G
+implicit none
+
+
+!  arguments to the routine:
+real(ep),dimension(:,:),intent(in) :: X         ! position array (m)
+real(ep),dimension(:,:),intent(out) :: A        ! acceleration (m/s^2)
+
+! internal variables:
+real(ep),dimension(size(mass),size(mass)) :: R  ! distances between objects (m)
+real(ep),dimension(size(mass),size(mass)) :: R2 ! squares of the distances (m^2)
+integer(st) :: i, j, k                          ! counting indices for the loops
+integer(st) :: Nobj                             ! the number of objects in the system
+
+Nobj = size(mass)
+
+A = 0.0
+do i = 1, Nobj
+    do j = i + 1, Nobj
+        R2(i,j) = (X(j,1) - X(i,1))**2 &
+                + (X(j,2) - X(i,2))**2 &
+                + (X(j,3) - X(i,3))**2
+        R(i,j) = sqrt(R2(i,j))
+        do k = 1, 3
+            A(i,k) = A(i,k) + ((mass_2_acc(i,j) / R2(i,j)) * ((X(j,k) - X(i,k)) / R(i,j)))
+            A(j,k) = A(j,k) + ((mass_2_acc(i,j) / R2(i,j)) * ((X(i,k) - X(j,k)) / R(i,j)))
+        enddo
+    enddo
+    A(i,:) = A(i,:) * G / mass_acc(i)
+enddo
+
+!do i = 1, size(mass)-1
+!    do j = i+1, size(mass)
+!        write(*,*) i, j, R(i,j)
+!    enddo
+!enddo
+!do i = 1, size(mass)
+!    write(*,*) A(i,1)
+!    write(*,*) A(i,2)
+!    write(*,*) A(i,3)
+!    write(*,*) "------------------------------"
+!enddo
+!write(*,*) "=============================="
+
+end subroutine acceleration2
 
 
 !##################################################################################################

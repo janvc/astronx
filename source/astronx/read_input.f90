@@ -37,8 +37,10 @@ real(dp),protected :: redmax                                    ! maximum reduct
 real(dp),protected :: init_step                                 ! the initial value for the timestep
 real(dp),protected :: total_mass                                ! the total mass of the system (kg)
 real(dp),dimension(:),allocatable,protected :: mass             ! masses of the objects (kg)
+real(ep),dimension(:),allocatable,protected :: mass_acc         ! test for the acceleration routine
 character(len=50),dimension(:),allocatable,protected :: names   ! the names of the objects
 real(dp),dimension(:,:),allocatable,protected :: mass_2         ! mass-products of all object-pairs (kg^2)
+real(ep),dimension(:,:),allocatable,protected :: mass_2_acc     ! as above...
 character(len=100),protected :: name_directory                  ! directory that will be created for the output
 logical,protected :: do_restart                                 ! create a restart file at every write step
 logical,protected :: do_steps                                   ! create a file containing information about the steps
@@ -298,6 +300,8 @@ endif
 allocate(names(N_obj))
 allocate(mass(N_obj))
 allocate(mass_2(N_obj,N_obj))
+allocate(mass_acc(N_obj))
+allocate(mass_2_acc(N_obj,N_obj))
 allocate(X(N_obj,3))
 allocate(V(N_obj,3))
 
@@ -321,6 +325,9 @@ close(input)
 forall ( i=1:N_obj, k=1:N_obj, i/=k )
     mass_2(i,k) = mass(i) * mass(k)
 end forall
+
+mass_acc = real(mass, ep)
+mass_2_acc = real(mass_2, ep)
 
 ! calculate the total system mass:
 total_mass = 0.0_dp

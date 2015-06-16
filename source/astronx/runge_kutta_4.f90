@@ -81,11 +81,6 @@ propagation: do
         endif
     endif
 
-!    if (do_steps) then
-!        write(steps,'("# Stepsize Error Time")')
-!    endif
-
-
     call rk4nr_onestep(timestep, h_did, X_int, V_int, X_tmp, V_tmp, delta, N_rksteps)
 
     if (underflow) exit propagation
@@ -129,7 +124,7 @@ subroutine rk4nr_onestep(h_try, h_did, X_old, V_old, X_new, V_new, delta, N_rkst
 !
 use types
 use shared_data, only: elapsed_time, output, steps, underflow
-use input_module, only: mass, mass_2, eps, do_steps, min_step, redmin, redmax
+use input_module, only: eps, do_steps, min_step, redmin, redmax
 use astronx_utils, only: acceleration, radius_of_gyration
 implicit none
 
@@ -162,7 +157,7 @@ real(ep),dimension(size(X_old,1),3) :: dV_scal  ! scaled velocity deviation
 
 ! we only have to calculate this once at the start
 step = h_try
-call acceleration(X_old, A_start, mass, mass_2)
+call acceleration(X_old, A_start)
 call radius_of_gyration(X_old, gyrate)
 V_avg = sum(abs(V_old)) / real(3*size(X_old,1),ep)
 
@@ -177,7 +172,7 @@ main_loop: do
 
     ! do two steps with half the length:
     call rk4nr_smallstep(X_old, V_old, X_mid, V_mid, A_start, half_step)
-    call acceleration(X_mid, A_mid, mass, mass_2)
+    call acceleration(X_mid, A_mid)
     call rk4nr_smallstep(X_mid, V_mid, X_end2, V_end2, A_mid, half_step)
 
     dX_scal = abs((X_end2 - X_end1) / gyrate)
@@ -185,7 +180,7 @@ main_loop: do
     delta = (sum(dX_scal) + sum(dV_scal)) / real(6*size(X_old,1),ep)
 
     if (do_steps) then
-        write(steps,'("  ",es16.5,"  ",es16.5,"  ",es16.8)') step, delta, elapsed_time
+        write(steps,'("  ",es16.8,"  ",es16.5,"  ",es16.5)') elapsed_time, step, delta
         flush(steps)
     endif
 
@@ -223,7 +218,7 @@ subroutine rk4nr_smallstep(X_old, V_old, X_new, V_new, A_old, step)
 ! acceleration calculations.
 !
 use types
-use input_module, only: mass, mass_2, do_rk4mid
+use input_module, only: do_rk4mid
 use astronx_utils, only: acceleration
 implicit none
 
@@ -270,21 +265,21 @@ if (do_rk4mid) then
     V_tmp1 = V_old + half_step * A_old
 
     ! calculate the first temporary acceleration:
-    call acceleration(X_tmp1, A_int1, mass, mass_2)
+    call acceleration(X_tmp1, A_int1)
 
     ! do the second step:
     X_tmp2 = X_old + half_step * V_tmp1
     V_tmp2 = V_old + half_step * A_int1
 
     ! calculate the second temporary acceleration:
-    call acceleration(X_tmp2, A_int2, mass, mass_2)
+    call acceleration(X_tmp2, A_int2)
 
     ! do the third step:
     X_tmp3 = X_old + step * V_tmp2
     V_tmp3 = V_old + step * A_int2
 
     ! calculate the acceleration at the end:
-    call acceleration(X_tmp3, A_int3, mass, mass_2)
+    call acceleration(X_tmp3, A_int3)
 
     ! do the final step:
     X_new = X_old + sixth_step * (V_old + V_tmp3 + 2.0_ep * (V_tmp1 + V_tmp2))
@@ -302,21 +297,21 @@ else
     V_tmp1 = V_old + third_step * A_old
 
     ! calculate the first temporary acceleration:
-    call acceleration(X_tmp1, A_int1, mass, mass_2)
+    call acceleration(X_tmp1, A_int1)
 
     ! do the second step:
     X_tmp2 = X_old + twothird_step * V_tmp1
     V_tmp2 = V_old + twothird_step * A_int1
 
     ! calculate the second temporary acceleration:
-    call acceleration(X_tmp2, A_int2, mass, mass_2)
+    call acceleration(X_tmp2, A_int2)
 
     ! do the third step:
     X_tmp3 = X_old + step * V_tmp2
     V_tmp3 = V_old + step * A_int2
 
     ! calculate the acceleration at the end:
-    call acceleration(X_tmp3, A_int3, mass, mass_2)
+    call acceleration(X_tmp3, A_int3)
 
     ! do the final step:
     X_new = X_old + eighth_step * (V_old + V_tmp3 + 3.0_ep * (V_tmp1 + V_tmp2))
