@@ -35,7 +35,7 @@ subroutine bs_largestep(h_start, h_next, X, V, N_ok, N_fail, N_bstotal, N_smallt
 !
 use types
 use shared_data, only: elapsed_time, underflow
-use input_module, only: eps, tout, maxinc, inc_thres, do_unrestrictedprop
+use input_module, only: eps, tout, maxinc, inc_thres, do_unrestrictedprop, min_step
 implicit none
 
 
@@ -62,6 +62,7 @@ real(ep),dimension(size(X,1),3) :: X_int    ! input to bs_onestep
 real(ep),dimension(size(X,1),3) :: V_int    ! input to bs_onestep
 real(ep),dimension(size(X,1),3) :: X_tmp    ! output of bs_onestep
 real(ep),dimension(size(X,1),3) :: V_tmp    ! output of bs_onestep
+logical :: success                          ! did bs_onestep converge with the initial stepsize?
 
 ! initializing:
 internal_elapsed_time = 0.0_ep
@@ -77,21 +78,21 @@ V_int = real(V,ep)
 propagation: do
 
     ! for a normal propagation, the stepsize must not overshoot, so it
-    ! will be reduced (adding 50 seconds to avoid numerical instabilities):
+    ! will be reduced (adding the minimum step to avoid numerical instabilities):
     if (.not. do_unrestrictedprop) then
-        if (internal_elapsed_time + timestep + 50.0_ep > real(tout,ep)) then
+        if (internal_elapsed_time + timestep + min_step > real(tout,ep)) then
             timestep = real(tout,ep) - internal_elapsed_time
         endif
     endif
 
-    call bs_onestep(timestep, h_did, X_int, V_int, X_tmp, V_tmp, nsteps, delta, N_bssteps, N_smallsteps)
+    call bs_onestep(timestep, h_did, X_int, V_int, X_tmp, V_tmp, nsteps, delta, N_bssteps, N_smallsteps, success)
 
     if (underflow) exit propagation
 
     N_bstotal = N_bstotal + N_bssteps
     N_smalltotal = N_smalltotal + N_smallsteps
 
-    if (h_did == timestep) then     ! did it converge with the attempted step?
+    if (success) then                   ! did it converge with the attempted step?
         if (nsteps <= inc_thres) then   ! if it took less than 'inc_thres' steps, then increase stepsize
             factor = (eps / delta)**(1.0_ep / real(nsteps,ep))
             timestep = h_did * min(factor,real(maxinc,ep))
@@ -120,7 +121,7 @@ end subroutine bs_largestep
 !############################################################################################################
 !############################################################################################################
 
-subroutine bs_onestep(h_try, h_did, X_old, V_old, X_new, V_new, nsteps, delta, N_bssteps, N_smallsteps)
+subroutine bs_onestep(h_try, h_did, X_old, V_old, X_new, V_new, nsteps, delta, N_bssteps, N_smallsteps, success)
 !
 ! this routine does one BS step consisting of repeated propagation and extrapolation to zero stepsize using
 ! an increasing number of substeps. If convergence can not be achieved, the propagation will be tried again
@@ -144,6 +145,7 @@ integer(st),intent(out) :: nsteps               ! number of steps needed to conv
 real(ep),intent(out) :: delta                   ! error estimate after convergence
 integer(st),intent(out) :: N_bssteps            ! number of BS steps performed
 integer(st),intent(out) :: N_smallsteps         ! number of substeps performed
+logical,intent(out) :: success                  ! did we converge with the initial stepsize?
 
 ! internal variables:
 integer(st) :: i!, j                            ! loop index
@@ -164,7 +166,7 @@ real(ep),dimension(size(X_old,1),3) :: dV_scal  ! scaled error in the velocities
 
 
 ! we only have to calculate this once at the start:
-call acceleration(X_old, A_start)
+call acceleration2(X_old, A_start)
 call radius_of_gyration(X_old, gyrate)
 V_avg = sum(abs(V_old)) / real(3*size(X_old,1),ep)
 
@@ -175,6 +177,7 @@ if (do_steps) then
 endif
 N_bssteps = 0
 N_smallsteps = 0
+success = .true.
 
 main_loop: do
     N_bssteps = N_bssteps + 1
@@ -183,7 +186,7 @@ main_loop: do
         call bs_substeps(X_old, V_old, X_tmp, V_tmp, A_start, i, h)
 
         N_smallsteps = N_smallsteps + i
-        h_est = ( h / real(i, ep)) * ( h / real(i, ep))
+        h_est = ( h / real(i, ep))**2
 
         call extrapolate(i, h_est, X_tmp, V_tmp, X_extr, V_extr, dX, dV)
 
@@ -205,6 +208,9 @@ main_loop: do
             exit main_loop
         endif
     enddo
+
+    ! if we reach this point, we did not converge with the initial trial stepsize
+    success = .false.
 
     if (h <= real(min_step,ep)) then
         write(output,'("WARNING: No convergence with minimum stepsize. Aborting!")')
@@ -273,13 +279,13 @@ A_int = A_start
 
 ! the remaining steps:
 do i = 2, nsteps
-    call acceleration(X_temp, A_int)
+    call acceleration2(X_temp, A_int)
     X_step = X_step + step_2 * A_int
     X_temp = X_temp + X_step
 enddo
 
 ! calculate the velocity at the end of the intervall:
-call acceleration(X_temp, A_int)
+call acceleration2(X_temp, A_int)
 V_new = X_step / step + half_step * A_int
 X_new = X_temp
 

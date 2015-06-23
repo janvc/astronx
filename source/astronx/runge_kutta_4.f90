@@ -60,6 +60,7 @@ real(ep),dimension(size(X,1),3) :: X_int    ! input to rk4nr_onestep
 real(ep),dimension(size(X,1),3) :: V_int    ! input to rk4nr_onestep
 real(ep),dimension(size(X,1),3) :: X_tmp    ! output of rk4nr_onestep
 real(ep),dimension(size(X,1),3) :: V_tmp    ! output of rk4nr_onestep
+logical :: success                          ! did we converge with the initial stepsize?
 
 ! initializing:
 internal_elapsed_time = 0.0_ep
@@ -81,13 +82,13 @@ propagation: do
         endif
     endif
 
-    call rk4nr_onestep(timestep, h_did, X_int, V_int, X_tmp, V_tmp, delta, N_rksteps)
+    call rk4nr_onestep(timestep, h_did, X_int, V_int, X_tmp, V_tmp, delta, N_rksteps, success)
 
     if (underflow) exit propagation
 
     N_rktotal = N_rktotal + N_rksteps
 
-    if (h_did == timestep) then   ! did it converge with the attempted stepsize?
+    if (success) then             ! did it converge with the attempted stepsize?
         if (delta < epsinc) then  ! then increase it for the next step, but only if the error is smaller
             factor = (eps / delta) ** 0.2_ep                    ! than 90% of the tolerance
             timestep = h_did * min(factor, real(maxinc, ep))
@@ -116,7 +117,7 @@ end subroutine rk4nr_largestep
 !############################################################################################################
 !############################################################################################################
 
-subroutine rk4nr_onestep(h_try, h_did, X_old, V_old, X_new, V_new, delta, N_rksteps)
+subroutine rk4nr_onestep(h_try, h_did, X_old, V_old, X_new, V_new, delta, N_rksteps, success)
 !
 ! this subroutine performs one Runge-Kutta-step with a given stepsize and returs an error estimate by
 ! doing the same step again, using two successive steps of half the stepsize. The difference between the
@@ -125,7 +126,7 @@ subroutine rk4nr_onestep(h_try, h_did, X_old, V_old, X_new, V_new, delta, N_rkst
 use types
 use shared_data, only: elapsed_time, output, steps, underflow
 use input_module, only: eps, do_steps, min_step, redmin, redmax
-use astronx_utils, only: acceleration, radius_of_gyration
+use astronx_utils, only: acceleration, acceleration2, radius_of_gyration
 implicit none
 
 ! arguments to the routine:
@@ -137,6 +138,7 @@ real(ep),intent(out),dimension(:,:) :: X_new    ! new positions
 real(ep),intent(out),dimension(:,:) :: V_new    ! new velocities
 real(ep),intent(out) :: delta                   ! error estimate after convergence
 integer(st),intent(out) :: N_rksteps            ! number of Runge-Kutta-steps needed to converge
+logical,intent(out) :: success                  ! did we converge with the initial stepsize?
 
 ! internal variables:
 real(ep) :: step                                ! the stepsize for the current attempt
@@ -157,11 +159,12 @@ real(ep),dimension(size(X_old,1),3) :: dV_scal  ! scaled velocity deviation
 
 ! we only have to calculate this once at the start
 step = h_try
-call acceleration(X_old, A_start)
+call acceleration2(X_old, A_start)
 call radius_of_gyration(X_old, gyrate)
 V_avg = sum(abs(V_old)) / real(3*size(X_old,1),ep)
 
 N_rksteps = 0
+success = .true.
 
 main_loop: do
     N_rksteps = N_rksteps + 1
@@ -172,7 +175,7 @@ main_loop: do
 
     ! do two steps with half the length:
     call rk4nr_smallstep(X_old, V_old, X_mid, V_mid, A_start, half_step)
-    call acceleration(X_mid, A_mid)
+    call acceleration2(X_mid, A_mid)
     call rk4nr_smallstep(X_mid, V_mid, X_end2, V_end2, A_mid, half_step)
 
     dX_scal = abs((X_end2 - X_end1) / gyrate)
@@ -190,6 +193,9 @@ main_loop: do
         h_did = step
         exit main_loop
     endif
+
+    ! if we reach this point, we did not converge with the initial trial stepsize
+    success = .false.
 
     if (step <= real(min_step,ep)) then
         write(output,'("WARNING: No convergence with minimum stepsize. Aborting!")')
@@ -219,7 +225,7 @@ subroutine rk4nr_smallstep(X_old, V_old, X_new, V_new, A_old, step)
 !
 use types
 use input_module, only: do_rk4mid
-use astronx_utils, only: acceleration
+use astronx_utils, only: acceleration, acceleration2
 implicit none
 
 ! arguments to the routine:
@@ -265,21 +271,21 @@ if (do_rk4mid) then
     V_tmp1 = V_old + half_step * A_old
 
     ! calculate the first temporary acceleration:
-    call acceleration(X_tmp1, A_int1)
+    call acceleration2(X_tmp1, A_int1)
 
     ! do the second step:
     X_tmp2 = X_old + half_step * V_tmp1
     V_tmp2 = V_old + half_step * A_int1
 
     ! calculate the second temporary acceleration:
-    call acceleration(X_tmp2, A_int2)
+    call acceleration2(X_tmp2, A_int2)
 
     ! do the third step:
     X_tmp3 = X_old + step * V_tmp2
     V_tmp3 = V_old + step * A_int2
 
     ! calculate the acceleration at the end:
-    call acceleration(X_tmp3, A_int3)
+    call acceleration2(X_tmp3, A_int3)
 
     ! do the final step:
     X_new = X_old + sixth_step * (V_old + V_tmp3 + 2.0_ep * (V_tmp1 + V_tmp2))
@@ -297,21 +303,21 @@ else
     V_tmp1 = V_old + third_step * A_old
 
     ! calculate the first temporary acceleration:
-    call acceleration(X_tmp1, A_int1)
+    call acceleration2(X_tmp1, A_int1)
 
     ! do the second step:
     X_tmp2 = X_old + twothird_step * V_tmp1
     V_tmp2 = V_old + twothird_step * A_int1
 
     ! calculate the second temporary acceleration:
-    call acceleration(X_tmp2, A_int2)
+    call acceleration2(X_tmp2, A_int2)
 
     ! do the third step:
     X_tmp3 = X_old + step * V_tmp2
     V_tmp3 = V_old + step * A_int2
 
     ! calculate the acceleration at the end:
-    call acceleration(X_tmp3, A_int3)
+    call acceleration2(X_tmp3, A_int3)
 
     ! do the final step:
     X_new = X_old + eighth_step * (V_old + V_tmp3 + 3.0_ep * (V_tmp1 + V_tmp2))

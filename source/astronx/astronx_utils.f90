@@ -138,7 +138,7 @@ subroutine acceleration(X, A)
 !  delivers the acceleration in terms of xyz-components.
 !
 use types
-use input_module, only: mass, mass_2, mass_acc, mass_2_acc
+use input_module, only: mass, mass_acc, mass_2_acc
 use shared_data, only: G
 implicit none
 
@@ -204,7 +204,7 @@ subroutine acceleration2(X, A)
 !  using explicit loops.
 !
 use types
-use input_module, only: mass, mass_2, mass_acc, mass_2_acc
+use input_module, only: mass_acc, mass_2_acc
 use shared_data, only: G
 implicit none
 
@@ -214,34 +214,59 @@ real(ep),dimension(:,:),intent(in) :: X         ! position array (m)
 real(ep),dimension(:,:),intent(out) :: A        ! acceleration (m/s^2)
 
 ! internal variables:
-real(ep),dimension(size(mass),size(mass)) :: R  ! distances between objects (m)
-real(ep),dimension(size(mass),size(mass)) :: R2 ! squares of the distances (m^2)
-integer(st) :: i, j, k                          ! counting indices for the loops
-integer(st) :: Nobj                             ! the number of objects in the system
+real(ep),dimension(size(mass_acc),size(mass_acc)) :: R  ! distances between objects (m)
+real(ep),dimension(size(mass_acc),size(mass_acc)) :: R2 ! squares of the distances (m^2)
+integer(st) :: i, j                                     ! counting indices for the loops
+integer(st) :: Nobj                                     ! the number of objects in the system
+real(ep) :: G_here                                      ! local extended precision version of G
+real(ep) :: mass_factor                                 ! temporary factor for force calculation
+real(ep) :: force_factor                                ! another one
+real(ep),dimension(size(mass_acc),size(mass_acc)) :: dX ! differences in X
+real(ep),dimension(size(mass_acc),size(mass_acc)) :: dY ! differences in Y
+real(ep),dimension(size(mass_acc),size(mass_acc)) :: dZ ! differences in Z
 
-Nobj = size(mass)
 
-A = 0.0
+Nobj = size(mass_acc)
+G_here = real(G, ep)
+dX = 0.0_ep
+dY = 0.0_ep
+dZ = 0.0_ep
+R2 = 0.0_ep
+R = 0.0_ep
+A = 0.0_ep
+
 do i = 1, Nobj
     do j = i + 1, Nobj
-        R2(i,j) = (X(j,1) - X(i,1))**2 &
-                + (X(j,2) - X(i,2))**2 &
-                + (X(j,3) - X(i,3))**2
+        dX(i,j) = X(j,1) - X(i,1)
+        dX(j,i) = -dX(i,j)
+        dY(i,j) = X(j,2) - X(i,2)
+        dY(j,i) = -dY(i,j)
+        dZ(i,j) = X(j,3) - X(i,3)
+        dZ(j,i) = -dZ(i,j)
+        R2(i,j) = dX(i,j)**2 + dY(i,j)**2 + dZ(i,j)**2
         R(i,j) = sqrt(R2(i,j))
-        do k = 1, 3
-            A(i,k) = A(i,k) + ((mass_2_acc(i,j) / R2(i,j)) * ((X(j,k) - X(i,k)) / R(i,j)))
-            A(j,k) = A(j,k) + ((mass_2_acc(i,j) / R2(i,j)) * ((X(i,k) - X(j,k)) / R(i,j)))
-        enddo
+        R2(j,i) = R2(i,j)
+        R(j,i) = R(i,j)
+        mass_factor = mass_2_acc(i,j) / R2(i,j)
+        A(i,1) = A(i,1) + (mass_factor * (dX(i,j) / R(i,j)))
+        A(i,2) = A(i,2) + (mass_factor * (dY(i,j) / R(i,j)))
+        A(i,3) = A(i,3) + (mass_factor * (dZ(i,j) / R(i,j)))
+        A(j,1) = A(j,1) - (mass_factor * (dX(i,j) / R(i,j)))
+        A(j,2) = A(j,2) - (mass_factor * (dY(i,j) / R(i,j)))
+        A(j,3) = A(j,3) - (mass_factor * (dZ(i,j) / R(i,j)))
     enddo
-    A(i,:) = A(i,:) * G / mass_acc(i)
+    force_factor = G_here / mass_acc(i)
+    A(i,1) = A(i,1) * force_factor
+    A(i,2) = A(i,2) * force_factor
+    A(i,3) = A(i,3) * force_factor
 enddo
 
-!do i = 1, size(mass)-1
-!    do j = i+1, size(mass)
+!do i = 1, Nobj
+!    do j = i+1, Nobj
 !        write(*,*) i, j, R(i,j)
 !    enddo
 !enddo
-!do i = 1, size(mass)
+!do i = 1, Nobj
 !    write(*,*) A(i,1)
 !    write(*,*) A(i,2)
 !    write(*,*) A(i,3)
