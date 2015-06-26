@@ -271,6 +271,86 @@ enddo
 
 end subroutine acceleration2
 
+!##################################################################################################
+!##################################################################################################
+
+subroutine accelerationP(X, A)
+!
+!  The purpose of this subroutine is the calculation of the accelerations based on the
+!  gravitational force. It takes the positions and masses of the objects as arguments and
+!  delivers the acceleration in terms of xyz-components. This is a parallel implementation
+!  using the OpenMP API
+!
+use types
+use input_module, only: mass_acc, mass_2_acc
+use shared_data, only: G
+implicit none
+
+
+! arguments to the routine:
+real(ep),dimension(:,:),intent(in) :: X     ! position array (m)
+real(ep),dimension(:,:),intent(out) :: A    ! acceleration (m/s^2)
+
+! internal variables:
+real(ep) :: R2                              ! squares of the distances between objects (m^2)
+integer(st) :: i, j                         ! counting indices for the loops
+integer(st) :: Nobj                         ! the number of objects in the system
+real(ep) :: G_here                          ! local extended precision version of G
+real(ep) :: mass_factor                     ! temporary factor for force calculation
+real(ep) :: force_factor                    ! another one
+real(ep) :: dX                              ! differences in X
+real(ep) :: dY                              ! differences in Y
+real(ep) :: dZ                              ! differences in Z
+
+Nobj = size(mass_acc)
+G_here = real(G, ep)
+dX = 0.0_ep
+dY = 0.0_ep
+dZ = 0.0_ep
+R2 = 0.0_ep
+A = 0.0_ep
+
+!$omp parallel default(none) &
+!$omp shared(Nobj, X, A, G_here, mass_2_acc, mass_acc) &
+!$omp private(i, j, mass_factor, force_factor, dX, dY, dZ, R2)
+
+!$omp do reduction(+:A)
+do i = 1, Nobj - 1
+    do j = i + 1, Nobj
+        dX = X(j,1) - X(i,1)
+        dY = X(j,2) - X(i,2)
+        dZ = X(j,3) - X(i,3)
+        R2 = dX**2 + dY**2 + dZ**2
+        mass_factor = mass_2_acc(i,j) / (R2 * sqrt(R2))
+        A(i,1) = A(i,1) + mass_factor * dX
+        A(i,2) = A(i,2) + mass_factor * dY
+        A(i,3) = A(i,3) + mass_factor * dZ
+        A(j,1) = A(j,1) - mass_factor * dX
+        A(j,2) = A(j,2) - mass_factor * dY
+        A(j,3) = A(j,3) - mass_factor * dZ
+    enddo
+enddo
+!$omp end do
+
+!$omp do
+do i = 1, Nobj
+    force_factor = G_here / mass_acc(i)
+    A(i,1) = A(i,1) * force_factor
+    A(i,2) = A(i,2) * force_factor
+    A(i,3) = A(i,3) * force_factor
+enddo
+!$omp end do
+!$omp end parallel
+
+!do i = 1, Nobj
+!    write(*,'("  ", es20.13)') A(i,1)
+!    write(*,'("  ", es20.13)') A(i,2)
+!    write(*,'("  ", es20.13)') A(i,3)
+!    write(*,*) "------------------------------"
+!enddo
+!write(*,*) "===================================="
+
+end subroutine accelerationP
 
 !##################################################################################################
 !##################################################################################################

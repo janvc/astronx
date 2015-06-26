@@ -130,7 +130,7 @@ subroutine bs_onestep(h_try, h_did, X_old, V_old, X_new, V_new, nsteps, delta, N
 use types
 use shared_data, only: steps, output, elapsed_time, underflow
 use input_module, only: eps, maxsubstep, min_step, redmin, redmax, do_steps
-use astronx_utils, only: scale_error, acceleration, acceleration2, radius_of_gyration
+use astronx_utils, only: scale_error, acceleration, acceleration2, accelerationP, radius_of_gyration
 implicit none
 
 
@@ -166,7 +166,7 @@ real(ep),dimension(size(X_old,1),3) :: dV_scal  ! scaled error in the velocities
 
 
 ! we only have to calculate this once at the start:
-call acceleration2(X_old, A_start)
+call accelerationP(X_old, A_start)
 call radius_of_gyration(X_old, gyrate)
 V_avg = sum(abs(V_old)) / real(3*size(X_old,1),ep)
 
@@ -241,7 +241,7 @@ subroutine bs_substeps(X_old, V_old, X_new, V_new, A_start, nsteps, total_step)
 !
 use types
 use input_module, only: N_obj
-use astronx_utils, only: acceleration, acceleration2
+use astronx_utils, only: acceleration, acceleration2, accelerationP
 implicit none
 
 
@@ -279,13 +279,13 @@ A_int = A_start
 
 ! the remaining steps:
 do i = 2, nsteps
-    call acceleration2(X_temp, A_int)
+    call accelerationP(X_temp, A_int)
     X_step = X_step + step_2 * A_int
     X_temp = X_temp + X_step
 enddo
 
 ! calculate the velocity at the end of the intervall:
-call acceleration2(X_temp, A_int)
+call accelerationP(X_temp, A_int)
 V_new = X_step / step + half_step * A_int
 X_new = X_temp
 
