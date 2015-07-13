@@ -26,6 +26,7 @@ implicit none
 integer(st),protected :: N_obj                                  ! number of objects to be simulated
 integer(st),protected :: maxsubstep                             ! maximum number of substeps in one BS-step
 integer(st),protected :: inc_thres                              ! number of substeps below which the stepsize will be increased
+integer(st),protected :: nproc                                  ! number of processors to use when parallelizing (1 = not parallel)
 real(dp),protected :: tfinal                                    ! the total length of the simulation (s)
 real(dp),protected :: tout                                      ! intervall of successive writes to the trajectory
 real(dp),protected :: eps                                       ! the error tolerance for the propagation
@@ -142,6 +143,7 @@ rewind(input)
 ! set the default values for all input parameters:
 maxsubstep = 12
 inc_thres = 8
+nproc = 1
 eps = 1.0e-6_dp
 eps_thres = 0.9_dp
 min_step = 100.0_dp
@@ -199,6 +201,8 @@ do i=1 , number_of_lines
             read(paraValue,*) maxsubstep
         else if (index(keyword, "inc_thres") /= 0) then
             read(paraValue,*) inc_thres
+        else if (index(keyword, "nproc") /= 0) then
+            read(paraValue,*) nproc
         else if (index(keyword, "min_step") /= 0) then
             read(paraValue,*) min_step
         else if (index(keyword, "maxinc") /= 0) then

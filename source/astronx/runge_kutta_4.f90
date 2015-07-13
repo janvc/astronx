@@ -170,13 +170,32 @@ main_loop: do
     N_rksteps = N_rksteps + 1
     half_step = step * 0.5_ep
 
-    ! do one large step:
-    call rk4nr_smallstep(X_old, V_old, X_end1, V_end1, A_start, step)
+    if (nproc > 1) then     ! do this in parallel
+        !$omp parallel
 
-    ! do two steps with half the length:
-    call rk4nr_smallstep(X_old, V_old, X_mid, V_mid, A_start, half_step)
-    call accelerationP(X_mid, A_mid)
-    call rk4nr_smallstep(X_mid, V_mid, X_end2, V_end2, A_mid, half_step)
+        !$omp parallel sections
+
+        !$omp section
+        ! do one large step:
+        call rk4nr_smallstep(X_old, V_old, X_end1, V_end1, A_start, step)
+
+        !$omp section
+        ! do two steps with half the length:
+        call rk4nr_smallstep(X_old, V_old, X_mid, V_mid, A_start, half_step)
+        call accelerationP(X_mid, A_mid)
+        call rk4nr_smallstep(X_mid, V_mid, X_end2, V_end2, A_mid, half_step)
+        !$omp end sections
+
+        !$omp end parallel
+    else
+        ! do one large step:
+        call rk4nr_smallstep(X_old, V_old, X_end1, V_end1, A_start, step)
+
+        ! do two steps with half the length:
+        call rk4nr_smallstep(X_old, V_old, X_mid, V_mid, A_start, half_step)
+        call accelerationP(X_mid, A_mid)
+        call rk4nr_smallstep(X_mid, V_mid, X_end2, V_end2, A_mid, half_step)
+    endif
 
     dX_scal = abs((X_end2 - X_end1) / gyrate)
     dV_scal = abs((V_end2 - V_end1) / V_avg)
