@@ -177,20 +177,6 @@ do k = 1 , 3
     enddo
 enddo
 
-!do i = 1, size(mass)-1
-!    do j = i+1, size(mass)
-!        write(*,*) i, j, R(i,j)
-!    enddo
-!enddo
-!do i = 1, size(mass)
-!    write(*,*) A(i,1)
-!    write(*,*) A(i,2)
-!    write(*,*) A(i,3)
-!    write(*,*) "------------------------------"
-!enddo
-!write(*,*) "=============================="
-
-
 end subroutine acceleration
 
 !##################################################################################################
