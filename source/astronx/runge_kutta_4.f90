@@ -125,7 +125,7 @@ subroutine rk4nr_onestep(h_try, h_did, X_old, V_old, X_new, V_new, delta, N_rkst
 !
 use types
 use shared_data, only: elapsed_time, output, steps, underflow
-use input_module, only: eps, do_steps, min_step, redmin, redmax
+use input_module, only: eps, do_steps, min_step, redmin, redmax, nproc
 use astronx_utils, only: acceleration, acceleration2, accelerationP, radius_of_gyration
 implicit none
 
@@ -173,7 +173,7 @@ main_loop: do
     if (nproc > 1) then     ! do this in parallel
         !$omp parallel
 
-        !$omp parallel sections
+        !$omp sections
 
         !$omp section
         ! do one large step:
