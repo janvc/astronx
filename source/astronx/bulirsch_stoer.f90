@@ -154,6 +154,9 @@ real(ep) :: h_est                               ! scaled and squared stepsize fo
 real(ep) :: factor                              ! factor by which to reduce the stepsize
 real(ep) :: gyrate                              ! the radius of gyration
 real(ep) :: V_avg                               ! the average velocity
+real(ep),save :: epsold = -1.0
+real(ep),dimension(maxsubstep+1) :: a           ! the work coefficients
+real(ep),dimension(maxsubstep,maxsubstep) :: alpha  ! other work coefficients
 real(ep),dimension(size(X_old,1),3) :: X_tmp    ! positions after propagation
 real(ep),dimension(size(X_old,1),3) :: V_tmp    ! velocities after propagation
 real(ep),dimension(size(X_old,1),3) :: X_extr   ! positions after extrapolation
@@ -163,6 +166,9 @@ real(ep),dimension(size(X_old,1),3) :: dV       ! velocity error after extrapola
 real(ep),dimension(size(X_old,1),3) :: A_start  ! acceleration at the beginning of the intervall
 real(ep),dimension(size(X_old,1),3) :: dX_scal  ! scaled error in the positions
 real(ep),dimension(size(X_old,1),3) :: dV_scal  ! scaled error in the velocities
+
+
+if (eps /= epsold) then
 
 
 ! we only have to calculate this once at the start:
