@@ -25,7 +25,7 @@ program astronx
 use types
 use shared_data, only: bin_trj, elapsed_time, output, steps, trajectory
 use input_module, only: names, mass, total_mass, do_steps, do_texttrj, name_directory, shift_cog, shift_mom, read_input, &
-                        process_cmd_arguments
+                        process_cmd_arguments, verbose
 use astronx_utils, only: show_input_parameters, shiftcog, shiftmom, centre_of_gravity, linear_momentum, angular_momentum
 use propagation
 implicit none
@@ -57,18 +57,18 @@ call read_input(input_file, X, V)
 call chdir(name_directory)
 
 ! open the output file for writing:
-open(unit=output,file=output_file,status="new",action="write",iostat=output_status)
+open(unit=output,file=output_file,status="replace",action="write",iostat=output_status)
 if (output_status /= 0) then
-    write(*,'("ERROR: failed to open output file: ",a30," status: ",i3)') output_file, output_status
+    write(*,'("ERROR: failed to open output file, status: ",i3)') output_status
     stop
 endif
 
 ! open the text trajectory file if requested:
 if (do_texttrj) then
-    open(unit=trajectory,file=traj_file,status="new",action="write",iostat=output_status)
+    open(unit=trajectory,file=traj_file,status="replace",action="write",iostat=output_status)
     if (output_status /= 0) then
-        write(*,'("ERROR: failed to open text trajectory file: ",a30," status: ",i3)') traj_file, output_status
-        write(output,'("ERROR: failed to open text trajectory file: ",a30," status: ",i3)') traj_file, output_status
+        write(*,'("ERROR: failed to open text trajectory file, status: ",i3)') output_status
+        write(output,'("ERROR: failed to open text trajectory file, status: ",i3)') output_status
         stop
     endif
     write(trajectory,'("# trajectory in gnuplot-friendly text form")')
@@ -87,19 +87,19 @@ endif
 
 ! open the steps file if requested:
 if (do_steps) then
-    open(unit=steps,file=steps_file,status="new",action="write",iostat=output_status)
+    open(unit=steps,file=steps_file,status="replace",action="write",iostat=output_status)
     if (output_status /= 0 ) then
-        write(*,'("ERROR: failed to open steps file:",a30," status: ",i3)')  steps_file, output_status
-        write(output,'("ERROR: failed to open steps file:",a30," status: ",i3)')  steps_file, output_status
+        write(*,'("ERROR: failed to open steps file, status: ",i3)')  output_status
+        write(output,'("ERROR: failed to open steps file, status: ",i3)')  output_status
         stop
     endif
 endif
 
 ! open the binary trajectory file:
-open(unit=bin_trj,file=bin_traj_file,status="new",action="write",iostat=output_status,form="unformatted")
+open(unit=bin_trj,file=bin_traj_file,status="replace",action="write",iostat=output_status,form="unformatted")
 if (output_status /= 0) then
-    write(*,'("ERROR: failed to open binary trajectory file: ",a30," status: ",i3)') bin_traj_file, output_status
-    write(output,'("ERROR: failed to open binary trajectory file: ",a30," status: ",i3)') bin_traj_file, output_status
+    write(*,'("ERROR: failed to open binary trajectory file, status: ",i3)') output_status
+    write(output,'("ERROR: failed to open binary trajectory file, status: ",i3)') output_status
     stop
 endif
 
@@ -122,6 +122,10 @@ write(output,'("\---------------------------------------------------------------
 write(output,*)
 write(output,*)
 write(output,*)
+if (verbose) then
+    write(*,'(" AstronX: A program for the simulation of celestial mechanics.")')
+    write(*,'(" Copyright 2012-2015 Jan von Cosel. Astronx is free software.")')
+endif
 
 ! write some information about the system to the output file:
 write(output,*)
@@ -237,6 +241,10 @@ write(output,'("                                 FINISHED THE PROPAGATION")')
 write(output,'("                           total cpu time:", f12.3, " seconds")') end_propcpu - start_propcpu
 write(output,'("  ----------------------------------------------------------------------------------")')
 
+if (verbose) then
+    write(*,*)
+    write(*,'(" Finished the propagation using ", f0.3, " s of CPU time.")') end_propcpu - start_propcpu
+endif
 
 
 !#####################################################################

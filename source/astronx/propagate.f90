@@ -32,7 +32,7 @@ subroutine propagate(X, V)
 !
 use types
 use shared_data, only: elapsed_time, restart, restart_file, output, steps, underflow
-use input_module, only: N_obj, mass, do_restart, tfinal, do_steps, init_step, do_bs, do_rk4mid
+use input_module, only: N_obj, mass, do_restart, tfinal, do_steps, init_step, do_bs, do_rk4mid, verbose
 use astronx_utils, only: write_to_trj
 use bulirsch_stoer, only: bs_largestep
 use runge_kutta_4_nr, only: rk4nr_largestep
@@ -75,6 +75,9 @@ if (do_bs) then
     write(output,*)
     write(output,'("       elapsed time      large steps      BS steps      small steps      cpu time [ms]")')
     write(output,'("                         good    bad")')
+    if (verbose) then
+        write(*,'(" Starting propagation with the Bulirsch-Stoer integrator")')
+    endif
 else
     write(output,'("                     *************************************************")')
     write(output,'("                     * USING THE RUNGE-KUTTA INTEGRATOR OF 4TH ORDER *")')
@@ -87,12 +90,19 @@ else
     write(output,*)
     write(output,'("       elapsed time      large steps              RK steps               cpu time [ms]")')
     write(output,'("                         good    bad")')
+    if (verbose) then
+        write(*,'(" Starting propagation with the Runge-Kutta integrator of fourth order")')
+    endif
 endif
 flush(output)
 
 ! here comes the real propagation loop:
 do
     call write_to_trj(elapsed_time, X, V)
+
+    if (verbose) then
+        call write_status(real(elapsed_time, dp), real(tfinal, dp))
+    endif
 
     if (do_restart) then
         open(unit=restart,file=restart_file,status="replace",action="write",iostat=restart_status)

@@ -65,7 +65,8 @@ implicit none
 
 ! internal variables:
 integer(st) :: i                ! loop index
-character(len=128) :: argument    ! command line argument template
+character(len=128) :: argument  ! command line argument template
+logical :: file_exists          ! to check if the file exists
 
 
 ! see if there are any arguments:
@@ -79,8 +80,14 @@ do i = 1, command_argument_count()
     call get_command_argument(i, argument)
     if (trim(argument) == "-w") then
         do_overwrite = .true.
+    elseif (trim(argument) == "-v") then
+        verbose = .true.
     else
-        ! check, if the argument is the input file...
+        inquire(file=trim(argument), exist=file_exists)
+        if (.not. file_exists) then
+            write(*,*) "ERROR: Input file ", trim(argument), " not found."
+            stop
+        endif
     endif
 enddo
 
@@ -336,10 +343,19 @@ do i=1, N_obj
 enddo
 
 ! create the name directory:
-call system(("mkdir "//name_directory), input_status)
-if (input_status /= 0) then
-    write(*,*) "ERROR: Could not create directory '", trim(name_directory), "'. Exiting."
-    stop
+inquire(file=name_directory, exist=test_name)
+if (test_name) then
+    if (.not. do_overwrite) then
+        write(*,*) "ERROR: The name directory '", trim(name_directory), "' already exists."
+        write(*,*) "Use the option '-w' to overwrite previous results."
+        stop
+    endif
+else
+    call system(("mkdir "//name_directory), input_status)
+    if (input_status /= 0) then
+        write(*,*) "ERROR: Could not create directory '", trim(name_directory), "'. Exiting."
+        stop
+    endif
 endif
 
 end subroutine read_input
