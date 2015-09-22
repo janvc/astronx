@@ -35,7 +35,7 @@ subroutine bs_largestep(h_start, h_next, X, V, N_ok, N_fail, N_bstotal, N_smallt
 !
 use types
 use shared_data, only: elapsed_time, underflow
-use input_module, only: eps, tout, maxinc, inc_thres, do_unrestrictedprop, min_step
+use input_module, only: tout, do_unrestrictedprop, min_step
 implicit none
 
 
@@ -57,7 +57,7 @@ real(ep) :: delta                           ! error estimate returned by bs_ones
 real(ep) :: internal_elapsed_time           ! what it says...
 real(ep) :: timestep                        ! attempted timestep for the next call to bs_onestep
 real(ep) :: h_did                           ! actually used stepsize in the last call to bs_onestep
-real(ep) :: factor                          ! factor by which to increase the stepsize
+real(ep) :: nextstep                        ! stepsize to be used in the next step
 real(ep),dimension(size(X,1),3) :: X_int    ! input to bs_onestep
 real(ep),dimension(size(X,1),3) :: V_int    ! input to bs_onestep
 real(ep),dimension(size(X,1),3) :: X_tmp    ! output of bs_onestep
@@ -85,25 +85,16 @@ propagation: do
         endif
     endif
 
-    call bs_onestep(timestep, h_did, X_int, V_int, X_tmp, V_tmp, nsteps, delta, N_bssteps, N_smallsteps, success)
+    call bs_onestep(internal_elapsed_time, timestep, h_did, nextstep, &
+        X_int, V_int, X_tmp, V_tmp, nsteps, delta, N_bssteps, N_smallsteps, success)
 
     if (underflow) exit propagation
 
     N_bstotal = N_bstotal + N_bssteps
     N_smalltotal = N_smalltotal + N_smallsteps
 
-    if (success) then                   ! did it converge with the attempted step?
-        if (nsteps <= inc_thres) then   ! if it took less than 'inc_thres' steps, then increase stepsize
-            factor = (eps / delta)**(1.0_ep / real(nsteps,ep))
-            timestep = h_did * min(factor,real(maxinc,ep))
-        endif
-        N_ok = N_ok + 1
-    else
-        N_fail = N_fail + 1
-        timestep = h_did
-    endif
+    timestep = nextstep
 
-    internal_elapsed_time = internal_elapsed_time + h_did
     elapsed_time = elapsed_time + real(h_did,dp)
     X_int = X_tmp
     V_int = V_tmp
@@ -113,7 +104,7 @@ enddo propagation
 
 X = real(X_int,dp)
 V = real(V_int,dp)
-h_next = real(timestep,dp)
+h_next = real(nextstep,dp)
 
 
 end subroutine bs_largestep
@@ -121,7 +112,7 @@ end subroutine bs_largestep
 !############################################################################################################
 !############################################################################################################
 
-subroutine bs_onestep(h_try, h_did, X_old, V_old, X_new, V_new, nsteps, delta, N_bssteps, N_smallsteps, success)
+subroutine bs_onestep(time, h_try, h_did, h_next, X_old, V_old, X_new, V_new, nsteps, delta, N_bssteps, N_smallsteps, success)
 !
 ! this routine does one BS step consisting of repeated propagation and extrapolation to zero stepsize using
 ! an increasing number of substeps. If convergence can not be achieved, the propagation will be tried again
@@ -129,14 +120,16 @@ subroutine bs_onestep(h_try, h_did, X_old, V_old, X_new, V_new, nsteps, delta, N
 !
 use types
 use shared_data, only: steps, output, elapsed_time, underflow
-use input_module, only: eps, maxsubstep, min_step, redmin, redmax, do_steps
+use input_module, only: eps, maxsubstep, min_step, redmin, redmax, do_steps, maxinc
 use astronx_utils, only: scale_error, acceleration, acceleration2, radius_of_gyration
 implicit none
 
 
 ! arguments to the routine:
+real(ep),intent(inout) :: time
 real(ep),intent(in) :: h_try                    ! stepsize to try
 real(ep),intent(out) :: h_did                   ! stepsize that actually worked
+real(ep),intent(out) :: h_next                  ! suggested next stepsize
 real(ep),intent(in),dimension(:,:) :: X_old     ! old positions
 real(ep),intent(in),dimension(:,:) :: V_old     ! old velocities
 real(ep),intent(out),dimension(:,:) :: X_new    ! new positions
@@ -148,15 +141,23 @@ integer(st),intent(out) :: N_smallsteps         ! number of substeps performed
 logical,intent(out) :: success                  ! did we converge with the initial stepsize?
 
 ! internal variables:
-integer(st) :: i!, j                            ! loop index
+integer(st) :: i, j                             ! loop indices
+integer(st) :: km
+integer(st),save :: kopt, kmax
+integer(st),dimension(1) :: imin
 real(ep) :: h                                   ! current stepsize
 real(ep) :: h_est                               ! scaled and squared stepsize for the extrapolation
 real(ep) :: factor                              ! factor by which to reduce the stepsize
 real(ep) :: gyrate                              ! the radius of gyration
 real(ep) :: V_avg                               ! the average velocity
+real(ep) :: eps1
+real(ep) :: scalefac, wrkmin
+real(ep),parameter :: safe1 = 0.25_ep, safe2 = 0.7_ep
 real(ep),save :: epsold = -1.0
-real(ep),dimension(maxsubstep+1) :: a           ! the work coefficients
-real(ep),dimension(maxsubstep,maxsubstep) :: alpha  ! other work coefficients
+real(ep),save :: xnew
+real(ep),dimension(maxsubstep) :: err
+real(ep),dimension(:),save,allocatable :: a           ! the work coefficients
+real(ep),dimension(:,:),save,allocatable :: alpha  ! other work coefficients
 real(ep),dimension(size(X_old,1),3) :: X_tmp    ! positions after propagation
 real(ep),dimension(size(X_old,1),3) :: V_tmp    ! velocities after propagation
 real(ep),dimension(size(X_old,1),3) :: X_extr   ! positions after extrapolation
@@ -166,10 +167,49 @@ real(ep),dimension(size(X_old,1),3) :: dV       ! velocity error after extrapola
 real(ep),dimension(size(X_old,1),3) :: A_start  ! acceleration at the beginning of the intervall
 real(ep),dimension(size(X_old,1),3) :: dX_scal  ! scaled error in the positions
 real(ep),dimension(size(X_old,1),3) :: dV_scal  ! scaled error in the velocities
+logical,save :: first = .true.
+logical :: reduct
+
+if (.not. allocated(a)) then
+    allocate(a(maxsubstep + 1))
+endif
+if (.not. allocated(alpha)) then
+    allocate(alpha(maxsubstep, maxsubstep))
+endif
 
 
 if (eps /= epsold) then
+    h_next = -1.0e29_ep
+    x_new = -1.0e29_ep
+    eps1 = eps * safe1
+    a(1) = 2.0_ep
+    do i = 1, maxsubstep
+        a(i+1) = a(i) + real(i + 1, ep)
+    enddo
+    do i = 2, maxsubstep
+        do j = 1, i - 1
+            alpha(j,i) = eps1**((a(j+1) - a(i+1))/((a(i+1) - a(1) + 1.0_ep) * real(2 * j + 1, ep)))
+        enddo
+    enddo
+    epsold = eps
+    do kopt = 2, maxsubstep - 1
+        if (a(kopt+1) > a(kopt) * alpha(kopt-1, kopt)) exit
+    enddo
+    kmax = kopt
 
+    ! write out a and alpha:
+    write(*,*) "The a coefficients:"
+    do i = 1, size(a)
+        write(*,'(es10.3)') a(i)
+    enddo
+    write(*,*) "The alpha matrix:"
+    do i = 1, size(alpha, 1)
+        do j = 1, size(alpha, 2)
+            write(*,'(es10.3)',advance='no') alpha(i,j)
+        enddo
+        write(*,*)
+    enddo
+endif
 
 ! we only have to calculate this once at the start:
 call acceleration2(X_old, A_start)
@@ -185,10 +225,18 @@ N_bssteps = 0
 N_smallsteps = 0
 success = .true.
 
+if (h /= h_next .or. time /= xnew) then
+    first = .true.
+    kopt = kmax
+endif
+
+reduct = .false.
+
 main_loop: do
     N_bssteps = N_bssteps + 1
 
-    do i = 1, maxsubstep
+    do i = 1, kmax
+        xnew = time + h
         call bs_substeps(X_old, V_old, X_tmp, V_tmp, A_start, i, h)
 
         N_smallsteps = N_smallsteps + i
@@ -196,9 +244,13 @@ main_loop: do
 
         call extrapolate(i, h_est, X_tmp, V_tmp, X_extr, V_extr, dX, dV)
 
-        dX_scal = abs(dX / gyrate)
-        dV_scal = abs(dV / V_avg)
-        delta = (sum(dX_scal) + sum(dV_scal)) / real(6*size(X_old,1),ep)
+        if (i /= 1) then
+            dX_scal = abs(dX / gyrate)
+            dV_scal = abs(dV / V_avg)
+            delta = (sum(dX_scal) + sum(dV_scal)) / (eps * real(6*size(X_old,1),ep))
+            km = i - 1
+            err(km) = (delta / safe1)**(1.0_ep / real(2 * km + 1, ep))
+        endif
 
         nsteps = i
 
@@ -207,11 +259,29 @@ main_loop: do
             flush(steps)
         endif
 
-        if (real(delta,dp) < eps) then
-            X_new = X_extr
-            V_new = V_extr
-            h_did = h
-            exit main_loop
+        if (i /= 1 .and. (i >= kopt - 1 .or. first)) then
+            if (delta < 1.0_ep) then
+                X_new = X_extr
+                V_new = V_extr
+                exit main_loop
+            endif
+            if (i == kmax .or. i == kopt + 1) then
+                factor = safe2 / err(km)
+                exit
+            else if (i == kopt) then
+                if (alpha(kopt-1, kopt) < err(km)) then
+                    factor = 1.0_ep / err(km)
+                    exit
+                endif
+            else if (kopt == kmax) then
+                if (alpha(km, kmax-1) < err(km)) then
+                    factor = alpha(km, kmax-1) * safe2 / err(km)
+                    exit
+                endif
+            else if (alpha(km, kopt) < err(km)) then
+                factor = alpha(km, kopt-1) / err(km)
+                exit
+            endif
         endif
     enddo
 
@@ -224,7 +294,6 @@ main_loop: do
         exit main_loop
     endif
 
-    factor = (eps / delta)**(1.0_ep / real(maxsubstep,ep))
     factor = max(min(factor,real(redmin,ep)),real(redmax,ep))
 
     if ((h * factor) < real(min_step,ep)) then
@@ -232,8 +301,27 @@ main_loop: do
     else
         h = h * factor
     endif
+
+    reduct = .true.
 enddo main_loop
 
+time = xnew
+h_did = h
+first = .false.
+
+imin = minloc(a(2:km+1)*max(err(1:km), 1.0_ep / maxinc))
+kopt = 1 + imin(1)
+scalefac = max(err(kopt+1), 1.0_ep / maxinc)
+wrkmin = scalefac * a(kopt)
+h_next = h_did / scalefac
+
+if (kopt >= i .and. kopt /= kmax .and. .not. reduct) then
+    factor = max(scalefac / alpha(kopt-1, kopt), 1.0_ep / maxinc)
+    if (a(kopt+1) * factor <= wrkmin) then
+        h_next = h_did / factor
+        kopt = kopt + 1
+    endif
+endif
 
 end subroutine bs_onestep
 
