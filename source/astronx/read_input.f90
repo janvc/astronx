@@ -26,6 +26,7 @@ implicit none
 integer(st),protected :: N_obj                                  ! number of objects to be simulated
 integer(st),protected :: maxsubstep                             ! maximum number of substeps in one BS-step
 integer(st),protected :: inc_thres                              ! number of substeps below which the stepsize will be increased
+integer(st),protected :: ndigit                                 ! number of significant digits in text trajectory
 real(dp),protected :: tfinal                                    ! the total length of the simulation (s)
 real(dp),protected :: tout                                      ! intervall of successive writes to the trajectory
 real(dp),protected :: eps                                       ! the error tolerance for the propagation
@@ -38,7 +39,7 @@ real(dp),protected :: init_step                                 ! the initial va
 real(dp),protected :: total_mass                                ! the total mass of the system (kg)
 real(dp),dimension(:),allocatable,protected :: mass             ! masses of the objects (kg)
 real(ep),dimension(:),allocatable,protected :: mass_acc         ! test for the acceleration routine
-character(len=50),dimension(:),allocatable,protected :: names   ! the names of the objects
+character(len=30),dimension(:),allocatable,protected :: names   ! the names of the objects
 real(dp),dimension(:,:),allocatable,protected :: mass_2         ! mass-products of all object-pairs (kg^2)
 real(ep),dimension(:,:),allocatable,protected :: mass_2_acc     ! as above...
 character(len=100),protected :: name_directory                  ! directory that will be created for the output
@@ -52,6 +53,7 @@ logical,protected :: do_overwrite                               ! overwrite the 
 logical,protected :: shift_cog                                  ! wether or not to shift the cog at the beginning
 logical,protected :: shift_mom                                  ! wether or not to compensate for cog motion
 logical,protected :: verbose                                    ! wether of not to write info about the propagation to terminal
+character(len=14),protected :: format_string                    ! format string to use for the text trajectory
 
 contains
 
@@ -113,6 +115,7 @@ real(dp),dimension(:,:),allocatable,intent(out) :: X  ! spatial coordinates of a
 real(dp),dimension(:,:),allocatable,intent(out) :: V  ! velocity components of all objects (m/s)
 
 ! internal variables:
+integer(st) :: fw
 character(len=40) :: keyword            ! dummy variable for the first column of the input file
 character(len=40) :: paraValue          ! the value of the parameter to be read
 character(len=200) :: input_buffer      ! one line of the input file, that is checked for keywords
@@ -149,6 +152,7 @@ rewind(input)
 ! set the default values for all input parameters:
 maxsubstep = 12
 inc_thres = 8
+ndigit = 10
 eps = 1.0e-6_dp
 eps_thres = 0.9_dp
 min_step = 100.0_dp
@@ -163,6 +167,7 @@ do_texttrj = .false.
 do_unrestrictedprop = .false.
 do_bs = .true.
 do_rk4mid = .true.
+format_string = '(1x, 3es18.10)'
 
 ! find and read the parameters from the input file and set the test-variables:
 do i=1 , number_of_lines
@@ -235,6 +240,16 @@ do i=1 , number_of_lines
             else
                 write(output,*) "Invalid value for 'integrator', using default: bs"
                 do_bs = .true.
+            endif
+        else if (index(keyword, "ndigit") /= 0) then
+            read(paravalue,*) ndigit
+            fw = ndigit + 8
+            if (fw < 10) then
+                write(format_string,'("(1x,  3es",i1,".",i1,")")') fw, ndigit
+            else if (ndigit > 10) then
+                write(format_string,'("(1x,3es",i2,".",i2,")")') fw, ndigit
+            else
+                write(format_string,'("(1x, 3es",i2,".",i1,")")') fw, ndigit
             endif
         endif
     else    ! boolean

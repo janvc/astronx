@@ -334,7 +334,7 @@ subroutine write_to_trj(time, X, V)
 !
 use types
 use shared_data, only: bin_trj, trajectory
-use input_module, only: do_texttrj
+use input_module, only: do_texttrj, format_string
 implicit none
 
 
@@ -350,7 +350,7 @@ integer(st) :: i                            ! loop index
 if (do_texttrj) then
     write(trajectory,'(es18.10)',advance='no') time
     do i = 1, size(X,1)
-        write(trajectory,'(3es18.10)',advance='no') X(i,1), X(i,2), X(i,3)
+        write(trajectory,format_string,advance='no') X(i,1), X(i,2), X(i,3)
     enddo
     write(trajectory,*)
 endif
