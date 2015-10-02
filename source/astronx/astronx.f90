@@ -25,7 +25,7 @@ program astronx
 use types
 use shared_data, only: bin_trj, elapsed_time, output, steps, trajectory
 use input_module, only: names, mass, total_mass, do_steps, do_texttrj, name_directory, shift_cog, shift_mom, read_input, &
-                        process_cmd_arguments, verbose
+                        process_cmd_arguments, verbose, ndigit
 use astronx_utils, only: show_input_parameters, shiftcog, shiftmom, centre_of_gravity, linear_momentum, angular_momentum
 use propagation
 implicit none
@@ -37,7 +37,7 @@ character(len=10) :: bin_traj_file="trajectory" ! the trajectory file in binary 
 character(len=9) :: traj_file="text_traj"       ! file to save the trajectory
 character(len=6) :: output_file="output"        ! the output file with general information about the calculation
 character(len=5) :: steps_file="steps"          ! this file contains detailed info about the propagation steps
-integer(st) :: i                                ! loop indices
+integer(st) :: i, j                             ! loop indices
 integer(st) :: output_status                    ! describing the file opening status
 real(dp),dimension(:,:),allocatable :: X        ! spatial coordinates of all objects (m)
 real(dp),dimension(:,:),allocatable :: V        ! velocity components of all objects (m/s)
@@ -73,15 +73,39 @@ if (do_texttrj) then
     endif
     write(trajectory,'("# trajectory in gnuplot-friendly text form")')
     write(trajectory,'("#")')
-    write(trajectory,'("# time          ")',advance='no')
-    do i = 1, size(mass)
-        write(trajectory,'(a54)',advance='no') names(i)
+    write(trajectory,'("# time               ")',advance='no')
+    do i = 1, size(mass) - 1
+        write(trajectory,'(a30)',advance='no') names(i)
+        do j = 1, (3 * ndigit) - 5
+            write(trajectory,'(" ")',advance='no')
+        enddo
     enddo
+    write(trajectory,'(a30)',advance='no') names(size(mass))
     write(trajectory,*)
-    write(trajectory,'("#                   ")',advance='no')
-    do i = 1, size(mass)
-        write(trajectory,'("x [m]             y [m]             z [m]             ")',advance='no')
+    write(trajectory,'("#                    ")',advance='no')
+    do i = 1, size(mass) - 1
+        write(trajectory,'("x [m]")',advance='no')
+        do j = 1, ndigit + 3
+            write(trajectory,'(" ")',advance='no')
+        enddo
+        write(trajectory,'("y [m]")',advance='no')
+        do j = 1, ndigit + 3
+            write(trajectory,'(" ")',advance='no')
+        enddo
+        write(trajectory,'("z [m]")',advance='no')
+        do j = 1, ndigit + 4
+            write(trajectory,'(" ")',advance='no')
+        enddo
     enddo
+    write(trajectory,'("x [m]")',advance='no')
+    do j = 1, ndigit + 3
+        write(trajectory,'(" ")',advance='no')
+    enddo
+    write(trajectory,'("y [m]")',advance='no')
+    do j = 1, ndigit + 3
+        write(trajectory,'(" ")',advance='no')
+    enddo
+    write(trajectory,'("z [m]")',advance='no')
     write(trajectory,*)
 endif
 
