@@ -28,6 +28,7 @@ use input_module, only: names, mass, total_mass, do_steps, do_texttrj, name_dire
                         process_cmd_arguments, verbose, ndigit
 use astronx_utils, only: show_input_parameters, shiftcog, shiftmom, centre_of_gravity, linear_momentum, angular_momentum
 use propagation
+use callcounts, only: init_counts, print_counts
 implicit none
 
 
@@ -47,6 +48,8 @@ real(dp),dimension(3) :: ang_mom                ! the total angular momentum of 
 real(dp) :: start_propcpu                       ! cpu time at the start of the propagation
 real(dp) :: end_propcpu                         ! cpu time at the end of the propagation
 
+
+call init_counts
 
 ! process the command line arguments:
 call process_cmd_arguments
@@ -322,5 +325,6 @@ write(output,'(" z = ",es15.8," kg*m^2/s")') ang_mom(3)
 write(output,*)
 write(output,*)
 
+call print_counts
 
 end program astronx

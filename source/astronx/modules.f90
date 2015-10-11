@@ -60,3 +60,58 @@ logical :: underflow                            ! to determine if the stepsize h
 
 end module shared_data
 
+!##################################################################################################
+!##################################################################################################
+
+module callcounts
+!
+! this module contains counters that count the calls to the different subroutines
+!
+use types
+implicit none
+
+integer(st) :: N_acceleration
+integer(st) :: N_bs_largestep
+integer(st) :: N_bs_onestep
+integer(st) :: N_bs_substeps
+integer(st) :: N_extrapolate
+
+contains
+
+!##################################################################################################
+
+subroutine init_counts
+!
+! this routine initializes all counters to zero
+!
+implicit none
+
+N_acceleration = 0_st
+N_bs_largestep = 0_st
+N_bs_onestep = 0_st
+N_bs_substeps = 0_st
+N_extrapolate = 0_st
+
+end subroutine init_counts
+
+!##################################################################################################
+
+subroutine print_counts
+!
+! this routine prints the number of calls to the counted routines to the output file
+!
+use shared_data, only: output
+implicit none
+
+write(output,'("   routine         number of calls")')
+write(output,'(" ---------------------------------")')
+write(output,'(" acceleration    ",i10)') N_acceleration
+write(output,'(" bs_largestep    ",i10)') N_bs_largestep
+write(output,'(" bs_onestep      ",i10)') N_bs_onestep
+write(output,'(" bs_substeps     ",i10)') N_bs_substeps
+write(output,'(" extrapolate     ",i10)') N_extrapolate
+
+end subroutine print_counts
+
+end module callcounts
+

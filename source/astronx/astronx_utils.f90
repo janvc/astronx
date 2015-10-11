@@ -192,6 +192,7 @@ subroutine acceleration2(X, A)
 use types
 use input_module, only: mass_acc, mass_2_acc
 use shared_data, only: G
+use callcounts, only: N_acceleration
 implicit none
 
 
@@ -210,6 +211,8 @@ real(ep) :: dX              ! differences in X
 real(ep) :: dY              ! differences in Y
 real(ep) :: dZ              ! differences in Z
 
+
+N_acceleration = N_acceleration + 1
 
 Nobj = size(mass_acc)
 G_here = real(G, ep)

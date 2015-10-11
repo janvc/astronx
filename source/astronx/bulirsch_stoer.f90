@@ -36,6 +36,7 @@ subroutine bs_largestep(h_start, h_next, X, V, N_ok, N_fail, N_bstotal, N_smallt
 use types
 use shared_data, only: elapsed_time, underflow
 use input_module, only: eps, tout, maxinc, inc_thres, do_unrestrictedprop, min_step
+use callcounts, only: N_bs_largestep
 implicit none
 
 
@@ -63,6 +64,9 @@ real(ep),dimension(size(X,1),3) :: V_int    ! input to bs_onestep
 real(ep),dimension(size(X,1),3) :: X_tmp    ! output of bs_onestep
 real(ep),dimension(size(X,1),3) :: V_tmp    ! output of bs_onestep
 logical :: success                          ! did bs_onestep converge with the initial stepsize?
+
+
+N_bs_largestep = N_bs_largestep + 1
 
 ! initializing:
 internal_elapsed_time = 0.0_ep
@@ -131,6 +135,7 @@ use types
 use shared_data, only: steps, output, elapsed_time, underflow
 use input_module, only: eps, maxsubstep, min_step, redmin, redmax, do_steps
 use astronx_utils, only: scale_error, acceleration, acceleration2, radius_of_gyration
+use callcounts, only: N_bs_onestep
 implicit none
 
 
@@ -164,6 +169,8 @@ real(ep),dimension(size(X_old,1),3) :: A_start  ! acceleration at the beginning 
 real(ep),dimension(size(X_old,1),3) :: dX_scal  ! scaled error in the positions
 real(ep),dimension(size(X_old,1),3) :: dV_scal  ! scaled error in the velocities
 
+
+N_bs_onestep = N_bs_onestep + 1
 
 ! we only have to calculate this once at the start:
 call acceleration2(X_old, A_start)
@@ -242,6 +249,7 @@ subroutine bs_substeps(X_old, V_old, X_new, V_new, A_start, nsteps, total_step)
 use types
 use input_module, only: N_obj
 use astronx_utils, only: acceleration, acceleration2
+use callcounts, only: N_bs_substeps
 implicit none
 
 
@@ -263,6 +271,8 @@ real(ep),dimension(N_obj,3) :: X_step   ! the substeps in the positions
 real(ep),dimension(N_obj,3) :: X_temp   ! temporary positions
 real(ep),dimension(N_obj,3) :: A_int    ! the acceleration calculated internally
 
+
+N_bs_substeps = N_bs_substeps + 1
 
 ! initialize:
 step = total_step / nsteps
@@ -302,6 +312,7 @@ subroutine extrapolate(i_est, h_est, X_est, V_est, X_out, V_out, dX, dV)
 !
 use types
 use input_module, only: N_obj, maxsubstep
+use callcounts, only: N_extrapolate
 implicit none
 
 
@@ -325,6 +336,8 @@ real(ep),dimension(2*N_obj,3) :: C                  ! temporary coefficients for
 real(ep),dimension(2*N_obj,3) :: factor             ! an intermediate factor
 integer(st) :: k                                    ! loop index
 
+
+N_extrapolate = N_extrapolate + 1
 
 ! allocate the saved arrays if needed:
 if (.not. allocated(D)) then
