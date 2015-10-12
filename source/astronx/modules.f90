@@ -30,7 +30,7 @@ implicit none
 save
 
 integer,parameter :: dp = selected_real_kind(14)  ! the default (double precision) real type
-integer,parameter :: ep = selected_real_kind(17)  ! extended precision real type
+integer,parameter :: ep = selected_real_kind(14)  ! extended precision real type
 integer,parameter :: st = selected_int_kind(5)    ! the default integer type
 
 end module types
