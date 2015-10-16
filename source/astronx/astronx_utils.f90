@@ -58,9 +58,9 @@ integer(st) :: i, k                             ! counting indices
 
 
 cog = 0.0
-do k = 1 , size(cog)
-    do i = 1 , size(X, 1)
-        cog(k) = cog(k) + (mass(i) * X(i,k))
+do i = 1 , size(X, 2)
+    do k = 1 , size(cog)
+        cog(k) = cog(k) + (mass(i) * X(k,i))
     enddo
 enddo
 cog = cog / total_mass
@@ -89,9 +89,9 @@ integer(st) :: i, k                         ! counting indices
 
 
 mom = 0.0
-do k = 1 , size(mom)
-    do i = 1 , size(V, 1)
-        mom(k) = mom(k) + (mass(i) * V(i,k))
+do i = 1 , size(V, 2)
+    do k = 1 , size(mom)
+        mom(k) = mom(k) + (mass(i) * V(k,i))
     enddo
 enddo
 
@@ -119,10 +119,10 @@ real(dp),dimension(:),intent(in) :: mass    ! the masses of the objects (kg)
 integer(st) :: i        ! counting index
 
 angmom = 0.0_dp
-do i = 1, size(X, 1)
-    angmom(1) = angmom(1) + mass(i) * (X(i,2)*V(i,3) - X(i,3)*V(i,2))
-    angmom(2) = angmom(2) + mass(i) * (X(i,3)*V(i,1) - X(i,1)*V(i,3))
-    angmom(3) = angmom(3) + mass(i) * (X(i,1)*V(i,2) - X(i,2)*V(i,1))
+do i = 1, size(X, 2)
+    angmom(1) = angmom(1) + mass(i) * (X(2,i)*V(3,i) - X(3,i)*V(2,i))
+    angmom(2) = angmom(2) + mass(i) * (X(3,i)*V(1,i) - X(1,i)*V(3,i))
+    angmom(3) = angmom(3) + mass(i) * (X(1,i)*V(2,i) - X(2,i)*V(1,i))
 enddo
 
 
@@ -156,9 +156,9 @@ integer(st) :: i, j, k                 ! counting indices for the loops
 ! calculate the distances using pythagoras' theorem
 ! (maybe this can be speeded up by setting j=2:N_obj)
 forall(i=1:size(mass), j=1:size(mass), j>=i+1)
-    R2(i,j) = ((X(j,1)-X(i,1))*(X(j,1)-X(i,1))) &
-            + ((X(j,2)-X(i,2))*(X(j,2)-X(i,2))) &
-            + ((X(j,3)-X(i,3))*(X(j,3)-X(i,3)))
+    R2(i,j) = ((X(1,j)-X(1,i))*(X(1,j)-X(1,i))) &
+            + ((X(2,j)-X(2,i))*(X(2,j)-X(2,i))) &
+            + ((X(3,j)-X(3,i))*(X(3,j)-X(3,i)))
     R(i,j) = sqrt(R2(i,j))
     R2(j,i) = R2(i,j)
     R(j,i) = R(i,j)
@@ -170,10 +170,10 @@ do k = 1 , 3
     do i = 1 , size(mass)
         do j = 1 , size(mass)
             if (i /= j) then
-                A(i,k) = A(i,k) + ((mass_2_acc(i,j) / R2(i,j)) * ((X(j,k) - X(i,k)) / R(i,j)))
+                A(k,i) = A(k,i) + ((mass_2_acc(i,j) / R2(i,j)) * ((X(k,j) - X(k,i)) / R(i,j)))
             endif
         enddo
-        A(i,k) = A(i,k) * (G / mass_acc(i))
+        A(k,i) = A(k,i) * (G / mass_acc(i))
     enddo
 enddo
 
@@ -224,25 +224,25 @@ A = 0.0_ep
 
 do i = 1, Nobj - 1
     do j = i + 1, Nobj
-        dX = X(j,1) - X(i,1)
-        dY = X(j,2) - X(i,2)
-        dZ = X(j,3) - X(i,3)
+        dX = X(1,j) - X(1,i)
+        dY = X(2,j) - X(2,i)
+        dZ = X(3,j) - X(3,i)
         R2 = dX**2 + dY**2 + dZ**2
         mass_factor = mass_2_acc(i,j) / (R2 * sqrt(R2))
-        A(i,1) = A(i,1) + mass_factor * dX
-        A(i,2) = A(i,2) + mass_factor * dY
-        A(i,3) = A(i,3) + mass_factor * dZ
-        A(j,1) = A(j,1) - mass_factor * dX
-        A(j,2) = A(j,2) - mass_factor * dY
-        A(j,3) = A(j,3) - mass_factor * dZ
+        A(1,i) = A(1,i) + mass_factor * dX
+        A(2,i) = A(2,i) + mass_factor * dY
+        A(3,i) = A(3,i) + mass_factor * dZ
+        A(1,j) = A(1,j) - mass_factor * dX
+        A(2,j) = A(2,j) - mass_factor * dY
+        A(3,j) = A(3,j) - mass_factor * dZ
     enddo
 enddo
 
 do i = 1, Nobj
     force_factor = G_here / mass_acc(i)
-    A(i,1) = A(i,1) * force_factor
-    A(i,2) = A(i,2) * force_factor
-    A(i,3) = A(i,3) * force_factor
+    A(1,i) = A(1,i) * force_factor
+    A(2,i) = A(2,i) * force_factor
+    A(3,i) = A(3,i) * force_factor
 enddo
 
 end subroutine acceleration2
@@ -272,17 +272,17 @@ real(ep),dimension(3) :: distance   ! distance between object and avg_pos
 ! calculate the average position:
 avg_pos = 0.0_ep
 forall (i = 1:3)
-    avg_pos(i) = sum(X(:,i))
+    avg_pos(i) = sum(X(i,:))
 end forall
-avg_pos = avg_pos / real(size(X, 1),ep)
+avg_pos = avg_pos / real(size(X, 2),ep)
 
 ! r_g is the average distance between an object and the average position:
 gyr = 0.0_ep
-do i = 1, size(X, 1)
-    distance(:) = X(i,:) - avg_pos(:)
+do i = 1, size(X, 2)
+    distance(:) = X(:,i) - avg_pos(:)
     gyr = gyr + sqrt(dot_product(distance, distance))
 enddo
-gyr = gyr / real(size(X, 1),ep)
+gyr = gyr / real(size(X, 2),ep)
 
 
 end subroutine radius_of_gyration
@@ -309,20 +309,20 @@ real(ep),intent(in),dimension(:,:) :: dV
 real(ep),intent(out) :: delta
 
 ! internal variables:
-real(ep),dimension(size(X_new,1),3) :: dX_scal
-real(ep),dimension(size(X_new,1),3) :: dV_scal
+real(ep),dimension(size(X_new,2),3) :: dX_scal
+real(ep),dimension(size(X_new,2),3) :: dV_scal
 real(ep) :: gyrate
 real(ep) :: V_avg
 
 
 call radius_of_gyration(X_new, gyrate)
 
-V_avg = sum(abs(V_new)) / real(3*size(X_new,1),ep)
+V_avg = sum(abs(V_new)) / real(3*size(X_new,2),ep)
 
 dX_scal = abs(dX / gyrate)
 dV_scal = abs(dV / V_avg)
 
-delta = (sum(dX_scal) + sum(dV_scal)) / real(6*size(X_new,1),ep)
+delta = (sum(dX_scal) + sum(dV_scal)) / real(6*size(X_new,2),ep)
 
 
 end subroutine scale_error
@@ -352,19 +352,19 @@ integer(st) :: i                            ! loop index
 ! write to the text trajectory if requested:
 if (do_texttrj) then
     write(trajectory,'(es18.10)',advance='no') time
-    do i = 1, size(X,1)
-        write(trajectory,format_string,advance='no') X(i,1), X(i,2), X(i,3)
+    do i = 1, size(X,2)
+        write(trajectory,format_string,advance='no') X(1,i), X(2,i), X(3,i)
     enddo
     write(trajectory,*)
 endif
 
 
 write(bin_trj) time
-do i = 1, size(X,1)
-    write(bin_trj) X(i,1), X(i,2), X(i,3)
+do i = 1, size(X,2)
+    write(bin_trj) X(1,i), X(2,i), X(3,i)
 enddo
-do i = 1, size(X,1)
-    write(bin_trj) V(i,1), V(i,2), V(i,3)
+do i = 1, size(X,2)
+    write(bin_trj) V(1,i), V(2,i), V(3,i)
 enddo
 
 
@@ -457,8 +457,8 @@ integer(st) :: i, k             ! loop indices
 
 call centre_of_gravity(X, cog, mass, total_mass)
 
-forall ( i=1:size(X,1), k=1:3 )
-    X(i,k) = X(i,k) - cog(k)
+forall ( i=1:size(X,2), k=1:3 )
+    X(k,i) = X(k,i) - cog(k)
 end forall
 
 
@@ -488,7 +488,7 @@ integer(st) :: i, k             ! loop indices
 call linear_momentum(V, mom, mass)
 
 forall ( i=1:size(mass), k=1:3 )
-    V(i,k) = V(i,k) - (mom(k) / total_mass)
+    V(k,i) = V(k,i) - (mom(k) / total_mass)
 end forall
 
 

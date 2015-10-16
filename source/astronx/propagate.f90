@@ -39,8 +39,8 @@ use runge_kutta_4_nr, only: rk4nr_largestep
 implicit none
 
 ! arguments to the subroutine:
-real(dp),dimension(N_obj,3),intent(inout) :: X  ! spatial coordinates of all objects (m)
-real(dp),dimension(N_obj,3),intent(inout) :: V  ! velocity components of all objects (m/s)
+real(dp),dimension(3,N_obj),intent(inout) :: X  ! spatial coordinates of all objects (m)
+real(dp),dimension(3,N_obj),intent(inout) :: V  ! velocity components of all objects (m/s)
 
 ! internal variables:
 integer(st) :: restart_status   ! IO status of the restart file
@@ -108,7 +108,7 @@ do
         open(unit=restart,file=restart_file,status="replace",action="write",iostat=restart_status)
         write(restart,*) elapsed_time
         do i = 1, N_obj
-            write(restart,*) mass(i), X(i,1), X(i,2), X(i,3), V(i,1), V(i,2), V(i,3)
+            write(restart,*) mass(i), X(1,i), X(2,i), X(3,i), V(1,i), V(2,i), V(3,i)
         enddo
         close(unit=restart)
     endif

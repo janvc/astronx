@@ -59,10 +59,10 @@ real(ep) :: internal_elapsed_time           ! what it says...
 real(ep) :: timestep                        ! attempted timestep for the next call to bs_onestep
 real(ep) :: h_did                           ! actually used stepsize in the last call to bs_onestep
 real(ep) :: factor                          ! factor by which to increase the stepsize
-real(ep),dimension(size(X,1),3) :: X_int    ! input to bs_onestep
-real(ep),dimension(size(X,1),3) :: V_int    ! input to bs_onestep
-real(ep),dimension(size(X,1),3) :: X_tmp    ! output of bs_onestep
-real(ep),dimension(size(X,1),3) :: V_tmp    ! output of bs_onestep
+real(ep),dimension(size(X,2),3) :: X_int    ! input to bs_onestep
+real(ep),dimension(size(X,2),3) :: V_int    ! input to bs_onestep
+real(ep),dimension(size(X,2),3) :: X_tmp    ! output of bs_onestep
+real(ep),dimension(size(X,2),3) :: V_tmp    ! output of bs_onestep
 logical :: success                          ! did bs_onestep converge with the initial stepsize?
 
 
@@ -159,15 +159,15 @@ real(ep) :: h_est                               ! scaled and squared stepsize fo
 real(ep) :: factor                              ! factor by which to reduce the stepsize
 real(ep) :: gyrate                              ! the radius of gyration
 real(ep) :: V_avg                               ! the average velocity
-real(ep),dimension(size(X_old,1),3) :: X_tmp    ! positions after propagation
-real(ep),dimension(size(X_old,1),3) :: V_tmp    ! velocities after propagation
-real(ep),dimension(size(X_old,1),3) :: X_extr   ! positions after extrapolation
-real(ep),dimension(size(X_old,1),3) :: V_extr   ! velocities after extrapolation
-real(ep),dimension(size(X_old,1),3) :: dX       ! position error after extrapolation
-real(ep),dimension(size(X_old,1),3) :: dV       ! velocity error after extrapolation
-real(ep),dimension(size(X_old,1),3) :: A_start  ! acceleration at the beginning of the intervall
-real(ep),dimension(size(X_old,1),3) :: dX_scal  ! scaled error in the positions
-real(ep),dimension(size(X_old,1),3) :: dV_scal  ! scaled error in the velocities
+real(ep),dimension(size(X_old,2),3) :: X_tmp    ! positions after propagation
+real(ep),dimension(size(X_old,2),3) :: V_tmp    ! velocities after propagation
+real(ep),dimension(size(X_old,2),3) :: X_extr   ! positions after extrapolation
+real(ep),dimension(size(X_old,2),3) :: V_extr   ! velocities after extrapolation
+real(ep),dimension(size(X_old,2),3) :: dX       ! position error after extrapolation
+real(ep),dimension(size(X_old,2),3) :: dV       ! velocity error after extrapolation
+real(ep),dimension(size(X_old,2),3) :: A_start  ! acceleration at the beginning of the intervall
+real(ep),dimension(size(X_old,2),3) :: dX_scal  ! scaled error in the positions
+real(ep),dimension(size(X_old,2),3) :: dV_scal  ! scaled error in the velocities
 
 
 N_bs_onestep = N_bs_onestep + 1
@@ -175,7 +175,7 @@ N_bs_onestep = N_bs_onestep + 1
 ! we only have to calculate this once at the start:
 call acceleration2(X_old, A_start)
 call radius_of_gyration(X_old, gyrate)
-V_avg = sum(abs(V_old)) / real(3*size(X_old,1),ep)
+V_avg = sum(abs(V_old)) / real(3*size(X_old,2),ep)
 
 ! the main loop, that does the repetitive propagation and extrapolation (and reduce the stepsize if necessary):
 h = h_try
@@ -199,7 +199,7 @@ main_loop: do
 
         dX_scal = abs(dX / gyrate)
         dV_scal = abs(dV / V_avg)
-        delta = (sum(dX_scal) + sum(dV_scal)) / real(6*size(X_old,1),ep)
+        delta = (sum(dX_scal) + sum(dV_scal)) / real(6*size(X_old,2),ep)
 
         nsteps = i
 
@@ -254,11 +254,11 @@ implicit none
 
 
 ! arguments to the routine:
-real(ep),dimension(N_obj,3),intent(in) :: X_old     ! the initial positions of all objects
-real(ep),dimension(N_obj,3),intent(in) :: V_old     ! the initial velocities of all objects
-real(ep),dimension(N_obj,3),intent(out) :: X_new    ! the final positions of all objects
-real(ep),dimension(N_obj,3),intent(out) :: V_new    ! the final velocities of all objects
-real(ep),dimension(N_obj,3),intent(in) :: A_start   ! the acceleration at the startpoint of the intervall
+real(ep),dimension(3,N_obj),intent(in) :: X_old     ! the initial positions of all objects
+real(ep),dimension(3,N_obj),intent(in) :: V_old     ! the initial velocities of all objects
+real(ep),dimension(3,N_obj),intent(out) :: X_new    ! the final positions of all objects
+real(ep),dimension(3,N_obj),intent(out) :: V_new    ! the final velocities of all objects
+real(ep),dimension(3,N_obj),intent(in) :: A_start   ! the acceleration at the startpoint of the intervall
 integer(st),intent(in) :: nsteps                    ! the number of steps to be done in this run
 real(ep),intent(in) :: total_step                   ! the total timestep to be done in this run
 
@@ -267,9 +267,9 @@ integer(st) :: i                        ! loop counting index
 real(ep) :: step                        ! the internal sub-timestep
 real(ep) :: half_step                   ! half of the substep
 real(ep) :: step_2                      ! square of the substep
-real(ep),dimension(N_obj,3) :: X_step   ! the substeps in the positions
-real(ep),dimension(N_obj,3) :: X_temp   ! temporary positions
-real(ep),dimension(N_obj,3) :: A_int    ! the acceleration calculated internally
+real(ep),dimension(3,N_obj) :: X_step   ! the substeps in the positions
+real(ep),dimension(3,N_obj) :: X_temp   ! temporary positions
+real(ep),dimension(3,N_obj) :: A_int    ! the acceleration calculated internally
 
 
 N_bs_substeps = N_bs_substeps + 1
@@ -319,21 +319,21 @@ implicit none
 ! arguments to the routine:
 integer(st),intent(in) :: i_est                     ! the number of the current call to this routine
 real(ep),intent(in) :: h_est                        ! the trial stepsize for this call
-real(ep),intent(in),dimension(N_obj,3) :: X_est     ! estimated positions for the current trial
-real(ep),intent(in),dimension(N_obj,3) :: V_est     ! estimated velocities for the current trial
-real(ep),intent(out),dimension(N_obj,3) :: X_out    ! extrapolated positions
-real(ep),intent(out),dimension(N_obj,3) :: V_out    ! extrapolated velocities
-real(ep),intent(out),dimension(N_obj,3) :: dX       ! position error on output
-real(ep),intent(out),dimension(N_obj,3) :: dV       ! velocity error on output
+real(ep),intent(in),dimension(3,N_obj) :: X_est     ! estimated positions for the current trial
+real(ep),intent(in),dimension(3,N_obj) :: V_est     ! estimated velocities for the current trial
+real(ep),intent(out),dimension(3,N_obj) :: X_out    ! extrapolated positions
+real(ep),intent(out),dimension(3,N_obj) :: V_out    ! extrapolated velocities
+real(ep),intent(out),dimension(3,N_obj) :: dX       ! position error on output
+real(ep),intent(out),dimension(3,N_obj) :: dV       ! velocity error on output
 
 ! internal variables:
 real(ep),dimension(:,:,:),save,allocatable :: D     ! the coefficient array for the extrapolation
 real(ep),dimension(:),save,allocatable :: h         ! the array containing the previously used stepsizes
-real(ep),dimension(2*N_obj,3) :: Y_est              ! working array containing the positions and velocities
-real(ep),dimension(2*N_obj,3) :: Y_out              ! output of the above array
-real(ep),dimension(2*N_obj,3) :: dY                 ! the error of positions and velocities
-real(ep),dimension(2*N_obj,3) :: C                  ! temporary coefficients for the extrapolation
-real(ep),dimension(2*N_obj,3) :: factor             ! an intermediate factor
+real(ep),dimension(3,2*N_obj) :: Y_est              ! working array containing the positions and velocities
+real(ep),dimension(3,2*N_obj) :: Y_out              ! output of the above array
+real(ep),dimension(3,2*N_obj) :: dY                 ! the error of positions and velocities
+real(ep),dimension(3,2*N_obj) :: C                  ! temporary coefficients for the extrapolation
+real(ep),dimension(3,2*N_obj) :: factor             ! an intermediate factor
 integer(st) :: k                                    ! loop index
 
 
@@ -341,7 +341,7 @@ N_extrapolate = N_extrapolate + 1
 
 ! allocate the saved arrays if needed:
 if (.not. allocated(D)) then
-    allocate(D(2*N_obj,3,maxsubstep))
+    allocate(D(3,2*N_obj,maxsubstep))
 endif
 
 if (.not. allocated(h)) then
@@ -351,8 +351,8 @@ endif
 
 ! initialize:
 h(i_est) = h_est
-Y_est(1:N_obj,:) = X_est
-Y_est(N_obj+1:2*N_obj,:) = V_est
+Y_est(:,1:N_obj) = X_est
+Y_est(:,N_obj+1:2*N_obj) = V_est
 Y_out = Y_est
 dY = Y_est
 C = Y_est
@@ -370,10 +370,10 @@ if (i_est /= 1) then
 endif
 
 ! setting the output variables:
-X_out = Y_out(1:N_obj,:)
-V_out = Y_out(N_obj+1:2*N_obj,:)
-dX = dY(1:N_obj,:)
-dV = dY(N_obj+1:2*N_obj,:)
+X_out = Y_out(:,1:N_obj)
+V_out = Y_out(:,N_obj+1:2*N_obj)
+dX = dY(:,1:N_obj)
+dV = dY(:,N_obj+1:2*N_obj)
 
 
 end subroutine extrapolate

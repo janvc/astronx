@@ -237,7 +237,7 @@ write(output,'("    name      mass (kg)       X (m)      Y (m)      Z (m)     V_
 write(output,*)
 do i = 1, size(mass)
     write(output,'(a10,"  ",es11.3,"  ",3es11.3,"  ",3es11.3)') &
-        & trim(names(i)), mass(i), X(i,1), X(i,2), X(i,3), V(i,1), V(i,2), V(i,3)
+        & trim(names(i)), mass(i), X(1,i), X(2,i), X(3,i), V(1,i), V(2,i), V(3,i)
 enddo
 write(output,*)
 write(output,*)
@@ -289,7 +289,7 @@ write(output,'("    name      mass (kg)       X (m)      Y (m)      Z (m)     V_
 write(output,*)
 do i = 1, size(mass)
     write(output,'(a10,"  ",es11.3,"  ",3es11.3,"  ",3es11.3)') &
-        & trim(names(i)), mass(i), X(i,1), X(i,2), X(i,3), V(i,1), V(i,2), V(i,3)
+        & trim(names(i)), mass(i), X(1,i), X(2,i), X(3,i), V(1,i), V(2,i), V(3,i)
 enddo
 write(output,*)
 write(output,*)

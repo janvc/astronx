@@ -324,8 +324,8 @@ allocate(mass(N_obj))
 allocate(mass_2(N_obj,N_obj))
 allocate(mass_acc(N_obj))
 allocate(mass_2_acc(N_obj,N_obj))
-allocate(X(N_obj,3))
-allocate(V(N_obj,3))
+allocate(X(3,N_obj))
+allocate(V(3,N_obj))
 
 ! move to start of coordinate block:
 do i=1 , coord_start
@@ -334,7 +334,7 @@ enddo
 
 ! read coordinates:
 do i=1 , N_obj
-    read(input,*,iostat=readstatus) names(i), mass(i), X(i,1), X(i,2), X(i,3), V(i,1), V(i,2), V(i,3)
+    read(input,*,iostat=readstatus) names(i), mass(i), X(1,i), X(2,i), X(3,i), V(1,i), V(2,i), V(3,i)
     if (readstatus /= 0) then
         write(*,*) "Error reading coordinate no. ", i, " Exiting."
         stop

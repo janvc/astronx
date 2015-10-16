@@ -56,10 +56,10 @@ real(ep) :: timestep                        ! current stepsize to try
 real(ep) :: h_did                           ! actually used stepsize
 real(ep) :: factor                          ! factor by which to increase the stepsize
 real(ep) :: epsinc                          ! 90% of the error tolerance
-real(ep),dimension(size(X,1),3) :: X_int    ! input to rk4nr_onestep
-real(ep),dimension(size(X,1),3) :: V_int    ! input to rk4nr_onestep
-real(ep),dimension(size(X,1),3) :: X_tmp    ! output of rk4nr_onestep
-real(ep),dimension(size(X,1),3) :: V_tmp    ! output of rk4nr_onestep
+real(ep),dimension(3,size(X,1)) :: X_int    ! input to rk4nr_onestep
+real(ep),dimension(3,size(X,1)) :: V_int    ! input to rk4nr_onestep
+real(ep),dimension(3,size(X,1)) :: X_tmp    ! output of rk4nr_onestep
+real(ep),dimension(3,size(X,1)) :: V_tmp    ! output of rk4nr_onestep
 logical :: success                          ! did we converge with the initial stepsize?
 
 ! initializing:
@@ -146,22 +146,22 @@ real(ep) :: half_step                           ! half of that
 real(ep) :: gyrate                              ! radius of gyration
 real(ep) :: V_avg                               ! average velocity
 real(ep) :: factor                              ! factor by which to reduce the stepsize
-real(ep),dimension(size(X_old,1),3) :: A_start  ! acceleration at the start of the step
-real(ep),dimension(size(X_old,1),3) :: X_end1   ! final positions with one large step
-real(ep),dimension(size(X_old,1),3) :: V_end1   ! final velocities with one large step
-real(ep),dimension(size(X_old,1),3) :: X_end2   ! final positions with two small steps
-real(ep),dimension(size(X_old,1),3) :: V_end2   ! final velocities with two small steps
-real(ep),dimension(size(X_old,1),3) :: X_mid    ! temporary positions
-real(ep),dimension(size(X_old,1),3) :: V_mid    ! temporary velocities
-real(ep),dimension(size(X_old,1),3) :: A_mid    ! temporary acceleration
-real(ep),dimension(size(X_old,1),3) :: dX_scal  ! scaled position deviation
-real(ep),dimension(size(X_old,1),3) :: dV_scal  ! scaled velocity deviation
+real(ep),dimension(3,size(X_old,1)) :: A_start  ! acceleration at the start of the step
+real(ep),dimension(3,size(X_old,1)) :: X_end1   ! final positions with one large step
+real(ep),dimension(3,size(X_old,1)) :: V_end1   ! final velocities with one large step
+real(ep),dimension(3,size(X_old,1)) :: X_end2   ! final positions with two small steps
+real(ep),dimension(3,size(X_old,1)) :: V_end2   ! final velocities with two small steps
+real(ep),dimension(3,size(X_old,1)) :: X_mid    ! temporary positions
+real(ep),dimension(3,size(X_old,1)) :: V_mid    ! temporary velocities
+real(ep),dimension(3,size(X_old,1)) :: A_mid    ! temporary acceleration
+real(ep),dimension(3,size(X_old,1)) :: dX_scal  ! scaled position deviation
+real(ep),dimension(3,size(X_old,1)) :: dV_scal  ! scaled velocity deviation
 
 ! we only have to calculate this once at the start
 step = h_try
 call acceleration2(X_old, A_start)
 call radius_of_gyration(X_old, gyrate)
-V_avg = sum(abs(V_old)) / real(3*size(X_old,1),ep)
+V_avg = sum(abs(V_old)) / real(3*size(X_old,2),ep)
 
 N_rksteps = 0
 success = .true.
@@ -180,7 +180,7 @@ main_loop: do
 
     dX_scal = abs((X_end2 - X_end1) / gyrate)
     dV_scal = abs((V_end2 - V_end1) / V_avg)
-    delta = (sum(dX_scal) + sum(dV_scal)) / real(6*size(X_old,1),ep)
+    delta = (sum(dX_scal) + sum(dV_scal)) / real(6*size(X_old,2),ep)
 
     if (do_steps) then
         write(steps,'("  ",es16.8,"  ",es16.5,"  ",es16.5)') elapsed_time, step, delta
@@ -242,15 +242,15 @@ real(ep) :: third_step                          ! one third of the total step
 real(ep) :: twothird_step                       ! two thirds of the total step
 real(ep) :: sixth_step                          ! one sixth of the total step
 real(ep) :: eighth_step                         ! one eighth of the total step
-real(ep),dimension(size(X_old,1),3) :: X_tmp1   !\
-real(ep),dimension(size(X_old,1),3) :: X_tmp2   ! | temporary positions
-real(ep),dimension(size(X_old,1),3) :: X_tmp3   !/
-real(ep),dimension(size(X_old,1),3) :: V_tmp1   !\
-real(ep),dimension(size(X_old,1),3) :: V_tmp2   ! | temporary velocities
-real(ep),dimension(size(X_old,1),3) :: V_tmp3   !/
-real(ep),dimension(size(X_old,1),3) :: A_int1   !\
-real(ep),dimension(size(X_old,1),3) :: A_int2   ! | internal acceleration values
-real(ep),dimension(size(X_old,1),3) :: A_int3   !/
+real(ep),dimension(3,size(X_old,1)) :: X_tmp1   !\
+real(ep),dimension(3,size(X_old,1)) :: X_tmp2   ! | temporary positions
+real(ep),dimension(3,size(X_old,1)) :: X_tmp3   !/
+real(ep),dimension(3,size(X_old,1)) :: V_tmp1   !\
+real(ep),dimension(3,size(X_old,1)) :: V_tmp2   ! | temporary velocities
+real(ep),dimension(3,size(X_old,1)) :: V_tmp3   !/
+real(ep),dimension(3,size(X_old,1)) :: A_int1   !\
+real(ep),dimension(3,size(X_old,1)) :: A_int2   ! | internal acceleration values
+real(ep),dimension(3,size(X_old,1)) :: A_int3   !/
 
 half_step = step * 0.5_ep
 third_step = step / 3.0_ep
