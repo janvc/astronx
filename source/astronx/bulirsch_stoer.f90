@@ -59,10 +59,10 @@ real(ep) :: internal_elapsed_time           ! what it says...
 real(ep) :: timestep                        ! attempted timestep for the next call to bs_onestep
 real(ep) :: h_did                           ! actually used stepsize in the last call to bs_onestep
 real(ep) :: factor                          ! factor by which to increase the stepsize
-real(ep),dimension(size(X,2),3) :: X_int    ! input to bs_onestep
-real(ep),dimension(size(X,2),3) :: V_int    ! input to bs_onestep
-real(ep),dimension(size(X,2),3) :: X_tmp    ! output of bs_onestep
-real(ep),dimension(size(X,2),3) :: V_tmp    ! output of bs_onestep
+real(ep),dimension(3,size(X,2)) :: X_int    ! input to bs_onestep
+real(ep),dimension(3,size(X,2)) :: V_int    ! input to bs_onestep
+real(ep),dimension(3,size(X,2)) :: X_tmp    ! output of bs_onestep
+real(ep),dimension(3,size(X,2)) :: V_tmp    ! output of bs_onestep
 logical :: success                          ! did bs_onestep converge with the initial stepsize?
 
 
@@ -159,15 +159,15 @@ real(ep) :: h_est                               ! scaled and squared stepsize fo
 real(ep) :: factor                              ! factor by which to reduce the stepsize
 real(ep) :: gyrate                              ! the radius of gyration
 real(ep) :: V_avg                               ! the average velocity
-real(ep),dimension(size(X_old,2),3) :: X_tmp    ! positions after propagation
-real(ep),dimension(size(X_old,2),3) :: V_tmp    ! velocities after propagation
-real(ep),dimension(size(X_old,2),3) :: X_extr   ! positions after extrapolation
-real(ep),dimension(size(X_old,2),3) :: V_extr   ! velocities after extrapolation
-real(ep),dimension(size(X_old,2),3) :: dX       ! position error after extrapolation
-real(ep),dimension(size(X_old,2),3) :: dV       ! velocity error after extrapolation
-real(ep),dimension(size(X_old,2),3) :: A_start  ! acceleration at the beginning of the intervall
-real(ep),dimension(size(X_old,2),3) :: dX_scal  ! scaled error in the positions
-real(ep),dimension(size(X_old,2),3) :: dV_scal  ! scaled error in the velocities
+real(ep),dimension(3,size(X_old,2)) :: X_tmp    ! positions after propagation
+real(ep),dimension(3,size(X_old,2)) :: V_tmp    ! velocities after propagation
+real(ep),dimension(3,size(X_old,2)) :: X_extr   ! positions after extrapolation
+real(ep),dimension(3,size(X_old,2)) :: V_extr   ! velocities after extrapolation
+real(ep),dimension(3,size(X_old,2)) :: dX       ! position error after extrapolation
+real(ep),dimension(3,size(X_old,2)) :: dV       ! velocity error after extrapolation
+real(ep),dimension(3,size(X_old,2)) :: A_start  ! acceleration at the beginning of the intervall
+real(ep),dimension(3,size(X_old,2)) :: dX_scal  ! scaled error in the positions
+real(ep),dimension(3,size(X_old,2)) :: dV_scal  ! scaled error in the velocities
 
 
 N_bs_onestep = N_bs_onestep + 1
