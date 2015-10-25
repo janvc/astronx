@@ -245,6 +245,12 @@ do i = 1, Nobj
     A(3,i) = A(3,i) * force_factor
 enddo
 
+! print the acceleration:
+write(*,'("------------------------------")')
+do i = 1, Nobj
+    write(*,*) A(1,i), A(2,i), A(3,i)
+enddo
+
 end subroutine acceleration2
 
 
