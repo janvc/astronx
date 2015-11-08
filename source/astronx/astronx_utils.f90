@@ -138,7 +138,7 @@ subroutine acceleration(X, A)
 !  delivers the acceleration in terms of xyz-components.
 !
 use types
-use input_module, only: mass, mass_acc, mass_2_acc
+use input_module, only: mass, mass_acc
 use shared_data, only: G
 implicit none
 
@@ -170,7 +170,7 @@ do k = 1 , 3
     do i = 1 , size(mass)
         do j = 1 , size(mass)
             if (i /= j) then
-                A(k,i) = A(k,i) + ((mass_2_acc(i,j) / R2(i,j)) * ((X(k,j) - X(k,i)) / R(i,j)))
+                A(k,i) = A(k,i) + ((mass_acc(i) * mass_acc(j) / R2(i,j)) * ((X(k,j) - X(k,i)) / R(i,j)))
             endif
         enddo
         A(k,i) = A(k,i) * (G / mass_acc(i))
@@ -190,7 +190,7 @@ subroutine acceleration2(X, A)
 !  using explicit loops.
 !
 use types
-use input_module, only: mass_acc, mass_2_acc
+use input_module, only: mass_acc
 use shared_data, only: G
 use callcounts, only: N_acceleration
 implicit none
@@ -228,7 +228,7 @@ do i = 1, Nobj - 1
         dY = X(2,j) - X(2,i)
         dZ = X(3,j) - X(3,i)
         R2 = dX**2 + dY**2 + dZ**2
-        mass_factor = mass_2_acc(i,j) / (R2 * sqrt(R2))
+        mass_factor = mass_acc(i) * mass_acc(j) / (R2 * sqrt(R2))
         A(1,i) = A(1,i) + mass_factor * dX
         A(2,i) = A(2,i) + mass_factor * dY
         A(3,i) = A(3,i) + mass_factor * dZ

@@ -40,8 +40,8 @@ real(dp),protected :: total_mass                                ! the total mass
 real(dp),dimension(:),allocatable,protected :: mass             ! masses of the objects (kg)
 real(ep),dimension(:),allocatable,protected :: mass_acc         ! test for the acceleration routine
 character(len=30),dimension(:),allocatable,protected :: names   ! the names of the objects
-real(dp),dimension(:,:),allocatable,protected :: mass_2         ! mass-products of all object-pairs (kg^2)
-real(ep),dimension(:,:),allocatable,protected :: mass_2_acc     ! as above...
+!real(dp),dimension(:,:),allocatable,protected :: mass_2         ! mass-products of all object-pairs (kg^2)
+!real(ep),dimension(:,:),allocatable,protected :: mass_2_acc     ! as above...
 character(len=100),protected :: name_directory                  ! directory that will be created for the output
 logical,protected :: do_restart                                 ! create a restart file at every write step
 logical,protected :: do_steps                                   ! create a file containing information about the steps
@@ -123,7 +123,7 @@ character(len=200) :: raw_buffer        ! input buffer without comments removed
 integer(st) :: input_status             ! IO status of the input file ( if /= 0 -> trouble!!)
 integer(st) :: number_of_lines          ! number of lines in the input file
 integer(st) :: readstatus               ! IO status for the read operation
-integer(st) :: i, k                     ! loop counting indices
+integer(st) :: i                        ! loop counting indices
 integer(st) :: coord_start, coord_end   ! first and last line of the coordinates-block in the input file
 logical :: test_name = .false.          !\
 logical :: test_N_obj = .false.         ! | logical variables to test for the existence of the corresponding
@@ -321,9 +321,9 @@ endif
 ! allocate the memory:
 allocate(names(N_obj))
 allocate(mass(N_obj))
-allocate(mass_2(N_obj,N_obj))
+!allocate(mass_2(N_obj,N_obj))
 allocate(mass_acc(N_obj))
-allocate(mass_2_acc(N_obj,N_obj))
+!allocate(mass_2_acc(N_obj,N_obj))
 allocate(X(3,N_obj))
 allocate(V(3,N_obj))
 
@@ -344,12 +344,12 @@ enddo
 close(input)
 
 ! set up the mass-squared-array to save a multiplication in each force calculation:
-forall ( i=1:N_obj, k=1:N_obj, i/=k )
-    mass_2(i,k) = mass(i) * mass(k)
-end forall
+!forall ( i=1:N_obj, k=1:N_obj, i/=k )
+!    mass_2(i,k) = mass(i) * mass(k)
+!end forall
 
 mass_acc = real(mass, ep)
-mass_2_acc = real(mass_2, ep)
+!mass_2_acc = real(mass_2, ep)
 
 ! calculate the total system mass:
 total_mass = 0.0_dp
