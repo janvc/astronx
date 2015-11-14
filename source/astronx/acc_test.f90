@@ -27,7 +27,8 @@ use astronx_utils, only: acceleration2
 implicit none
 
 integer(st) :: Niter                        ! number of runs of acceleration
-integer(st) :: i                            ! loop index
+integer(st) :: nobj
+integer(st) :: i, k, j                      ! loop indices
 real(dp) :: start_cpu                       ! time of start
 real(dp) :: stop_cpu                        ! time of end
 real(dp),dimension(:,:),allocatable :: X    ! spatial coordinates of all objects (m)
@@ -39,16 +40,22 @@ character(len=40) :: input_file             ! name of the input file
 call get_command_argument(1, input_file)
 call read_input(input_file, X, V)
 call get_command_argument(2, input_file)
+nobj = size(X, 1)
 read(input_file,*) Niter
 
-allocate(A(size(X, 1), 3))
-allocate(X_a(size(X, 1), 3))
+allocate(A(nobj, 3))
+allocate(X_a(nobj, 3))
 
 X_a = real(X, ep)
 
 call cpu_time(start_cpu)
-do i = 1, Niter
+do i = 1, niter
     call acceleration2(X_a, A)
+    do j = 1, 3
+        do k = 1, nobj
+            X_a(k,j) = X_a(k,j) + A(k,j)
+        enddo
+    enddo
 enddo
 call cpu_time(stop_cpu)
 
