@@ -50,6 +50,10 @@ X_a = real(X, ep)
 
 call cpu_time(start_cpu)
 do i = 1, niter
+    write(*,'("------------------------------")')
+    do j = 1, Nobj
+        write(*,*) X_a(j,1), X_a(j,2), X_a(j,3)
+    enddo
     call acceleration2(X_a, A)
     do j = 1, 3
         do k = 1, nobj
