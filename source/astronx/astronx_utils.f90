@@ -245,12 +245,6 @@ do i = 1, Nobj
     A(i,3) = A(i,3) * force_factor
 enddo
 
-! print the acceleration:
-write(*,'("------------------------------")')
-do i = 1, Nobj
-    write(*,*) A(i,1), A(i,2), A(i,3)
-enddo
-
 end subroutine acceleration2
 
 
