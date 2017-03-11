@@ -1,0 +1,22 @@
+# a well-behaved system containing 10 objects
+#
+name_dir   = bench_010_wb
+n_obj      = 10
+tfinal     = 2.0e11
+tout       = 5.0e7
+eps        = 1.0e-11
+shift_cog
+shift_mom
+
+begin_coords
+    sun         1.9884e30     0.0           0.0       0.0          0.0       0.0       0.0
+    mercury     3.3022e23     5.790905e10   0.0       0.0          0.0       4.7865e4  0.0
+    venus       4.8676e24     1.08208e11    0.0       0.0          0.0       3.5016e4  0.0
+    earth       5.97219e24    1.49598261e11 0.0       0.0          0.0       2.9781e4  0.0
+    mars        6.4185e23     2.279391e11   0.0       0.0          0.0       2.4126e4  0.0
+    jupiter     1.8986e27     7.785472e11   0.0       0.0          0.0       1.3054e4  0.0
+    ganymede    1.4819e23     7.785472e11   1.0704e9  0.0         -1.0879e4  1.3054e4  0.0
+    saturn      5.6846e26     1.43344937e12 0.0       0.0          0.0       9.6207e3  0.0
+    uranus      6.681e25      2.8706714e12  0.0       0.0          0.0       6.7984e3  0.0
+    neptun      1.0243e26     4.4985426e12  0.0       0.0          0.0       5.4308e3  0.0
+end_coords
