@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 Jan von Cosel
+ * Copyright 2012-2017 Jan von Cosel
  *
  * This file is part of astronx.
  *

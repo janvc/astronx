@@ -1,4 +1,4 @@
-! Copyright 2012-2015 Jan von Cosel
+! Copyright 2012-2017 Jan von Cosel
 !
 ! This file is part of astronx.
 !
@@ -21,45 +21,32 @@ program acc_test
 !
 ! this program is used to test the performance of the acceleration routine
 !
-use types
-use input_module, only: read_input
-use astronx_utils, only: acceleration2
+use iso_fortran_env, only: int32, real64, output_unit
+use input_module, only: N_obj, process_cmd_arguments, read_input
+use astronx_utils, only: acceleration
 implicit none
 
-integer(st) :: Niter                        ! number of runs of acceleration
-integer(st) :: nobj
-integer(st) :: i, k, j                      ! loop indices
-real(dp) :: start_cpu                       ! time of start
-real(dp) :: stop_cpu                        ! time of end
-real(dp),dimension(:,:),allocatable :: X    ! spatial coordinates of all objects (m)
-real(dp),dimension(:,:),allocatable :: V    ! velocity components of all objects (m/s)
-real(ep),dimension(:,:),allocatable :: A    ! the acceleration
-real(ep),dimension(:,:),allocatable :: X_a  ! spatial coordinates of all objects (m)
-character(len=40) :: input_file             ! name of the input file
+integer(int32) :: Niter                     ! number of runs of acceleration
+integer(int32) :: i                         ! loop index
+real(real64) :: start_cpu                   ! time of start
+real(real64) :: stop_cpu                    ! time of end
+real(real64),dimension(:),allocatable :: X  ! spatial coordinates of all objects (m)
+real(real64),dimension(:),allocatable :: V  ! velocities of all objects (m)
+real(real64),dimension(:),allocatable :: A  ! the acceleration
+character(len=40) :: arg_string             ! placehoder string for input argument
 
-call get_command_argument(1, input_file)
-call read_input(input_file, X, V)
-call get_command_argument(2, input_file)
-nobj = size(X, 1)
-read(input_file,*) Niter
 
-allocate(A(nobj, 3))
-allocate(X_a(nobj, 3))
+call process_cmd_arguments
+call read_input(X, V)
+call get_command_argument(3, arg_string)
 
-X_a = real(X, ep)
+read(arg_string,*) Niter
+
+allocate(A(3 * N_obj))
 
 call cpu_time(start_cpu)
 do i = 1, niter
-    write(*,'("------------------------------")')
-    do j = 1, Nobj
-        write(*,*) X_a(j,1), X_a(j,2), X_a(j,3)
-    enddo
-    call acceleration2(X_a, A)
-    do j = 1, 3
-        do k = 1, nobj
-            X_a(k,j) = X_a(k,j) + A(k,j)
-        enddo
-    enddo
+    call acceleration(X, A)
 enddo
 call cpu_time(stop_cpu)
 

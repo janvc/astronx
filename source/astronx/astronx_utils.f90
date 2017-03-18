@@ -1,4 +1,4 @@
-! Copyright 2012-2015 Jan von Cosel
+! Copyright 2012-2017 Jan von Cosel
 !
 ! This file is part of astronx.
 !
@@ -34,34 +34,33 @@ module astronx_utils
 !  shiftcog              shift the centre of gravity into the origin
 !  shiftmom              shift the total linear momentum to zero
 !
+use iso_fortran_env, only: int32, real64
 contains
 
 !##################################################################################################
 !##################################################################################################
 
-subroutine centre_of_gravity(X, cog, mass, total_mass)
+subroutine centre_of_gravity(X, cog)
 !
 ! the purpose of this subroutine is to calculate the position of the centre of gravity of the system
 !
-use types
+use input_module, only: N_obj, mass, total_mass
 implicit none
 
 
 ! arguments to the routine:
-real(dp),dimension(:,:),intent(in) :: X     ! position array (m)
-real(dp),dimension(:),intent(out) :: cog    ! position of the centre of gravity (m)
-real(dp),dimension(:),intent(in) :: mass    ! the masses of the objects (kg)
-real(dp),intent(in) :: total_mass           ! the total mass of the system (kg)
+real(real64),dimension(:),intent(in) :: X       ! position array (m)
+real(real64),dimension(:),intent(out) :: cog    ! position of the centre of gravity (m)
 
 ! internal variables:
-integer(st) :: i, k                             ! counting indices
+integer(int32) :: i ! loop index
 
 
-cog = 0.0
-do k = 1 , size(cog)
-    do i = 1 , size(X, 1)
-        cog(k) = cog(k) + (mass(i) * X(i,k))
-    enddo
+cog = 0.0_real64
+do i = 1, N_obj
+    cog(1) = cog(1) + (mass(i) * X(3 * (i-1) + 1))
+    cog(2) = cog(2) + (mass(i) * X(3 * (i-1) + 2))
+    cog(3) = cog(3) + (mass(i) * X(3 * (i-1) + 3))
 enddo
 cog = cog / total_mass
 
@@ -71,28 +70,27 @@ end subroutine centre_of_gravity
 !##################################################################################################
 !##################################################################################################
 
-subroutine linear_momentum(V, mom, mass)
+subroutine linear_momentum(V, mom)
 !
 ! the purpose of this subroutine is to calculate the overall linear momentum of the system
 !
-use types
+use input_module, only: N_obj, mass
 implicit none
 
 
 ! arguments to the routine:
-real(dp),dimension(:,:),intent(in) :: V     ! velocity array (m/s)
-real(dp),dimension(:),intent(out) :: mom    ! total momentum vector (kg*m/s)
-real(dp),dimension(:),intent(in) :: mass    ! the masses of the objects (kg)
+real(real64),dimension(:),intent(in) :: V       ! velocity array (m/s)
+real(real64),dimension(:),intent(out) :: mom    ! total momentum vector (kg*m/s)
 
 ! internal variables:
-integer(st) :: i, k                         ! counting indices
+integer(int32) :: i ! loop index
 
 
-mom = 0.0
-do k = 1 , size(mom)
-    do i = 1 , size(V, 1)
-        mom(k) = mom(k) + (mass(i) * V(i,k))
-    enddo
+mom = 0.0_real64
+do i = 1, N_obj
+    mom(1) = mom(1) + (mass(i) * V(3 * (i-1) + 1))
+    mom(2) = mom(2) + (mass(i) * V(3 * (i-1) + 2))
+    mom(3) = mom(3) + (mass(i) * V(3 * (i-1) + 3))
 enddo
 
 
@@ -101,28 +99,27 @@ end subroutine linear_momentum
 !##################################################################################################
 !##################################################################################################
 
-subroutine angular_momentum(X, V, angmom, mass)
+subroutine angular_momentum(X, V, angmom)
 !
 ! This subroutine will calculate the total angular momentum of the system.
 !
-use types
+use input_module, only: N_obj, mass
 implicit none
 
 
 ! arguments to the subroutine:
-real(dp),dimension(:,:),intent(in) :: X     ! the positions (m)
-real(dp),dimension(:,:),intent(in) :: V     ! the velocities (m/s)
-real(dp),dimension(:),intent(out) :: angmom ! the angular momentum vector
-real(dp),dimension(:),intent(in) :: mass    ! the masses of the objects (kg)
+real(real64),dimension(:),intent(in) :: X       ! the positions (m)
+real(real64),dimension(:),intent(in) :: V       ! the velocities (m/s)
+real(real64),dimension(:),intent(out) :: angmom ! the angular momentum vector
 
 ! internal variables:
-integer(st) :: i        ! counting index
+integer(int32) :: i ! loop index
 
-angmom = 0.0_dp
-do i = 1, size(X, 1)
-    angmom(1) = angmom(1) + mass(i) * (X(i,2)*V(i,3) - X(i,3)*V(i,2))
-    angmom(2) = angmom(2) + mass(i) * (X(i,3)*V(i,1) - X(i,1)*V(i,3))
-    angmom(3) = angmom(3) + mass(i) * (X(i,1)*V(i,2) - X(i,2)*V(i,1))
+angmom = 0.0_real64
+do i = 1, N_obj
+    angmom(1) = angmom(1) + mass(i) * (X(3 * (i-1) + 2)*V(3 * (i-1) + 3) - X(3 * (i-1) + 3)*V(3 * (i-1) + 2))
+    angmom(2) = angmom(2) + mass(i) * (X(3 * (i-1) + 3)*V(3 * (i-1) + 1) - X(3 * (i-1) + 1)*V(3 * (i-1) + 3))
+    angmom(3) = angmom(3) + mass(i) * (X(3 * (i-1) + 1)*V(3 * (i-1) + 2) - X(3 * (i-1) + 2)*V(3 * (i-1) + 1))
 enddo
 
 
@@ -135,117 +132,61 @@ subroutine acceleration(X, A)
 !
 !  The purpose of this subroutine is the calculation of the accelerations based on the
 !  gravitational force. It takes the positions and masses of the objects as arguments and
-!  delivers the acceleration in terms of xyz-components.
-!
-use types
-use input_module, only: mass, mass_acc
-use shared_data, only: G
-implicit none
-
-
-!  arguments to the routine:
-real(ep),dimension(:,:),intent(in) :: X         ! position array (m)
-real(ep),dimension(:,:),intent(out) :: A        ! acceleration (m/s^2)
-
-! internal variables:
-real(ep),dimension(size(mass),size(mass)) :: R   ! distances between objects (m)
-real(ep),dimension(size(mass),size(mass)) :: R2  ! squares of the distances (m^2)
-integer(st) :: i, j, k                 ! counting indices for the loops
-
-
-! calculate the distances using pythagoras' theorem
-! (maybe this can be speeded up by setting j=2:N_obj)
-forall(i=1:size(mass), j=1:size(mass), j>=i+1)
-    R2(i,j) = ((X(j,1)-X(i,1))*(X(j,1)-X(i,1))) &
-            + ((X(j,2)-X(i,2))*(X(j,2)-X(i,2))) &
-            + ((X(j,3)-X(i,3))*(X(j,3)-X(i,3)))
-    R(i,j) = sqrt(R2(i,j))
-    R2(j,i) = R2(i,j)
-    R(j,i) = R(i,j)
-end forall
-
-! calculate the forces and accelerations
-A = 0.0
-do k = 1 , 3
-    do i = 1 , size(mass)
-        do j = 1 , size(mass)
-            if (i /= j) then
-                A(i,k) = A(i,k) + ((mass_acc(i) * mass_acc(j) / R2(i,j)) * ((X(j,k) - X(i,k)) / R(i,j)))
-            endif
-        enddo
-        A(i,k) = A(i,k) * (G / mass_acc(i))
-    enddo
-enddo
-
-end subroutine acceleration
-
-!##################################################################################################
-!##################################################################################################
-
-subroutine acceleration2(X, A)
-!
-!  The purpose of this subroutine is the calculation of the accelerations based on the
-!  gravitational force. It takes the positions and masses of the objects as arguments and
 !  delivers the acceleration in terms of xyz-components. This is an alternative implementation
 !  using explicit loops.
 !
-use types
-use input_module, only: mass_acc
-use shared_data, only: G
-use callcounts, only: N_acceleration
+use globalmod, only: G
+use counters, only: N_acceleration
+use input_module, only: N_obj, mass
 implicit none
 
 
 !  arguments to the routine:
-real(ep),dimension(:,:),intent(in) :: X         ! position array (m)
-real(ep),dimension(:,:),intent(out) :: A        ! acceleration (m/s^2)
+real(real64),dimension(:),intent(in) :: X   ! position array (m)
+real(real64),dimension(:),intent(out) :: A  ! acceleration (m/s^2)
 
 ! internal variables:
-real(ep) :: R2              ! squares of the distances (m^2)
-integer(st) :: i, j         ! counting indices for the loops
-integer(st) :: Nobj         ! the number of objects in the system
-real(ep) :: G_here          ! local extended precision version of G
-real(ep) :: mass_factor     ! temporary factor for force calculation
-real(ep) :: force_factor    ! another one
-real(ep) :: dX              ! differences in X
-real(ep) :: dY              ! differences in Y
-real(ep) :: dZ              ! differences in Z
+integer(int32) :: i, j          ! counting indices for the loops
+real(real64) :: R2              ! squares of the distances (m^2)
+real(real64) :: mass_factor     ! temporary factor for force calculation
+real(real64) :: force_factor    ! another one
+real(real64) :: dX              ! differences in X
+real(real64) :: dY              ! differences in Y
+real(real64) :: dZ              ! differences in Z
 
 
 N_acceleration = N_acceleration + 1
 
-Nobj = size(mass_acc)
-G_here = real(G, ep)
-dX = 0.0_ep
-dY = 0.0_ep
-dZ = 0.0_ep
-R2 = 0.0_ep
-A = 0.0_ep
+dX = 0.0_real64
+dY = 0.0_real64
+dZ = 0.0_real64
+R2 = 0.0_real64
+A = 0.0_real64
 
-do i = 1, Nobj - 1
-    do j = i + 1, Nobj
-        dX = X(j,1) - X(i,1)
-        dY = X(j,2) - X(i,2)
-        dZ = X(j,3) - X(i,3)
-        R2 = dX**2 + dY**2 + dZ**2
-        mass_factor = mass_acc(i) * mass_acc(j) / (R2 * sqrt(R2))
-        A(i,1) = A(i,1) + mass_factor * dX
-        A(i,2) = A(i,2) + mass_factor * dY
-        A(i,3) = A(i,3) + mass_factor * dZ
-        A(j,1) = A(j,1) - mass_factor * dX
-        A(j,2) = A(j,2) - mass_factor * dY
-        A(j,3) = A(j,3) - mass_factor * dZ
+do i = 1, N_obj - 1
+    do j = i + 1, N_obj
+        dX = X(3 * (j-1) + 1) - X(3 * (i-1) + 1)
+        dY = X(3 * (j-1) + 2) - X(3 * (i-1) + 2)
+        dZ = X(3 * (j-1) + 3) - X(3 * (i-1) + 3)
+        R2 = dX * dX + dY * dY + dZ * dZ
+        mass_factor = mass(i) * mass(j) / (R2 * sqrt(R2))
+        A(3 * (i-1) + 1) = A(3 * (i-1) + 1) + mass_factor * dX
+        A(3 * (i-1) + 2) = A(3 * (i-1) + 2) + mass_factor * dY
+        A(3 * (i-1) + 3) = A(3 * (i-1) + 3) + mass_factor * dZ
+        A(3 * (j-1) + 1) = A(3 * (j-1) + 1) - mass_factor * dX
+        A(3 * (j-1) + 2) = A(3 * (j-1) + 2) - mass_factor * dY
+        A(3 * (j-1) + 3) = A(3 * (j-1) + 3) - mass_factor * dZ
     enddo
 enddo
 
-do i = 1, Nobj
-    force_factor = G_here / mass_acc(i)
-    A(i,1) = A(i,1) * force_factor
-    A(i,2) = A(i,2) * force_factor
-    A(i,3) = A(i,3) * force_factor
+do i = 1, N_obj
+    force_factor = G / mass(i)
+    A(3 * (i-1) + 1) = A(3 * (i-1) + 1) * force_factor
+    A(3 * (i-1) + 2) = A(3 * (i-1) + 2) * force_factor
+    A(3 * (i-1) + 3) = A(3 * (i-1) + 3) * force_factor
 enddo
 
-end subroutine acceleration2
+end subroutine acceleration
 
 
 !##################################################################################################
@@ -255,34 +196,36 @@ subroutine radius_of_gyration(X, gyr)
 !
 ! This subroutine calculates the radius of gyration (r_g) of a configuration X
 !
-use types
+use input_module, only: N_obj
 implicit none
 
 
 ! arguments to the routine:
-real(ep),intent(in),dimension(:,:) :: X     ! the positions of all objects
-real(ep),intent(out) :: gyr                     ! the radius of gyration
+real(real64),intent(in),dimension(:) :: X   ! the positions of all objects
+real(real64),intent(out) :: gyr             ! the radius of gyration
 
 ! internal variables:
-integer(st) :: i                    ! loop index
-real(ep),dimension(3) :: avg_pos    ! the average positon (like centre of gravity w/o mass weighting)
-real(ep),dimension(3) :: distance   ! distance between object and avg_pos
+integer(int32) :: i                     ! loop index
+real(real64),dimension(3) :: center     ! the geometric center of the system
+real(real64),dimension(3) :: distance   ! distance between object and center
 
 
 ! calculate the average position:
-avg_pos = 0.0_ep
-forall (i = 1:3)
-    avg_pos(i) = sum(X(:,i))
-end forall
-avg_pos = avg_pos / real(size(X, 1),ep)
+center = 0.0_real64
+do i = 1, N_obj
+    center(1) = center(1) + X(3 * (i-1) + 1)
+    center(2) = center(2) + X(3 * (i-1) + 2)
+    center(3) = center(3) + X(3 * (i-1) + 3)
+enddo
+center = center / real(N_obj, real64)
 
 ! r_g is the average distance between an object and the average position:
-gyr = 0.0_ep
-do i = 1, size(X, 1)
-    distance(:) = X(i,:) - avg_pos(:)
+gyr = 0.0_real64
+do i = 1, N_obj
+    distance(:) = X(3*(i-1)+1 : 3*(i-1)+3) - center(:)
     gyr = gyr + sqrt(dot_product(distance, distance))
 enddo
-gyr = gyr / real(size(X, 1),ep)
+gyr = gyr / real(N_obj,real64)
 
 
 end subroutine radius_of_gyration
@@ -297,32 +240,32 @@ subroutine scale_error(X_new, V_new, dX, dV, delta)
 ! error will be scaled based on the radius of gyration. This acts as an approximate measure
 ! for the size of the system.
 !
-use types
+use input_module, only: N_obj
 implicit none
 
 
 ! arguments to the routine:
-real(ep),intent(in),dimension(:,:) :: X_new
-real(ep),intent(in),dimension(:,:) :: V_new
-real(ep),intent(in),dimension(:,:) :: dX
-real(ep),intent(in),dimension(:,:) :: dV
-real(ep),intent(out) :: delta
+real(real64),intent(in),dimension(:) :: X_new   ! newly computed values of the positions
+real(real64),intent(in),dimension(:) :: V_new   ! newly computed values of the velocities
+real(real64),intent(in),dimension(:) :: dX      ! error estimate for the positions
+real(real64),intent(in),dimension(:) :: dV      ! error estimate for the velocities
+real(real64),intent(out) :: delta               ! the normalized error
 
 ! internal variables:
-real(ep),dimension(size(X_new,1),3) :: dX_scal
-real(ep),dimension(size(X_new,1),3) :: dV_scal
-real(ep) :: gyrate
-real(ep) :: V_avg
+real(real64),dimension(3 * N_obj) :: dX_scal    ! scaled position error
+real(real64),dimension(3 * N_obj) :: dV_scal    ! scaled velocity error
+real(real64) :: gyrate                          ! radius of gyration
+real(real64) :: V_avg                           ! average velocity
 
 
 call radius_of_gyration(X_new, gyrate)
 
-V_avg = sum(abs(V_new)) / real(3*size(X_new,1),ep)
+V_avg = sum(abs(V_new)) / real(3 * N_obj, real64)
 
 dX_scal = abs(dX / gyrate)
 dV_scal = abs(dV / V_avg)
 
-delta = (sum(dX_scal) + sum(dV_scal)) / real(6*size(X_new,1),ep)
+delta = (sum(dX_scal) + sum(dV_scal)) / real(6 * N_obj, real64)
 
 
 end subroutine scale_error
@@ -335,36 +278,34 @@ subroutine write_to_trj(time, X, V)
 ! This subroutine will write one frame to the trajectory consisting of the elapsed time and
 ! the contents of the arrays X and V.
 !
-use types
-use shared_data, only: bin_trj, trajectory
-use input_module, only: do_texttrj, format_string
+use globalmod, only: bin_trj, txt_trj
+use input_module, only: N_obj, do_txttrj, format_string
 implicit none
 
 
 ! arguments to the routine:
-real(dp),intent(in) :: time                 ! the current time
-real(dp),intent(in),dimension(:,:) :: X     ! the positions
-real(dp),intent(in),dimension(:,:) :: V     ! the velocities
+real(real64),intent(in) :: time             ! the current time
+real(real64),intent(in),dimension(:) :: X   ! the positions
+real(real64),intent(in),dimension(:) :: V   ! the velocities
 
 ! internal variables:
-integer(st) :: i                            ! loop index
+integer(int32) :: i ! loop index
 
 ! write to the text trajectory if requested:
-if (do_texttrj) then
-    write(trajectory,'(es18.10)',advance='no') time
-    do i = 1, size(X,1)
-        write(trajectory,format_string,advance='no') X(i,1), X(i,2), X(i,3)
+if (do_txttrj) then
+    write(txt_trj,'(es18.10)',advance='no') time
+    do i = 1, N_obj
+        write(txt_trj,format_string,advance='no') X(3 * (i-1) + 1), X(3 * (i-1) + 2), X(3 * (i-1) + 3)
     enddo
-    write(trajectory,*)
+    write(txt_trj,*)
 endif
 
-
 write(bin_trj) time
-do i = 1, size(X,1)
-    write(bin_trj) X(i,1), X(i,2), X(i,3)
+do i = 1, N_obj
+    write(bin_trj) X(3 * (i-1) + 1), X(3 * (i-1) + 2), X(3 * (i-1) + 3)
 enddo
-do i = 1, size(X,1)
-    write(bin_trj) V(i,1), V(i,2), V(i,3)
+do i = 1, N_obj
+    write(bin_trj) V(3 * (i-1) + 1), V(3 * (i-1) + 2), V(3 * (i-1) + 3)
 enddo
 
 
@@ -378,7 +319,7 @@ subroutine show_input_parameters
 ! this routine will write the values of all input parameters to the output file
 !
 use input_module
-use shared_data, only: output
+use globalmod, only: output
 implicit none
 
 
@@ -417,12 +358,12 @@ if (do_steps) then
 else
     write(output,'("steps         no")')
 endif
-if (do_texttrj) then
+if (do_txttrj) then
     write(output,'("text_trj      yes")')
 else
     write(output,'("text_trj      no")')
 endif
-if (do_unrestrictedprop) then
+if (do_unResProp) then
     write(output,'("prop_type     unrestricted")')
 else
     write(output,'("prop_type     normal")')
@@ -442,24 +383,25 @@ subroutine shiftcog(X)
 ! this routine will the positions of all objects by an equal amount, so that the centre of
 ! gravity coincides with the origin of the coordinate system
 !
-use types
-use input_module, only: mass, total_mass
+use input_module, only: N_obj
 implicit none
 
 
 ! arguments to the routine:
-real(dp),dimension(:,:),intent(inout) :: X  ! the positions that will be shifted
+real(real64),dimension(:),intent(inout) :: X    ! the positions that will be shifted
 
 ! internal variables:
-real(dp),dimension(3) :: cog    ! the position of the centre of gravity
-integer(st) :: i, k             ! loop indices
+real(real64),dimension(3) :: cog    ! the position of the centre of gravity
+integer(int32) :: i                 ! loop index
 
 
-call centre_of_gravity(X, cog, mass, total_mass)
+call centre_of_gravity(X, cog)
 
-forall ( i=1:size(X,1), k=1:3 )
-    X(i,k) = X(i,k) - cog(k)
-end forall
+do i = 1, N_obj
+    X(3 * (i-1) + 1) = X(3 * (i-1) + 1) - cog(1)
+    X(3 * (i-1) + 2) = X(3 * (i-1) + 2) - cog(2)
+    X(3 * (i-1) + 3) = X(3 * (i-1) + 3) - cog(3)
+enddo
 
 
 end subroutine shiftcog
@@ -472,24 +414,25 @@ subroutine shiftmom(V)
 ! this routine will add an additional contribution to all velocity components
 ! to make the total linear momentum of the system vanish
 !
-use types
-use input_module, only: mass, total_mass
+use input_module, only: N_obj, total_mass
 implicit none
 
 
 ! arguments to the routine:
-real(dp),dimension(:,:),intent(inout) :: V      ! the velocities to be shifted
+real(real64),dimension(:),intent(inout) :: V    ! the velocities to be shifted
 
 ! internal variables:
-real(dp),dimension(3) :: mom    ! the linear momentum vector
-integer(st) :: i, k             ! loop indices
+real(real64),dimension(3) :: mom    ! the linear momentum vector
+integer(int32) :: i                 ! loop index
 
 
-call linear_momentum(V, mom, mass)
+call linear_momentum(V, mom)
 
-forall ( i=1:size(mass), k=1:3 )
-    V(i,k) = V(i,k) - (mom(k) / total_mass)
-end forall
+do i = 1, N_obj
+    V(3 * (i-1) + 1) = V(3 * (i-1) + 1) - mom(1) / total_mass
+    V(3 * (i-1) + 2) = V(3 * (i-1) + 2) - mom(2) / total_mass
+    V(3 * (i-1) + 3) = V(3 * (i-1) + 3) - mom(3) / total_mass
+enddo
 
 
 end subroutine shiftmom

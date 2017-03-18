@@ -1,4 +1,4 @@
-! Copyright 2012-2015 Jan von Cosel
+! Copyright 2012-2017 Jan von Cosel
 !
 ! This file is part of astronx.
 !
@@ -22,96 +22,44 @@
 !  constants and global variables) between different parts of the program.
 !
 !
-module types
-!
-! this module defines the variable types used in this program.
-!
-implicit none
-save
-
-integer,parameter :: dp = selected_real_kind(14)  ! the default (double precision) real type
-integer,parameter :: ep = selected_real_kind(17)  ! extended precision real type
-integer,parameter :: st = selected_int_kind(5)    ! the default integer type
-
-end module types
-
-!##################################################################################################
-!##################################################################################################
-
-module shared_data
+module globalmod
 !
 ! this module contains all variables to be shared between multiple procedures
 !
-use types
+use iso_fortran_env, only: int32, real64
 implicit none
 save
 
-integer(st),parameter :: input = 1              ! IO-unit of the input file
-integer(st),parameter :: output = 2             ! IO-unit of the output file
-integer(st),parameter :: trajectory = 3         ! IO-unit of the trajectory file
-integer(st),parameter :: restart = 4            ! IO-unit of the restart file
-integer(st),parameter :: bin_trj = 5            ! IO-unit of the binary trajectory file
-integer(st),parameter :: steps = 7              ! IO-unit of the steps file
-real(dp) :: elapsed_time                        ! the current time
-real(ep),parameter :: small = 1.0e-20           ! a small number to prevent division by 0
-real(dp),parameter :: G = 6.6726e-11            ! the gravitational constant
+
+integer(int32) :: input                         ! IO-unit of the input file
+integer(int32) :: output                        ! IO-unit of the output file
+integer(int32) :: txt_trj                       ! IO-unit of the trajectory file
+integer(int32) :: restart                       ! IO-unit of the restart file
+integer(int32) :: bin_trj                       ! IO-unit of the binary trajectory file
+integer(int32) :: steps                         ! IO-unit of the steps file
+real(real64) :: elapsed_time                    ! the current time
+real(real64),parameter :: small = 1.0e-20       ! a small number to prevent division by 0
+real(real64),parameter :: G = 6.6726e-11        ! the gravitational constant
 character(len=7) :: restart_file = "restart"    ! this file contains the current positions and velocities
+character(len=10) :: bin_trj_file="trajectory"  ! the trajectory file in binary format
+character(len=8) :: txt_trj_file="text_trj"     ! file to save the trajectory
+character(len=6) :: output_file="output"        ! the output file with general information about the calculation
+character(len=5) :: steps_file="steps"          ! this file contains detailed info about the propagation steps
 logical :: underflow                            ! to determine if the stepsize has underflown
 
-end module shared_data
+end module globalmod
 
 !##################################################################################################
 !##################################################################################################
 
-module callcounts
-!
-! this module contains counters that count the calls to the different subroutines
-!
-use types
-implicit none
+module counters
+use iso_fortran_env, only: int32
 
-integer(st) :: N_acceleration
-integer(st) :: N_bs_largestep
-integer(st) :: N_bs_onestep
-integer(st) :: N_bs_substeps
-integer(st) :: N_extrapolate
+integer(int32) :: N_acceleration    !
+integer(int32) :: N_bs_largestep    !\ 
+integer(int32) :: N_bs_onestep      !  number of calls to the respective routine
+integer(int32) :: N_bs_substeps     !/
+integer(int32) :: N_extrapolate     !
 
-contains
-
-!##################################################################################################
-
-subroutine init_counts
-!
-! this routine initializes all counters to zero
-!
-implicit none
-
-N_acceleration = 0_st
-N_bs_largestep = 0_st
-N_bs_onestep = 0_st
-N_bs_substeps = 0_st
-N_extrapolate = 0_st
-
-end subroutine init_counts
-
-!##################################################################################################
-
-subroutine print_counts
-!
-! this routine prints the number of calls to the counted routines to the output file
-!
-use shared_data, only: output
-implicit none
-
-write(output,'("   routine         number of calls")')
-write(output,'(" ---------------------------------")')
-write(output,'(" acceleration    ",i10)') N_acceleration
-write(output,'(" bs_largestep    ",i10)') N_bs_largestep
-write(output,'(" bs_onestep      ",i10)') N_bs_onestep
-write(output,'(" bs_substeps     ",i10)') N_bs_substeps
-write(output,'(" extrapolate     ",i10)') N_extrapolate
-
-end subroutine print_counts
-
-end module callcounts
+end module counters
 
