@@ -2,7 +2,7 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 set(CMAKE_Fortran_FLAGS "-std=f2008 -fall-intrinsics -Wall -Wextra --pedantic")
 set(CMAKE_Fortran_FLAGS_DEBUG "-ggdb3 -O0 -ffpe-trap=invalid,zero,overflow")
-set(CMAKE_Fortran_FLAGS_RELEASE "-O3 -march=native -mavx2 -funroll-loops")
+set(CMAKE_Fortran_FLAGS_RELEASE "-O3 -march=native -mavx -funroll-loops")
 
 set(astronx_SOURCES
     modules.f90

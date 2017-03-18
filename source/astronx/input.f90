@@ -326,8 +326,8 @@ enddo
 ! read coordinates:
 do i=1, N_obj
     read(input,*,iostat=readstatus) names(i), mass(i), &
-                                    X(3 * (i-1) + 0), X(3 * (i-1) + 1), X(3 * (i-1) + 2), &
-                                    V(3 * (i-1) + 0), V(3 * (i-1) + 1), V(3 * (i-1) + 2)
+                                    X(3 * (i-1) + 1), X(3 * (i-1) + 2), X(3 * (i-1) + 3), &
+                                    V(3 * (i-1) + 1), V(3 * (i-1) + 2), V(3 * (i-1) + 3)
     if (readstatus /= 0) then
         write(error_unit,*) "Error reading coordinate of object ", i, " Exiting."
         stop
