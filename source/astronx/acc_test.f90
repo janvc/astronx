@@ -22,8 +22,9 @@ program acc_test
 ! this program is used to test the performance of the acceleration routine
 !
 use iso_fortran_env, only: int32, real64, output_unit
-use input_module, only: N_obj, process_cmd_arguments, read_input
-use astronx_utils, only: acceleration
+use globalmod, only: G
+use input_module, only: N_obj, process_cmd_arguments, read_input, mass
+use astronx_utils, only: acceleration, acceleration2
 implicit none
 
 integer(int32) :: Niter                     ! number of runs of acceleration
@@ -46,7 +47,8 @@ allocate(A(3 * N_obj))
 
 call cpu_time(start_cpu)
 do i = 1, niter
-    call acceleration(X, A)
+    !call acceleration_c(N_obj, X, A, G, mass)
+    call acceleration2(X, A)
 enddo
 call cpu_time(stop_cpu)
 

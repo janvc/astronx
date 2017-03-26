@@ -89,14 +89,16 @@ do i = 1, command_argument_count()
     elseif (trim(argument) == "-t") then
         acc_test = .true.
     else
-        inquire(file=trim(argument), exist=file_exists)
-        if (.not. file_exists) then
-            write(error_unit,*) "ERROR: Input file ", trim(argument), " not found."
-            stop
-        else
-            name_length = len(trim(argument))
-            allocate(character(len=name_length) :: input_file)
-            input_file = trim(argument)
+        if (.not. allocated(input_file)) then
+            inquire(file=trim(argument), exist=file_exists)
+            if (.not. file_exists) then
+                write(error_unit,*) "ERROR: Input file ", trim(argument), " not found."
+                stop
+            else
+                name_length = len(trim(argument))
+                allocate(character(len=name_length) :: input_file)
+                input_file = trim(argument)
+            endif
         endif
     endif
 enddo

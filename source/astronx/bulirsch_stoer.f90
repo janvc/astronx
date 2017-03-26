@@ -132,10 +132,10 @@ subroutine bs_onestep(h_try, h_did, X_old, V_old, X_new, V_new, nsteps, delta, N
 ! an increasing number of substeps. If convergence can not be achieved, the propagation will be tried again
 ! with reduced stepsize.
 !
-use globalmod, only: elapsed_time, output, steps, underflow
+use globalmod, only: elapsed_time, output, steps, underflow, G
 use counters, only: N_bs_onestep
-use input_module, only: N_obj, eps, maxsubstep, min_step, redmin, redmax, do_steps
-use astronx_utils, only: scale_error, acceleration, radius_of_gyration
+use input_module, only: N_obj, eps, maxsubstep, min_step, redmin, redmax, do_steps, mass
+use astronx_utils, only: scale_error, acceleration, acceleration2, radius_of_gyration
 implicit none
 
 
@@ -173,7 +173,8 @@ real(real64),dimension(3 * N_obj) :: dV_scal    ! scaled error in the velocities
 N_bs_onestep = N_bs_onestep + 1
 
 ! we only have to calculate this once at the start:
-call acceleration(X_old, A_start)
+!call acceleration_c(N_obj, X_old, A_start, G, mass)
+call acceleration2(X_old, A_start)
 call radius_of_gyration(X_old, gyrate)
 V_avg = sum(abs(V_old)) / real(3 * N_obj, real64)
 
@@ -248,8 +249,9 @@ subroutine bs_substeps(X_old, V_old, X_new, V_new, A_start, nsteps, total_step)
 ! positions (and velocities) over a large intervall consisting of several substeps.
 !
 use counters, only: N_bs_substeps
-use input_module, only: N_obj
-use astronx_utils, only: acceleration
+use globalmod, only: G
+use input_module, only: N_obj, mass
+use astronx_utils, only: acceleration, acceleration2
 implicit none
 
 
@@ -289,13 +291,15 @@ A_int = A_start
 
 ! the remaining steps:
 do i = 2, nsteps
-    call acceleration(X_temp, A_int)
+    !call acceleration_c(N_obj, X_temp, A_int, G, mass)
+    call acceleration2(X_temp, A_int)
     X_step = X_step + step_2 * A_int
     X_temp = X_temp + X_step
 enddo
 
 ! calculate the velocity at the end of the intervall:
-call acceleration(X_temp, A_int)
+!call acceleration_c(N_obj, X_temp, A_int, G, mass)
+call acceleration2(X_temp, A_int)
 V_new = X_step / step + half_step * A_int
 X_new = X_temp
 

@@ -192,6 +192,59 @@ end subroutine acceleration
 !##################################################################################################
 !##################################################################################################
 
+
+subroutine acceleration2(X, A)
+!
+!  The purpose of this subroutine is the calculation of the accelerations based on the
+!  gravitational force. It takes the positions and masses of the objects as arguments and
+!  delivers the acceleration in terms of xyz-components. This is an alternative implementation
+!  using explicit loops.
+!
+use globalmod, only: G
+use counters, only: N_acceleration
+use input_module, only: N_obj, mass
+implicit none
+
+
+!  arguments to the routine:
+real(real64),dimension(:),intent(in) :: X   ! position array (m)
+real(real64),dimension(:),intent(out) :: A  ! acceleration (m/s^2)
+
+! internal variables:
+integer(int32) :: i, j          ! counting indices for the loops
+real(real64) :: R2              ! squares of the distances (m^2)
+real(real64) :: tmpFac          ! r**3
+real(real64) :: dX              ! differences in X
+real(real64) :: dY              ! differences in Y
+real(real64) :: dZ              ! differences in Z
+
+
+N_acceleration = N_acceleration + 1
+
+A = 0.0_real64
+
+do i = 1, N_obj - 1
+    do j = i + 1, N_obj
+        dX = X(3 * (j-1) + 1) - X(3 * (i-1) + 1)
+        dY = X(3 * (j-1) + 2) - X(3 * (i-1) + 2)
+        dZ = X(3 * (j-1) + 3) - X(3 * (i-1) + 3)
+        R2 = dX * dX + dY * dY + dZ * dZ
+        tmpFac = G / (R2 * sqrt(R2))
+        A(3 * (i-1) + 1) = A(3 * (i-1) + 1) + mass(j) * tmpFac * dX
+        A(3 * (i-1) + 2) = A(3 * (i-1) + 2) + mass(j) * tmpFac * dY
+        A(3 * (i-1) + 3) = A(3 * (i-1) + 3) + mass(j) * tmpFac * dZ
+        A(3 * (j-1) + 1) = A(3 * (j-1) + 1) - mass(i) * tmpFac * dX
+        A(3 * (j-1) + 2) = A(3 * (j-1) + 2) - mass(i) * tmpFac * dY
+        A(3 * (j-1) + 3) = A(3 * (j-1) + 3) - mass(i) * tmpFac * dZ
+    enddo
+enddo
+
+end subroutine acceleration2
+
+
+!##################################################################################################
+!##################################################################################################
+
 subroutine radius_of_gyration(X, gyr)
 !
 ! This subroutine calculates the radius of gyration (r_g) of a configuration X
