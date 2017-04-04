@@ -20,7 +20,66 @@
 
 #include<math.h>
 
-void acceleration_c_(int *Nobj, double *x, double *a, double *G, double *mass)
+void acc_1c_(int *restrict Nobj, double *restrict x, double *restrict a, double *restrict G, double *restrict mass)
+{
+    int i, j;
+
+    for (j = 0; j < 3 * *Nobj; j++)
+        a[j] = 0.0;
+
+    for (i = 0; i < *Nobj - 1; i++)
+    {
+        for (j = i + 1; j < *Nobj; j++)
+        {
+            double dX = x[3 * j + 0] - x[3 * i + 0];
+            double dY = x[3 * j + 1] - x[3 * i + 1];
+            double dZ = x[3 * j + 2] - x[3 * i + 2];
+            double R2 = dX * dX + dY * dY + dZ * dZ;
+            double mFac = mass[i] * mass[j] / (R2 * sqrt(R2));
+            a[3 * i + 0] += mFac * dX;
+            a[3 * i + 1] += mFac * dY;
+            a[3 * i + 2] += mFac * dZ;
+            a[3 * j + 0] -= mFac * dX;
+            a[3 * j + 1] -= mFac * dY;
+            a[3 * j + 2] -= mFac * dZ;
+        }
+    }
+
+    for (i = 0; i < *Nobj; i++)
+    {
+        double fFac = *G / mass[i];
+        a[3 * i + 0] *= fFac;
+        a[3 * i + 1] *= fFac;
+        a[3 * i + 2] *= fFac;
+    }
+}
+
+
+void acc_2c_(int *restrict Nobj, double *restrict x, double *restrict a, double *restrict G, double *restrict mass)
+{
+    int i, j;
+
+    for (j = 0; j < 3 * *Nobj; j++)
+        a[j] = 0.0;
+
+    for (i = 0; i < *Nobj - 1; i++)
+        for (j = i + 1; j < *Nobj; j++)
+        {
+            double dX = x[3 * j + 0] - x[3 * i + 0];
+            double dY = x[3 * j + 1] - x[3 * i + 1];
+            double dZ = x[3 * j + 2] - x[3 * i + 2];
+            double R2 = dX * dX + dY * dY + dZ * dZ;
+            double tmpFac = *G / (R2 * sqrt(R2));
+            a[3 * i + 0] += mass[j] * tmpFac * dX;
+            a[3 * i + 1] += mass[j] * tmpFac * dY;
+            a[3 * i + 2] += mass[j] * tmpFac * dZ;
+            a[3 * j + 0] -= mass[i] * tmpFac * dX;
+            a[3 * j + 1] -= mass[i] * tmpFac * dY;
+            a[3 * j + 2] -= mass[i] * tmpFac * dZ;
+        }
+}
+
+void acc_co1_(int *restrict Nobj, double *restrict x, double *restrict a, double *restrict G, double *restrict mass)
 {
 #pragma omp parallel
 {
@@ -80,7 +139,7 @@ void acceleration_c_(int *Nobj, double *x, double *a, double *G, double *mass)
 }
 
 
-void acceleration_c2_(int *Nobj, double *x, double *a, double *G, double *mass)
+void acc_co2_(int *restrict Nobj, double *restrict x, double *restrict a, double *restrict G, double *restrict mass)
 {
     #pragma omp parallel
     {

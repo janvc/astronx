@@ -28,6 +28,8 @@ integer(int32),protected :: N_obj                               ! number of obje
 integer(int32),protected :: maxsubstep                          ! maximum number of substeps in one BS-step
 integer(int32),protected :: inc_thres                           ! number of substeps below which the stepsize will be increased
 integer(int32),protected :: ndigit                              ! number of significant digits in text trajectory
+integer(int32),protected :: nstep                               ! number of steps in rk4fix
+integer(int32),protected :: int_type                            ! bs (1), rkqs (2), rk4fixm (3), rk4fixt (4)
 real(real64),protected :: tfinal                                ! the total length of the simulation (s)
 real(real64),protected :: tout                                  ! intervall of successive writes to the trajectory
 real(real64),protected :: eps                                   ! the error tolerance for the propagation
@@ -46,8 +48,6 @@ logical,protected :: do_restart                                 ! create a resta
 logical,protected :: do_steps                                   ! create a file containing information about the steps
 logical,protected :: do_txttrj                                  ! write a trajectory file in text form
 logical,protected :: do_unResProp                               ! propagate without caring about the write step
-logical,protected :: do_bs                                      ! use BS instead of RK as integrator
-logical,protected :: do_rk4mid                                  ! evaluate the derivative in the middle of the interval in rk4
 logical,protected :: do_overwrite                               ! overwrite the contents of the name-directory
 logical,protected :: shift_cog                                  ! wether or not to shift the cog at the beginning
 logical,protected :: shift_mom                                  ! wether or not to compensate for cog motion
@@ -134,9 +134,9 @@ integer(int32) :: readstatus                ! IO status for the read operation
 integer(int32) :: i                         ! loop counting index
 integer(int32) :: coord_start, coord_end    ! first and last line of the coordinates-block in the input file
 integer(int32) :: namedir_length            ! length of the string describing the name directory
-logical :: test_name = .false.              !\
-logical :: test_tfinal = .false.            ! | parameters in the input file
-logical :: test_tout = .false.              !/
+logical :: test_name = .false.              !
+logical :: test_tfinal = .false.            ! parameters in the input file
+logical :: test_tout = .false.              !
 logical :: test_tinit = .false.             !
 
 
@@ -157,9 +157,11 @@ enddo
 rewind(input)
 
 ! set the default values for all input parameters:
-maxsubstep = 12_int32
-inc_thres = 8_int32
-ndigit = 10_int32
+maxsubstep = 12
+inc_thres = 8
+ndigit = 10
+nstep = 5
+int_type = 1
 eps = 1.0e-6_real64
 eps_thres = 0.9_real64
 min_step = 100.0_real64
@@ -172,8 +174,6 @@ do_restart = .false.
 do_steps = .false.
 do_txttrj = .false.
 do_unResProp = .false.
-do_bs = .true.
-do_rk4mid = .true.
 format_string = '(1x, 3es18.10)'
 
 ! find and read the parameters from the input file and set the test-variables:
@@ -225,6 +225,8 @@ do i=1 , Nlines
             read(paraValue,*) redmin
         else if (index(keyword, "redmax") /= 0) then
             read(paraValue,*) redmax
+        else if (index(keyword, "nstep") /= 0) then
+            read(paraValue,*) nstep
         else if (index(keyword, "prop_type") /= 0) then
             if (index(paraValue, "unrestricted") /= 0) then
                 do_unResProp = .true.
@@ -234,18 +236,18 @@ do i=1 , Nlines
                 write(error_unit,*) "Invalid value for 'prop_type', using default: normal"
                 do_unResProp = .false.
             endif
-        else if (index(keyword, "integrator") /= 0) then
+        else if (index(keyword, "int_type") /= 0) then
             if (index(paraValue, "bs") /= 0) then
-                do_bs = .true.
-            else if (index(paraValue, "rk4mid") /= 0) then
-                do_bs = .false.
-                do_rk4mid = .true.
-            else if (index(paraValue, "rk43rd") /= 0) then
-                do_bs = .false.
-                do_rk4mid = .false.
+                int_type = 1
+            else if (index(paraValue, "rkqs") /= 0) then
+                int_type = 2
+            else if (index(paraValue, "rk4fixm") /= 0) then
+                int_type = 3
+            else if (index(paraValue, "rk4fixt") /= 0) then
+                int_type = 4
             else
                 write(error_unit,*) "Invalid value for 'integrator', using default: bs"
-                do_bs = .true.
+                int_type = 1
             endif
         else if (index(keyword, "ndigit") /= 0) then
             read(paravalue,*) ndigit
@@ -288,6 +290,11 @@ endif
 if (.not. test_tout) then
     write(error_unit,*) "INPUT ERROR: Printout step not specified. Exiting"
     stop
+endif
+
+if ((int_type == 3 .or. int_type == 4) .and. do_steps) then
+    write(error_unit,*) "Steps file makes no sense with a fixed-step integrator..."
+    do_steps = .false.
 endif
 
 ! if the initial step has not been specified, set to tout as the default:

@@ -56,10 +56,13 @@ module counters
 use iso_fortran_env, only: int32
 
 integer(int32) :: N_acceleration    !
-integer(int32) :: N_bs_largestep    !\ 
+integer(int32) :: N_bs_largestep    !
 integer(int32) :: N_bs_onestep      !  number of calls to the respective routine
-integer(int32) :: N_bs_substeps     !/
+integer(int32) :: N_bs_substeps     !
 integer(int32) :: N_extrapolate     !
+integer(int32) :: N_rk4fix_largestep
+integer(int32) :: N_rk4fix_onestep
+
 
 end module counters
 

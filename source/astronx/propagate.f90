@@ -32,10 +32,11 @@ subroutine propagate(X, V)
 ! this routine will propagate the system with the chosen integration algoithm
 !
 use globalmod, only: elapsed_time, restart, restart_file, output, steps, underflow
-use input_module, only: N_obj, mass, do_restart, tfinal, do_steps, init_step, do_bs, do_rk4mid, verbose
+use input_module, only: N_obj, mass, int_type, do_restart, tfinal, do_steps, init_step, &
+                        verbose, nstep
 use astronx_utils, only: write_to_trj
 use bulirsch_stoer, only: bs_largestep
-use runge_kutta_4_nr, only: rk4nr_largestep
+use rk4fix, only: rk4fix_largestep
 implicit none
 
 ! arguments to the subroutine:
@@ -49,10 +50,9 @@ integer(int32) :: N_ok              ! number of successful BS steps per large st
 integer(int32) :: N_ok_tot          ! total number of successful BS steps
 integer(int32) :: N_fail            ! number of BS steps per large step, where the stepsize had to be reduced
 integer(int32) :: N_fail_tot        ! total number of failed BS steps
-integer(int32) :: N_rksteps         ! total number of RK steps per large step
 integer(int32) :: N_bssteps         ! total number of BS steps per large step
 integer(int32) :: N_bstotal         ! overall number of BS steps
-integer(int32) :: N_rktotal         ! overall number of RK steps
+integer(int32) :: N_rkfixtotal      ! overall number of RK steps
 integer(int32) :: N_smallsteps      ! number of BS substeps per large step
 integer(int32) :: N_smalltotal      ! total number of BS substeps
 real(real64) :: timestep            ! initial stepsize for the next large step (s)
@@ -65,10 +65,10 @@ timestep = init_step
 N_ok_tot = 0
 N_fail_tot = 0
 N_bstotal = 0
-N_rktotal = 0
+N_rkfixtotal = 0
 N_smalltotal = 0
 
-if (do_bs) then
+if (int_type == 1) then
     write(output,'("                          ***************************************")')
     write(output,'("                          * USING THE BULIRSCH-STOER INTEGRATOR *")')
     write(output,'("                          ***************************************")')
@@ -78,20 +78,20 @@ if (do_bs) then
     if (verbose) then
         write(output_unit,'(" Starting propagation with the Bulirsch-Stoer integrator")')
     endif
-else
-    write(output,'("                     *************************************************")')
-    write(output,'("                     * USING THE RUNGE-KUTTA INTEGRATOR OF 4TH ORDER *")')
-    if (do_rk4mid) then
-        write(output,'("                     *               WITH MIDPOINT STEP              *")')
+else if (int_type == 3 .or. int_type == 4) then
+    write(output,'("                ************************************************************")')
+    write(output,'("                * USING THE FIXED-STEP RUNGE-KUTTA INTEGRATOR OF 4TH ORDER *")')
+    if (int_type == 3) then
+        write(output,'("                *                      WITH MIDPOINT STEP                  *")')
     else
-        write(output,'("                     *                WITH THIRDS STEP               *")')
+        write(output,'("                *                       WITH THIRDS STEP                   *")')
     endif
-    write(output,'("                     *************************************************")')
+    write(output,'("                ************************************************************")')
     write(output,*)
-    write(output,'("       elapsed time      large steps              RK steps               cpu time [ms]")')
-    write(output,'("                         good    bad")')
+    write(output,'("       elapsed time            RK steps               cpu time [ms]")')
+    write(output,*)
     if (verbose) then
-        write(output_unit,'(" Starting propagation with the Runge-Kutta integrator of fourth order")')
+        write(output_unit,'(" Starting propagation with the fixed-step Runge-Kutta integrator of fourth order")')
     endif
 endif
 flush(output)
@@ -119,16 +119,16 @@ do
     if (do_steps) then
         write(steps,'("# elapsed time:    ", es16.9)') elapsed_time
         write(steps,'("# trying propagation with step:   ", es16.9)') timestep
-        if (.not. do_bs) then
+        if (int_type /= 1) then
             write(steps,'("#        Time             Stepsize           Error")')
         endif
     endif
 
     call cpu_time(start_stepcpu)
-    if (do_bs) then
+    if (int_type == 1) then
         call bs_largestep(timestep, next_step, X, V, N_ok, N_fail, N_bssteps, N_smallsteps)
-    else
-        call rk4nr_largestep(timestep, next_step, X, V, N_ok, N_fail, N_rksteps)
+    else if (int_type == 3 .or. int_type == 4) then
+        call rk4fix_largestep(X, V)
     endif
     call cpu_time(end_stepcpu)
 
@@ -139,7 +139,7 @@ do
     N_fail_tot = N_fail_tot + N_fail
     N_bstotal = N_bstotal + N_bssteps
     N_smalltotal = N_smalltotal + N_smallsteps
-    N_rktotal = N_rktotal + N_rksteps
+    N_rkfixtotal = N_rkfixtotal + nstep
 
     if (do_steps) then
         write(steps,'("# successful / failed steps: ", i4, ",", i4)') N_ok, N_fail
@@ -148,12 +148,12 @@ do
         write(steps,'("#")')
     endif
 
-    if (do_bs) then
+    if (int_type == 1) then
         write(output,'("       ", es11.5, "      ", i5, "  ", i5, "         ", i5, "         ", i7, "       ", f8.1)') &
             elapsed_time, N_ok, N_fail, N_bssteps, N_smallsteps, (end_stepcpu-start_stepcpu)*1000.0_real64
-    else
-        write(output,'("       ", es11.5, "      ", i5, "  ", i5, "                 ", i5, "                ", f8.1)') &
-            elapsed_time, N_ok, N_fail, N_rksteps, (end_stepcpu-start_stepcpu)*1000.0_real64
+    else if (int_type == 3 .or. int_type == 4) then
+        write(output,'("       ", es11.5, "             ", i5, "                    ", f8.1)') &
+            elapsed_time, nstep, (end_stepcpu-start_stepcpu)*1000.0_real64
     endif
     flush(output)
 enddo
@@ -162,18 +162,17 @@ write(output,*)
 write(output,'("       **************************************************************")')
 write(output,'("       *                 SUMMARY OF THE CALCULATION                 *")')
 write(output,'("       *                                                            *")')
-if (do_bs) then
-    write(output,'("       * total time      large steps      BS steps      small steps *")')
-    write(output,'("       *                 good    bad                                *")')
+if (int_type == 1) then
+    write(output,'("       * total time [s]     large steps      BS steps      small steps *")')
+    write(output,'("       *                    good    bad                                *")')
 
-    write(output,'("       *", es10.3, "    ", i7, i7, "      ", i8, "        ", i8, "  *")') &
+    write(output,'("       *", es10.3, "       ", i7, i7, "      ", i8, "        ", i8, "  *")') &
         elapsed_time, N_ok_tot, N_fail_tot, N_bstotal, N_smalltotal
-else
-    write(output,'("       * total time      large steps              RK steps          *")')
-    write(output,'("       *                 good    bad                                *")')
+else if (int_type == 3 .or. int_type == 4) then
+    write(output,'("       * total time [s]            RK4 steps                        *")')
 
-    write(output,'("       *", es10.3, "    ", i7, i7, "              ", i8, "          *")') &
-        elapsed_time, N_ok_tot, N_fail_tot, N_rktotal
+    write(output,'("       *", es10.3, "                 ", i8, "                         *")') &
+        elapsed_time, N_rkfixtotal
 endif
 
 write(output,'("       **************************************************************")')
@@ -181,7 +180,6 @@ write(output,*)
 
 if (do_steps) then
     write(steps,'("# Simulation done!")')
-    write(steps,'("# Total number of successful / failed steps: ",2i7)') N_ok_tot, N_fail_tot
 endif
 
 end subroutine propagate

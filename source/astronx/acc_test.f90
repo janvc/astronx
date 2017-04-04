@@ -23,34 +23,76 @@ program acc_test
 !
 use iso_fortran_env, only: int32, real64, output_unit
 use globalmod, only: G
-use input_module, only: N_obj, process_cmd_arguments, read_input, mass
-use astronx_utils, only: acceleration, acceleration2
+use accmod, only: acc_1f, acc_2f
 implicit none
 
-integer(int32) :: Niter                     ! number of runs of acceleration
-integer(int32) :: i                         ! loop index
-real(real64) :: start_cpu                   ! time of start
-real(real64) :: stop_cpu                    ! time of end
-real(real64),dimension(:),allocatable :: X  ! spatial coordinates of all objects (m)
-real(real64),dimension(:),allocatable :: V  ! velocities of all objects (m)
-real(real64),dimension(:),allocatable :: A  ! the acceleration
-character(len=40) :: arg_string             ! placehoder string for input argument
+integer(int32) :: Niter                         ! number of runs of acceleration
+integer(int32) :: Nobj                          ! number of objects
+integer(int32) :: i                             ! loop index
+real(real64) :: start_cpu                       ! time of start
+real(real64) :: stop_cpu                        ! time of end
+real(real64),dimension(:),allocatable :: X      ! spatial coordinates of all objects (m)
+real(real64),dimension(:),allocatable :: mass   ! velocities of all objects (m)
+real(real64),dimension(:),allocatable :: A      ! the acceleration
+character(len=40) :: arg_string                 ! placehoder string for input argument
+logical :: writeAcc                             ! write out the acceleration at the end?
 
 
-call process_cmd_arguments
-call read_input(X, V)
-call get_command_argument(3, arg_string)
-
+call get_command_argument(1, arg_string)
 read(arg_string,*) Niter
+call get_command_argument(2, arg_string)
+read(arg_string,*) Nobj
 
-allocate(A(3 * N_obj))
+i = command_argument_count()
+writeAcc = .false.
+if (i > 2) then
+    writeAcc = .true.
+endif
+
+allocate(mass(Nobj))
+allocate(X(3 * Nobj))
+allocate(A(3 * Nobj))
+
+call random_number(X)
+call random_number(mass)
+X = X * 1.0e10
+mass = mass * 1.0e25
 
 call cpu_time(start_cpu)
-do i = 1, niter
-    !call acceleration_c(N_obj, X, A, G, mass)
-    call acceleration2(X, A)
+do i = 1, Niter
+
+#ifdef ACC_1F
+    call acc_1f(Nobj, X, A, G, mass)
+#endif
+
+#ifdef ACC_2F
+    call acc_2f(Nobj, X, A, G, mass)
+#endif
+
+#ifdef ACC_1C
+    call acc_1c(Nobj, X, A, G, mass)
+#endif
+
+#ifdef ACC_2C
+    call acc_2c(Nobj, X, A, G, mass)
+#endif
+
+#ifdef ACC_1O
+    call acc_co1(Nobj, X, A, G, mass)
+#endif
+
+#ifdef ACC_2O
+    call acc_co2(Nobj, X, A, G, mass)
+#endif
+
 enddo
 call cpu_time(stop_cpu)
+
+if (writeAcc) then
+    do i = 1, 3 * Nobj
+        write(*,*) X(i)
+    enddo
+endif
 
 write(*,*) stop_cpu - start_cpu
 
