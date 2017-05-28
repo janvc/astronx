@@ -23,7 +23,7 @@ program acc_test
 !
 use iso_fortran_env, only: int32, real64, output_unit
 use globalmod, only: G
-use accmod, only: acc_1f, acc_2f
+use accmod, only: acc_1f, acc_2f, acc_t
 implicit none
 
 integer(int32) :: Niter                         ! number of runs of acceleration
@@ -83,6 +83,10 @@ do i = 1, Niter
 
 #ifdef ACC_2O
     call acc_co2(Nobj, X, A, G, mass)
+#endif
+
+#ifdef ACC_TEST
+    call acc_t(Nobj, X, A, G, mass)
 #endif
 
 enddo

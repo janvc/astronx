@@ -138,7 +138,7 @@ subroutine acceleration(X, A)
 use globalmod, only: G
 use counters, only: N_acceleration
 use input_module, only: N_obj, mass
-use accmod, only: acc_1f, acc_2f
+use accmod, only: acc_1f, acc_2f, acc_t
 implicit none
 
 
@@ -170,6 +170,10 @@ call acc_co1(N_obj, X, A, G, mass)
 
 #ifdef ACC_2O
 call acc_co2(N_obj, X, A, G, mass)
+#endif
+
+#ifdef ACC_TEST
+call acc_t(N_obj, X, A, G, mass)
 #endif
 
 end subroutine acceleration
