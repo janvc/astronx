@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include "acceleration.h"
 
 int main(int argc, char *argv[])
 {
@@ -50,6 +51,7 @@ int main(int argc, char *argv[])
     clock_t t0, t1;
     t0 = clock();
     for (int i = 0; i < Niter; i++)
+//        acc_2c2_(&Nobj, xx, xy, xz, ax, ay, az, &G, mass);
         acc_2c2avx_(&Nobj, xx, xy, xz, ax, ay, az, &G, mass);
     t1 = clock();
     double cpu_time_used = ((double) (t1 - t0)) / CLOCKS_PER_SEC;
@@ -59,21 +61,28 @@ int main(int argc, char *argv[])
     if (argc == 4)
     {
         for (int i = 0; i < Nobj; i++)
-            printf("%7d %22.15e %22.15e %22.15e %22.15e %22.15e %22.15e %22.15e \n", i+1, mass[i], xx[i], xy[i], xz[i], ax[i], ay[i], az[i]);
+            printf("%7d %19.12e %19.12e %19.12e %19.12e %19.12e %19.12e %19.12e \n", i+1, mass[i], xx[i], xy[i], xz[i], ax[i], ay[i], az[i]);
+        printf("\n");
         for (int i = 0; i < Nobj; i++)
-            printf("%22.15e\n", mass[i]);
+            printf("%19.12e\n", mass[i]);
+        printf("\n");
         for (int i = 0; i < Nobj; i++)
-            printf("%22.15e\n", xx[i]);
+            printf("%19.12e\n", xx[i]);
+        printf("\n");
         for (int i = 0; i < Nobj; i++)
-            printf("%22.15e\n", xy[i]);
+            printf("%19.12e\n", xy[i]);
+        printf("\n");
         for (int i = 0; i < Nobj; i++)
-            printf("%22.15e\n", xz[i]);
+            printf("%19.12e\n", xz[i]);
+        printf("\n");
         for (int i = 0; i < Nobj; i++)
-            printf("%22.15e\n", ax[i]);
+            printf("%19.12e\n", ax[i]);
+        printf("\n");
         for (int i = 0; i < Nobj; i++)
-            printf("%22.15e\n", ay[i]);
+            printf("%19.12e\n", ay[i]);
+        printf("\n");
         for (int i = 0; i < Nobj; i++)
-            printf("%22.15e\n", az[i]);
+            printf("%19.12e\n", az[i]);
     }
 
     return 0;

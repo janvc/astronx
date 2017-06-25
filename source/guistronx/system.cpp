@@ -18,6 +18,7 @@
  *
  */
 
+#include <vector>
 #include "system.h"
 
 namespace guistronx
