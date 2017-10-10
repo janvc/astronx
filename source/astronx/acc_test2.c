@@ -51,8 +51,12 @@ int main(int argc, char *argv[])
     clock_t t0, t1;
     t0 = clock();
     for (int i = 0; i < Niter; i++)
-//        acc_2c2_(&Nobj, xx, xy, xz, ax, ay, az, &G, mass);
+#ifdef USE_STD
+        acc_2c2_(&Nobj, xx, xy, xz, ax, ay, az, &G, mass);
+#endif
+#ifdef USE_AVX
         acc_2c2avx_(&Nobj, xx, xy, xz, ax, ay, az, &G, mass);
+#endif
     t1 = clock();
     double cpu_time_used = ((double) (t1 - t0)) / CLOCKS_PER_SEC;
 
