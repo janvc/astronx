@@ -51,7 +51,7 @@ elseif(ACC_VER MATCHES "2o")
     endif()
 endif()
 
-set(astronx_SOURCES
+set(fastronx_SOURCES
     acceleration.f90
     modules.f90
     input.f90
@@ -71,13 +71,19 @@ set(acc_test_SOURCES
     acc_test.f90
     )
 
-add_executable(astronx ${astronx_SOURCES})
+set(castronx_SOURCES
+    astronx.cpp
+    input_module.cpp
+    )
+
+add_executable(fastronx ${fastronx_SOURCES})
+add_executable(castronx ${castronx_SOURCES})
 add_executable(acc_test ${acc_test_SOURCES})
 add_executable(acc_test2_std acceleration.c acc_test2.c)
 add_executable(acc_test2_avx acceleration.c acc_test2.c)
 target_link_libraries(acc_test2_std m)
 target_link_libraries(acc_test2_avx m)
-set_target_properties(astronx PROPERTIES LINKER_LANGUAGE Fortran)
+set_target_properties(fastronx PROPERTIES LINKER_LANGUAGE Fortran)
 set_target_properties(acc_test PROPERTIES LINKER_LANGUAGE Fortran)
 set_target_properties(acc_test2_std PROPERTIES COMPILE_DEFINITIONS "USE_STD")
 set_target_properties(acc_test2_avx PROPERTIES COMPILE_DEFINITIONS "USE_AVX")
@@ -85,3 +91,4 @@ if(USE_OPENMP)
     target_link_libraries(astronx gomp)
     target_link_libraries(acc_test gomp)
 endif()
+
