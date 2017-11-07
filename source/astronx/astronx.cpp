@@ -20,11 +20,10 @@
 
 
 #include<iostream>
-#include "input_module.h"
+#include "configuration.h"
 
-int main()
+int main(int argc, char *argv[])
 {
-    astronx::input mInput;
-    mInput.process_cmd_arguments();
+    Astronx::Configuration mConfig(argv);
 }
 

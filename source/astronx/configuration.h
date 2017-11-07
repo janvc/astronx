@@ -23,17 +23,16 @@
 
 #include<eigen3/Eigen/Core>
 
-namespace astronx
+namespace Astronx
 {
 
-class input
+class Configuration
 {
 public:
-    void process_cmd_arguments();
-    void read_input_file(const std::string &input_file, Eigen::MatrixXd &X, Eigen::MatrixXd &V);
+    Configuration(char *arguments[]);
 };
 
-} // namespace astronx
+} // namespace Astronx
 
 #endif // INPUT_H
 

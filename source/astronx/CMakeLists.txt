@@ -73,7 +73,7 @@ set(acc_test_SOURCES
 
 set(castronx_SOURCES
     astronx.cpp
-    input_module.cpp
+    configuration.cpp
     )
 
 add_executable(fastronx ${fastronx_SOURCES})
