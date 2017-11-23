@@ -19,17 +19,30 @@
  */
 
 
-#include "input_module.h"
+#include <iostream>
+#include <string>
+#include <boost/program_options.hpp>
+#include "configuration.h"
 
-namespace astronx
+namespace Astronx
 {
 
-void input::process_cmd_arguments()
+void Configuration::init(int argnum, char *arguments[])
 {
-}
-
-void input::read_input_file(const std::string &input_file, Eigen::MatrixXd &X, Eigen::MatrixXd &V)
-{
+    namespace po = boost::program_options;
+    po::options_description desc("Allowed options");
+    desc.add_options()
+        ("help,h", "produce this help message")
+        ("input,i", po::value<std::string>(&m_inputFileName)->required(), "the input file")
+    ;
+    po::variables_map vm;
+    po::store(po::parse_command_line(argnum, arguments, desc), vm);
+    if (vm.count("help"))
+    {
+        std::cout << desc << std::endl;
+        return;
+    }
+    po::notify(vm);
 }
 
 } // namespace astronx

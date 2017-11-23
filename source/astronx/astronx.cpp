@@ -24,6 +24,6 @@
 
 int main(int argc, char *argv[])
 {
-    Astronx::Configuration mConfig(argv);
+    Astronx::Configuration::get().init(argc, argv);
 }
 
