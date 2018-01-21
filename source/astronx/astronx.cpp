@@ -24,6 +24,9 @@
 
 int main(int argc, char *argv[])
 {
-    Astronx::Configuration::get().init(argc, argv);
+    if (Astronx::Configuration::get().init(argc, argv) != 0)
+        return -1;
+
+    std::cout << "Program executed normally\n";
 }
 

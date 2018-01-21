@@ -18,6 +18,9 @@
  *
  */
 
+
+#include <vector>
+
 #ifndef INPUT_H
 #define INPUT_H
 
@@ -33,13 +36,16 @@ public:
         static Configuration instance;
         return instance;
     }
-    void init(int argnum, char *arguments[]);
+    int init(int argnum, char *arguments[]);
     std::string get_testString();
 
 private:
     Configuration(){}
     Configuration(const Configuration&);
     Configuration& operator=(const Configuration&);
+
+    void setDefaults();
+    void parseInputLine(std::string &inputLine);
 
     std::string m_inputFileName;
 
@@ -68,6 +74,23 @@ private:
     bool m_ShiftCOM;    // shift the center of mass to the origin
     bool m_ShiftMom;    // eliminate the system's total linear momentum
     bool m_verbose;     // write info to the terminal
+
+    std::vector<double> m_masses;       // masses of the objects
+    std::vector<std::string> m_names;   // names of the objects
+    std::vector<double> m_X0;           // initial x position
+    std::vector<double> m_Y0;           // initial y position
+    std::vector<double> m_Z0;           // initial z position
+    std::vector<double> m_VX0;          // initial velocity along x
+    std::vector<double> m_VY0;          // initial velocity along y
+    std::vector<double> m_VZ0;          // initial velocity along z
+
+    enum IntType
+    {
+        BS = 0,
+        RkQS = 1,
+        Rk4FixM = 2,
+        Rk4FixT = 3
+    } m_IntType;
 };
 
 } // namespace Astronx
