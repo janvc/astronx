@@ -24,6 +24,8 @@
 #include <string>
 #include <algorithm>
 #include <boost/program_options.hpp>
+#include <boost/algorithm/string.hpp>
+#include <boost/tokenizer.hpp>
 #include "configuration.h"
 
 namespace Astronx
@@ -106,6 +108,7 @@ int Configuration::init(int argnum, char *arguments[])
 
     std::string currentLine;
     int lineNumber = 0;
+    int coordStartLine = 0;
     while (std::getline(inputFile, currentLine))
     {
         lineNumber++;
@@ -115,7 +118,13 @@ int Configuration::init(int argnum, char *arguments[])
         {
             try
             {
-                parseInputLine(currentLine);
+                int status = parseInputLine(currentLine);
+
+                if (status == 1)
+                {
+                    coordStartLine = lineNumber;
+                    break;
+                }
             }
             catch (const std::exception &e)
             {
@@ -143,6 +152,85 @@ int Configuration::init(int argnum, char *arguments[])
     if (m_InitStep == 0.0)
         m_InitStep = m_tOut;
 
+    /*
+     * Read the initial coordinates and velocities of the objects
+     */
+    inputFile.seekg(0);
+    for (int i = 0; i < coordStartLine; i++)
+        inputFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+
+    while (std::getline(inputFile, currentLine))
+    {
+        lineNumber++;
+
+        if (currentLine.find("end_coords") == std::string::npos)    // proceed if this is NOT the end of the coordinates
+        {
+            try
+            {
+                // tokenize string
+                boost::char_separator<char> sep(" ");
+                boost::tokenizer<boost::char_separator<char>> tokens(currentLine, sep);
+                boost::tokenizer<boost::char_separator<char>>::iterator iter = tokens.begin();
+
+                // read the object data
+                m_names.push_back(*iter);
+                iter++;
+
+                m_masses.push_back(std::stod(*iter));
+                iter++;
+
+                m_X0.push_back(std::stod(*iter));
+                iter++;
+                m_Y0.push_back(std::stod(*iter));
+                iter++;
+                m_Z0.push_back(std::stod(*iter));
+                iter++;
+
+                m_VX0.push_back(std::stod(*iter));
+                iter++;
+                m_VY0.push_back(std::stod(*iter));
+                iter++;
+                m_VZ0.push_back(std::stod(*iter));
+            }
+            catch (...)
+            {
+                std::cerr << "Error reading initial configuration in line number " << lineNumber << "\n" << std::endl;
+                return -5;
+            }
+        }
+        else
+            break;
+    }
+
+    /*
+     * check vector lengths for consistency
+     */
+    int nnm = m_names.size();
+    int nma = m_masses.size();
+    int nx0 = m_X0.size();
+    int ny0 = m_Y0.size();
+    int nz0 = m_Z0.size();
+    int nvx = m_VX0.size();
+    int nvy = m_VY0.size();
+    int nvz = m_VZ0.size();
+
+    if (! (nnm == nma && nnm == nx0 && nnm == ny0 && nnm == nz0 && nnm == nvx && nnm == nvy && nnm == nvz))
+    {
+        std::cerr << "error in the coordinate section\n";
+        return -4;
+    }
+
+    // open the output file
+    int lastDot = m_inputFileName.find_last_of(".");
+    if (lastDot == std::string::npos)
+        m_outputFileName = m_inputFileName + ".out";
+
+    m_outputFileName = m_inputFileName.substr(0, lastDot) + ".out";
+
+    std::cout << m_outputFileName;
+
+    m_outputFile = std::ofstream(m_outputFileName);
+
     return 0;
 }
 
@@ -166,63 +254,64 @@ void Configuration::setDefaults()
     m_steps      = false;
     m_textTrj    = false;
     m_UnResProp  = false;
+    m_IntType    = BS;
 }
 
-void Configuration::parseInputLine(std::string &inputLine)
+int Configuration::parseInputLine(std::string &inputLine)
 {
+    namespace ba = boost::algorithm;
+
     std::string::size_type separator = inputLine.find("=");
-    std::string keystring = inputLine.substr(0, separator);
-    std::string valuestring = inputLine.substr(separator + 1);
+    std::string keystring = ba::to_lower_copy(ba::trim_copy(inputLine.substr(0, separator)));
+    std::string valuestring = ba::to_lower_copy(inputLine.substr(separator + 1));
 
     // remove all whitespace before and after the keyword and the value
     keystring.erase(std::remove_if(keystring.begin(), keystring.end(), isspace), keystring.end());
     valuestring.erase(std::remove_if(valuestring.begin(), valuestring.end(), isspace), valuestring.end());
 
-    std::istringstream iss(valuestring);
-
     if (keystring == "tfinal")
     {
-        iss >> m_tFinal;
+        m_tFinal = std::stod(valuestring);
     }
     else if (keystring == "tout")
     {
-        iss >> m_tOut;
+        m_tOut = std::stod(valuestring);
     }
     else if (keystring == "eps")
     {
-        iss >> m_eps;
+        m_eps = std::stod(valuestring);
     }
     else if (keystring == "initstep")
     {
-        iss >> m_InitStep;
+        m_InitStep = std::stod(valuestring);
     }
     else if (keystring == "maxsubstep")
     {
-        iss >> m_MaxSubStep;
+        m_MaxSubStep = std::stoi(valuestring);
     }
     else if (keystring == "minstep")
     {
-        iss >> m_MinStep;
+        m_MinStep = std::stod(valuestring);
     }
     else if (keystring == "maxinc")
     {
-        iss >> m_MaxInc;
+        m_MaxInc = std::stod(valuestring);
     }
     else if (keystring == "redmin")
     {
-        iss >> m_RedMin;
+        m_RedMin = std::stod(valuestring);
     }
     else if (keystring == "redmax")
     {
-        iss >> m_RedMax;
+        m_RedMax = std::stod(valuestring);
     }
     else if (keystring == "nsteps")
     {
-        iss >> m_Nstep;
+        m_Nstep = std::stoi(valuestring);
     }
     else if (keystring == "ndigit")
     {
-        iss >> m_Ndigit;
+        m_Ndigit = std::stoi(valuestring);
     }
     else if (keystring == "shiftcom")
     {
@@ -266,8 +355,33 @@ void Configuration::parseInputLine(std::string &inputLine)
         else
             throw std::invalid_argument("unknown integrator type:" + valuestring);
     }
+    else if (keystring == "begin_coords")
+    {
+        return 1;
+    }
+    else if (keystring == "end_coords")
+    {
+        return -1;
+    }
     else
         throw std::invalid_argument("unknown keyword: " + keystring);
+
+    return 0;
+}
+
+std::string &Configuration::inputFile()
+{
+    return m_inputFileName;
+}
+
+double Configuration::tfinal()
+{
+    return m_tFinal;
+}
+
+std::ofstream &Configuration::outputFile()
+{
+    return m_outputFile;
 }
 
 } // namespace astronx

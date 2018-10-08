@@ -20,6 +20,7 @@
 
 
 #include <vector>
+#include <fstream>
 
 #ifndef INPUT_H
 #define INPUT_H
@@ -39,15 +40,19 @@ public:
     int init(int argnum, char *arguments[]);
     std::string get_testString();
 
+    std::string &inputFile();
+    double tfinal();
+    std::ofstream &outputFile();
 private:
     Configuration(){}
     Configuration(const Configuration&);
     Configuration& operator=(const Configuration&);
 
     void setDefaults();
-    void parseInputLine(std::string &inputLine);
+    int parseInputLine(std::string &inputLine);
 
     std::string m_inputFileName;
+    std::string m_outputFileName;
 
     // here comes the data:
     int m_Nobj;         // number of objects
@@ -83,6 +88,8 @@ private:
     std::vector<double> m_VX0;          // initial velocity along x
     std::vector<double> m_VY0;          // initial velocity along y
     std::vector<double> m_VZ0;          // initial velocity along z
+
+    std::ofstream m_outputFile;         // stream corresponding to the output file
 
     enum IntType
     {

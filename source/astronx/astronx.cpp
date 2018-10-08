@@ -27,6 +27,23 @@ int main(int argc, char *argv[])
     if (Astronx::Configuration::get().init(argc, argv) != 0)
         return -1;
 
-    std::cout << "Program executed normally\n";
+    std::ofstream &out = Astronx::Configuration::get().outputFile();
+
+    out << "/-------------------------------------------------------------------------------\\\n";
+    out << "|                                  ** AstronX **                                |\n";
+    out << "|                                                                               |\n";
+    out << "|                A program for the simulation of celestial mechanics            |\n";
+    out << "|      /\\                                                              \\\\    // |\n";
+    out << "|     //\\\\                Copyright 2012-2018 Jan von Cosel             \\\\  //  |\n";
+    out << "|    //  \\\\                                                              \\\\//   |\n";
+    out << "|   //====\\\\                  Astronx is free software.                  //\\\\   |\n";
+    out << "|  //      \\\\    You can redistribute it and/or modify it under the     //  \\\\  |\n";
+    out << "| //        \\\\   terms of the GNU General Public License as published  //    \\\\ |\n";
+    out << "|                by the Free Software Foundation, either version 3 of           |\n";
+    out << "|                the License, or (at your option) any later version.            |\n";
+    out << "|                     Astronx comes with absolutely no warranty.                |\n";
+    out << "\\-------------------------------------------------------------------------------/\n";
+
+
 }
 
