@@ -21,6 +21,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <iomanip>
 #include <string>
 #include <algorithm>
 #include <boost/program_options.hpp>
@@ -104,6 +105,16 @@ int Configuration::init(int argnum, char *arguments[])
         return -3;
     }
 
+    int lastDot = m_inputFileName.find_last_of(".");
+    if (lastDot == std::string::npos)
+    {
+        m_baseName = m_inputFileName;
+    }
+    else
+    {
+        m_baseName = m_inputFileName.substr(0, lastDot);
+    }
+
     setDefaults();
 
     std::string currentLine;
@@ -162,40 +173,44 @@ int Configuration::init(int argnum, char *arguments[])
     while (std::getline(inputFile, currentLine))
     {
         lineNumber++;
+        currentLine = currentLine.substr(0, currentLine.find_first_of("#"));
 
         if (currentLine.find("end_coords") == std::string::npos)    // proceed if this is NOT the end of the coordinates
         {
-            try
+            if (currentLine.size() > 0)
             {
-                // tokenize string
-                boost::char_separator<char> sep(" ");
-                boost::tokenizer<boost::char_separator<char>> tokens(currentLine, sep);
-                boost::tokenizer<boost::char_separator<char>>::iterator iter = tokens.begin();
+                try
+                {
+                    // tokenize string
+                    boost::char_separator<char> sep(" ");
+                    boost::tokenizer<boost::char_separator<char>> tokens(currentLine, sep);
+                    boost::tokenizer<boost::char_separator<char>>::iterator iter = tokens.begin();
 
-                // read the object data
-                m_names.push_back(*iter);
-                iter++;
+                    // read the object data
+                    m_names.push_back(*iter);
+                    iter++;
 
-                m_masses.push_back(std::stod(*iter));
-                iter++;
+                    m_masses.push_back(std::stod(*iter));
+                    iter++;
 
-                m_X0.push_back(std::stod(*iter));
-                iter++;
-                m_Y0.push_back(std::stod(*iter));
-                iter++;
-                m_Z0.push_back(std::stod(*iter));
-                iter++;
+                    m_X0.push_back(std::stod(*iter));
+                    iter++;
+                    m_Y0.push_back(std::stod(*iter));
+                    iter++;
+                    m_Z0.push_back(std::stod(*iter));
+                    iter++;
 
-                m_VX0.push_back(std::stod(*iter));
-                iter++;
-                m_VY0.push_back(std::stod(*iter));
-                iter++;
-                m_VZ0.push_back(std::stod(*iter));
-            }
-            catch (...)
-            {
-                std::cerr << "Error reading initial configuration in line number " << lineNumber << "\n" << std::endl;
-                return -5;
+                    m_VX0.push_back(std::stod(*iter));
+                    iter++;
+                    m_VY0.push_back(std::stod(*iter));
+                    iter++;
+                    m_VZ0.push_back(std::stod(*iter));
+                }
+                catch (...)
+                {
+                    std::cerr << "Error reading initial configuration in line number " << lineNumber << "\n" << std::endl;
+                    return -5;
+                }
             }
         }
         else
@@ -220,16 +235,28 @@ int Configuration::init(int argnum, char *arguments[])
         return -4;
     }
 
+    m_Nobj = m_masses.size();
+
+    // calculate the total mass
+    m_Mtot = 0.0;
+    for (int i = 0; i < m_Nobj; i++)
+        m_Mtot += m_masses[i];
+
     // open the output file
-    int lastDot = m_inputFileName.find_last_of(".");
-    if (lastDot == std::string::npos)
-        m_outputFileName = m_inputFileName + ".out";
-
-    m_outputFileName = m_inputFileName.substr(0, lastDot) + ".out";
-
-    std::cout << m_outputFileName;
-
+    m_outputFileName = m_baseName + ".out";
     m_outputFile = std::ofstream(m_outputFileName);
+
+    m_restartName = m_baseName + ".rst";
+    if (m_restart)
+    {
+        m_restartFile = std::ofstream(m_restartName);
+    }
+
+    m_stepsName = m_baseName + ".stp";
+    if (m_steps)
+    {
+        m_stepsFile = std::ofstream(m_stepsName);
+    }
 
     return 0;
 }
@@ -244,6 +271,7 @@ void Configuration::setDefaults()
     m_tOut       =  0.0;
     m_InitStep   =  0.0;
     m_eps        =  1.0e-6;
+    m_epsThres   =  0.9;
     m_MinStep    =  1.0e2;
     m_MaxInc     = 10.0;
     m_RedMin     =  0.9;
@@ -281,6 +309,10 @@ int Configuration::parseInputLine(std::string &inputLine)
     {
         m_eps = std::stod(valuestring);
     }
+    else if (keystring == "eps_thres")
+    {
+        m_epsThres = std::stod(valuestring);
+    }
     else if (keystring == "initstep")
     {
         m_InitStep = std::stod(valuestring);
@@ -313,11 +345,11 @@ int Configuration::parseInputLine(std::string &inputLine)
     {
         m_Ndigit = std::stoi(valuestring);
     }
-    else if (keystring == "shiftcom")
+    else if (keystring == "shift_cog")
     {
         m_ShiftCOM = true;
     }
-    else if (keystring == "shiftmom")
+    else if (keystring == "shift_mom")
     {
         m_ShiftMom = true;
     }
@@ -382,6 +414,107 @@ double Configuration::tfinal()
 std::ofstream &Configuration::outputFile()
 {
     return m_outputFile;
+}
+
+int Configuration::Nobj()
+{
+    return m_Nobj;
+}
+
+std::vector<double> Configuration::XX0()
+{
+    return m_X0;
+}
+
+std::vector<double> Configuration::XY0()
+{
+    return m_Y0;
+}
+
+std::vector<double> Configuration::XZ0()
+{
+    return m_Z0;
+}
+
+std::vector<double> Configuration::VX0()
+{
+    return m_VX0;
+}
+
+std::vector<double> Configuration::VY0()
+{
+    return m_VY0;
+}
+
+std::vector<double> Configuration::VZ0()
+{
+    return m_VZ0;
+}
+
+std::vector<double> Configuration::masses()
+{
+    return m_masses;
+}
+
+std::vector<std::string> Configuration::names()
+{
+    return m_names;
+}
+
+bool Configuration::Verbose()
+{
+    return m_verbose;
+}
+
+bool Configuration::ShiftCOM()
+{
+    return m_ShiftCOM;
+}
+
+bool Configuration::ShiftMom()
+{
+    return m_ShiftMom;
+}
+
+double Configuration::TotMass()
+{
+    return m_Mtot;
+}
+
+void Configuration::listParas()
+{
+    m_outputFile << "---------------------\n";
+    m_outputFile << "SIMULATION PARAMETERS\n";
+    m_outputFile << "---------------------\n\n";
+
+    m_outputFile << std::setprecision(3);
+    m_outputFile << "eps         " << std::setw(11) << m_eps        << "\n";
+    m_outputFile << "eps_thres   " << std::setw(11) << m_epsThres   << "\n";
+    m_outputFile << "tfinal      " << std::setw(11) << m_tFinal     << "\n";
+    m_outputFile << "tout        " << std::setw(11) << m_tOut       << "\n";
+    m_outputFile << "init_step   " << std::setw(11) << m_InitStep   << "\n";
+    m_outputFile << "maxsubstep  " << std::setw(3)  << m_MaxSubStep << "\n";
+    m_outputFile << "inc_thres   " << std::setw(3)  << m_IncThres   << "\n";
+    m_outputFile << "int_type    " << std::setw(2)  << m_IntType    << "\n";
+    m_outputFile << "nstep       " << std::setw(5)  << m_Nstep      << "\n";
+    m_outputFile << "min_step    " << std::setw(11) << m_MinStep    << "\n";
+    m_outputFile << "maxinc      " << std::setw(11) << m_MaxInc     << "\n";
+    m_outputFile << "redmin      " << std::setw(11) << m_RedMin     << "\n";
+    m_outputFile << "redmax      " << std::setw(11) << m_RedMax     << "\n";
+
+    m_outputFile << "shift_cog     " << (m_ShiftCOM  ? "yes" : "no") << "\n";
+    m_outputFile << "shift_mom     " << (m_ShiftMom  ? "yes" : "no") << "\n";
+    m_outputFile << "restart       " << (m_restart   ? "yes" : "no") << "\n";
+    m_outputFile << "steps         " << (m_steps     ? "yes" : "no") << "\n";
+    m_outputFile << "text_trj      " << (m_textTrj   ? "yes" : "no") << "\n";
+    m_outputFile << "prop_type     " << (m_UnResProp ? "unrestricted" : "normal") << "\n";
+
+    m_outputFile << "\n\n\n";
+}
+
+IntType Configuration::intType()
+{
+    return m_IntType;
 }
 
 } // namespace astronx

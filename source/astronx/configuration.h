@@ -21,6 +21,7 @@
 
 #include <vector>
 #include <fstream>
+#include "constants.h"
 
 #ifndef INPUT_H
 #define INPUT_H
@@ -43,6 +44,21 @@ public:
     std::string &inputFile();
     double tfinal();
     std::ofstream &outputFile();
+    int Nobj();
+    std::vector<double> XX0();
+    std::vector<double> XY0();
+    std::vector<double> XZ0();
+    std::vector<double> VX0();
+    std::vector<double> VY0();
+    std::vector<double> VZ0();
+    std::vector<std::string> names();
+    std::vector<double> masses();
+    bool Verbose();
+    bool ShiftCOM();
+    bool ShiftMom();
+    double TotMass();
+    void listParas();
+    IntType intType();
 private:
     Configuration(){}
     Configuration(const Configuration&);
@@ -52,7 +68,10 @@ private:
     int parseInputLine(std::string &inputLine);
 
     std::string m_inputFileName;
+    std::string m_baseName;
     std::string m_outputFileName;
+    std::string m_restartName;
+    std::string m_stepsName;
 
     // here comes the data:
     int m_Nobj;         // number of objects
@@ -64,6 +83,7 @@ private:
     double m_tFinal;    // total length of simulation
     double m_tOut;      // writeout interval
     double m_eps;       // error tolerance for the propagation
+    double m_epsThres;  // threshold to increase stepsize in Runge-Kutta run
     double m_MinStep;   // minimum timestep
     double m_MaxInc;    // max. factor by which to increase stepsize
     double m_RedMin;    // minimum factor for the stepsize reduction
@@ -90,14 +110,10 @@ private:
     std::vector<double> m_VZ0;          // initial velocity along z
 
     std::ofstream m_outputFile;         // stream corresponding to the output file
+    std::ofstream m_restartFile;
+    std::ofstream m_stepsFile;
 
-    enum IntType
-    {
-        BS = 0,
-        RkQS = 1,
-        Rk4FixM = 2,
-        Rk4FixT = 3
-    } m_IntType;
+    IntType m_IntType;
 };
 
 } // namespace Astronx
