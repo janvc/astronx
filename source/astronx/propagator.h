@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <string>
+#include <fstream>
 #include <array>
 
 
@@ -23,11 +24,15 @@ public:
 
 private:
     void propBS();
+    void writeToTrj();
 
     // general properties of the system
     int m_Npad;
     int m_Nobj;
     double m_totMass;
+
+    // the time
+    double m_elapsedTime;
 
     // position and velocity of objects
     double *m_xx;
@@ -40,6 +45,11 @@ private:
     double *m_masses;   // masses of objects
 
     std::vector<std::string> m_names;   // object names
+
+    std::ofstream m_restartFile;
+    std::ofstream m_stepsFile;
+    std::ofstream m_binTrj;
+    std::ofstream m_txtTrj;
 };
 
 }

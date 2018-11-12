@@ -246,18 +246,6 @@ int Configuration::init(int argnum, char *arguments[])
     m_outputFileName = m_baseName + ".out";
     m_outputFile = std::ofstream(m_outputFileName);
 
-    m_restartName = m_baseName + ".rst";
-    if (m_restart)
-    {
-        m_restartFile = std::ofstream(m_restartName);
-    }
-
-    m_stepsName = m_baseName + ".stp";
-    if (m_steps)
-    {
-        m_stepsFile = std::ofstream(m_stepsName);
-    }
-
     return 0;
 }
 
@@ -406,6 +394,11 @@ std::string &Configuration::inputFile()
     return m_inputFileName;
 }
 
+std::string Configuration::baseName()
+{
+    return m_baseName;
+}
+
 double Configuration::tfinal()
 {
     return m_tFinal;
@@ -474,6 +467,21 @@ bool Configuration::ShiftCOM()
 bool Configuration::ShiftMom()
 {
     return m_ShiftMom;
+}
+
+bool Configuration::TextTrj()
+{
+    return m_textTrj;
+}
+
+bool Configuration::Restart()
+{
+    return m_restart;
+}
+
+bool Configuration::Steps()
+{
+    return m_steps;
 }
 
 double Configuration::TotMass()

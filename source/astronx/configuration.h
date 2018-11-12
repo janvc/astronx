@@ -42,6 +42,7 @@ public:
     std::string get_testString();
 
     std::string &inputFile();
+    std::string baseName();
     double tfinal();
     std::ofstream &outputFile();
     int Nobj();
@@ -56,6 +57,9 @@ public:
     bool Verbose();
     bool ShiftCOM();
     bool ShiftMom();
+    bool TextTrj();
+    bool Restart();
+    bool Steps();
     double TotMass();
     void listParas();
     IntType intType();
@@ -110,8 +114,6 @@ private:
     std::vector<double> m_VZ0;          // initial velocity along z
 
     std::ofstream m_outputFile;         // stream corresponding to the output file
-    std::ofstream m_restartFile;
-    std::ofstream m_stepsFile;
 
     IntType m_IntType;
 };

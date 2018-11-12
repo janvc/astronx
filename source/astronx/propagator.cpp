@@ -43,6 +43,17 @@ Propagator::Propagator()
         m_masses[i] = Configuration::get().masses()[i];
         m_names = Configuration::get().names();
     }
+
+    m_binTrj = std::ofstream(Configuration::get().baseName() + ".bin.trj", std::ios::binary);
+
+    if (Configuration::get().TextTrj())
+        m_txtTrj = std::ofstream(Configuration::get().baseName() + ".txt.trj");
+
+    if (Configuration::get().Restart())
+        m_restartFile = std::ofstream(Configuration::get().baseName() + ".rst");
+
+    if (Configuration::get().Steps())
+        m_stepsFile = std::ofstream(Configuration::get().baseName() + ".stp");
 }
 
 std::array<double,3> Propagator::com()
@@ -134,6 +145,37 @@ void Propagator::propagate()
     out << "                                  STARTING THE PROPAGATION\n";
     out << "  ----------------------------------------------------------------------------------\n\n";
 
+    if (Configuration::get().intType() == BS)
+    {
+        out << "                          ***************************************\n";
+        out << "                          * USING THE BULIRSCH-STOER INTEGRATOR *\n";
+        out << "                          ***************************************\n\n";
+
+        out << "       elapsed time      large steps      BS steps      small steps      cpu time [ms]\n";
+        out << "                         good    bad\n";
+
+        if (Configuration::get().Verbose())
+            std::cout << " Starting propagation with the Bulirsch-Stoer integrator\n";
+    }
+    else if (Configuration::get().intType() == Rk4FixM || Configuration::get().intType() == Rk4FixT)
+    {
+        out << "                ************************************************************\n";
+        out << "                * USING THE FIXED-STEP RUNGE-KUTTA INTEGRATOR OF 4TH ORDER *\n";
+
+        if (Configuration::get().intType() == Rk4FixM)
+            out << "                *                      WITH MIDPOINT STEP                  *\n";
+        else
+            out << "                *                       WITH THIRDS STEP                   *\n";
+
+        out << "                ************************************************************\n\n";
+
+        out << "       elapsed time            RK steps               cpu time [ms]\n\n";
+
+        if (Configuration::get().Verbose())
+            std::cout << " Starting propagation with the fixed-step Runge-Kutta integrator of fourth order\n";
+    }
+
+
     switch (Configuration::get().intType()) {
     case BS:
         propBS();
@@ -147,10 +189,38 @@ void Propagator::propBS()
 {
     std::ofstream &out = Configuration::get().outputFile();
 
-    out << "                          ***************************************\n";
-    out << "                          * USING THE BULIRSCH-STOER INTEGRATOR *\n";
-    out << "                          ***************************************\n";
 
+}
+
+void Propagator::writeToTrj()
+{
+    if (Configuration::get().TextTrj())
+    {
+        m_txtTrj << std::setprecision(10) << std::scientific << std::setw(18) << m_elapsedTime;
+
+        for (int i = 0; i < m_Nobj; i++)
+        {
+            m_txtTrj << std::setw(18) << m_xx[i]
+                     << std::setw(18) << m_xy[i]
+                     << std::setw(18) << m_xz[i];
+        }
+        m_txtTrj << "\n";
+    }
+
+    m_binTrj.write((char*) &m_elapsedTime, sizeof(double));
+
+    for (int i = 0; i < m_Nobj; i++)
+    {
+        m_binTrj.write((char*) &m_xx[i], sizeof(double));
+        m_binTrj.write((char*) &m_xy[i], sizeof(double));
+        m_binTrj.write((char*) &m_xz[i], sizeof(double));
+    }
+    for (int i = 0; i < m_Nobj; i++)
+    {
+        m_binTrj.write((char*) &m_vx[i], sizeof(double));
+        m_binTrj.write((char*) &m_vy[i], sizeof(double));
+        m_binTrj.write((char*) &m_vz[i], sizeof(double));
+    }
 }
 
 }
