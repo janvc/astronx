@@ -39,7 +39,7 @@ integer(int32) :: bin_trj                       ! IO-unit of the binary trajecto
 integer(int32) :: steps                         ! IO-unit of the steps file
 real(real64) :: elapsed_time                    ! the current time
 real(real64),parameter :: small = 1.0e-20       ! a small number to prevent division by 0
-real(real64),parameter :: G = 6.6726e-11        ! the gravitational constant
+real(real64),parameter :: G = 6.6726e-11_real64 ! the gravitational constant
 character(len=7) :: restart_file = "restart"    ! this file contains the current positions and velocities
 character(len=10) :: bin_trj_file="trajectory"  ! the trajectory file in binary format
 character(len=8) :: txt_trj_file="text_trj"     ! file to save the trajectory
