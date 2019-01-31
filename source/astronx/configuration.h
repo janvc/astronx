@@ -44,8 +44,17 @@ public:
     std::string &inputFile();
     std::string baseName();
     double tfinal();
+    double tout();
+    double minStep();
+    double Eps();
+    double RedMin();
+    double RedMax();
+    double MaxInc();
     std::ofstream &outputFile();
     int Nobj();
+    int MaxSubStep();
+    int IncThres();
+    int Ndigit();
     std::vector<double> XX0();
     std::vector<double> XY0();
     std::vector<double> XZ0();
@@ -60,9 +69,16 @@ public:
     bool TextTrj();
     bool Restart();
     bool Steps();
+    bool UnRes();
     double TotMass();
     void listParas();
     IntType intType();
+    double initStep();
+
+    void inc_BSL();
+    void inc_BSO();
+    void inc_BSS();
+    void inc_BSE();
 private:
     Configuration(){}
     Configuration(const Configuration&);
@@ -74,7 +90,6 @@ private:
     std::string m_inputFileName;
     std::string m_baseName;
     std::string m_outputFileName;
-    std::string m_restartName;
     std::string m_stepsName;
 
     // here comes the data:
@@ -83,6 +98,12 @@ private:
     int m_IncThres;     // no. of substeps below which the stepsize will be increased
     int m_Ndigit;       // no. of significant digits in text trajectory
     int m_Nstep;        // no. of steps in rk4fix
+
+    // counters for function calls
+    int m_N_BS_LargeStep;
+    int m_N_BS_OneStep;
+    int m_N_BS_SubSteps;
+    int m_N_BS_Extrapolate;
 
     double m_tFinal;    // total length of simulation
     double m_tOut;      // writeout interval

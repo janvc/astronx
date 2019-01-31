@@ -246,6 +246,8 @@ int Configuration::init(int argnum, char *arguments[])
     m_outputFileName = m_baseName + ".out";
     m_outputFile = std::ofstream(m_outputFileName);
 
+    m_N_BS_LargeStep = 0;
+
     return 0;
 }
 
@@ -255,9 +257,9 @@ void Configuration::setDefaults()
     m_IncThres   =  8;
     m_Ndigit     = 10;
     m_Nstep      =  5;
-    m_tFinal     =  0.0;
-    m_tOut       =  0.0;
-    m_InitStep   =  0.0;
+//    m_tFinal     =  0.0;
+//    m_tOut       =  0.0;
+//    m_InitStep   =  0.0;
     m_eps        =  1.0e-6;
     m_epsThres   =  0.9;
     m_MinStep    =  1.0e2;
@@ -349,7 +351,7 @@ int Configuration::parseInputLine(std::string &inputLine)
     {
         m_steps = true;
     }
-    else if (keystring == "texttrj")
+    else if (keystring == "text_trj")
     {
         m_textTrj = true;
     }
@@ -404,6 +406,36 @@ double Configuration::tfinal()
     return m_tFinal;
 }
 
+double Configuration::tout()
+{
+    return m_tOut;
+}
+
+double Configuration::minStep()
+{
+    return m_MinStep;
+}
+
+double Configuration::Eps()
+{
+    return m_eps;
+}
+
+double Configuration::RedMin()
+{
+    return m_RedMin;
+}
+
+double Configuration::RedMax()
+{
+    return m_RedMax;
+}
+
+double Configuration::MaxInc()
+{
+    return m_MaxInc;
+}
+
 std::ofstream &Configuration::outputFile()
 {
     return m_outputFile;
@@ -412,6 +444,21 @@ std::ofstream &Configuration::outputFile()
 int Configuration::Nobj()
 {
     return m_Nobj;
+}
+
+int Configuration::MaxSubStep()
+{
+    return m_MaxSubStep;
+}
+
+int Configuration::IncThres()
+{
+    return m_IncThres;
+}
+
+int Configuration::Ndigit()
+{
+    return m_Ndigit;
 }
 
 std::vector<double> Configuration::XX0()
@@ -484,6 +531,11 @@ bool Configuration::Steps()
     return m_steps;
 }
 
+bool Configuration::UnRes()
+{
+    return m_UnResProp;
+}
+
 double Configuration::TotMass()
 {
     return m_Mtot;
@@ -523,6 +575,31 @@ void Configuration::listParas()
 IntType Configuration::intType()
 {
     return m_IntType;
+}
+
+double Configuration::initStep()
+{
+    return m_InitStep;
+}
+
+void Configuration::inc_BSL()
+{
+    m_N_BS_LargeStep++;
+}
+
+void Configuration::inc_BSO()
+{
+    m_N_BS_OneStep++;
+}
+
+void Configuration::inc_BSS()
+{
+    m_N_BS_SubSteps++;
+}
+
+void Configuration::inc_BSE()
+{
+    m_N_BS_Extrapolate++;
 }
 
 } // namespace astronx
