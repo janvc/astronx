@@ -5,10 +5,15 @@ option(REALLY_FAST "Use unsafe math optimizations" OFF)
 
 set(CMAKE_Fortran_FLAGS "-std=f2008 -fall-intrinsics -Wall -Wextra --pedantic -cpp")
 set(CMAKE_C_FLAGS "-Wall -Wextra --pedantic -mavx")
-set(CMAKE_C_FLAGS_DEBUG "-ggdb3 -O0")
-set(CMAKE_C_FLAGS_RELEASE "-O3 -march=native -ffast-math -funroll-loops")
+set(CMAKE_CXX_FLAGS "-Wall -Wextra --pedantic")
+
 set(CMAKE_Fortran_FLAGS_DEBUG "-ggdb3 -O0 -ffpe-trap=invalid,zero,overflow")
+set(CMAKE_C_FLAGS_DEBUG "-ggdb3 -O0")
+set(CMAKE_CXX_FLAGS_DEBUG "-ggdb3 -O0")
+
 set(CMAKE_Fortran_FLAGS_RELEASE "-O3 -march=native")
+set(CMAKE_C_FLAGS_RELEASE "-O3 -march=native")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -march=native")
 
 find_package(Boost COMPONENTS system filesystem program_options REQUIRED)
 
