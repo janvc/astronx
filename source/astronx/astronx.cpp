@@ -57,7 +57,7 @@ int main(int argc, char *argv[])
     out << "GENERAL INFORMATION ABOUT THE SYSTEM\n";
     out << "------------------------------------\n\n";
     out << "Total mass:\n";
-    out << " m = " << std::scientific << std::setprecision(9) << std::setw(15) << Astronx::Configuration::get().TotMass() << " kg\n\n";
+    out << " m = " << std::scientific << std::setprecision(9) << std::setw(15) << std::uppercase << Astronx::Configuration::get().TotMass() << " kg\n\n";
 
     std::array<double,3> cog = prop.com();
     out << "Location of the centre of gravity:\n";
