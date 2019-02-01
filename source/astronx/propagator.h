@@ -71,6 +71,7 @@ private:
     // auxiliary data for Bulirsch-Stoer extrapolation
     double *m_extD;
     double *m_extErr;
+    double *m_tmpDat;
     std::vector<double> m_extH;
 
     double *m_masses;   // masses of objects

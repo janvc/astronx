@@ -69,7 +69,6 @@ Propagator::Propagator()
         for (int i = 0; i < m_Nobj - 1; i++)
         {
             m_txtTrj << m_names[i];
-//            m_txtTrj << std::setw(30) << m_names[i];
             for (int j = 0; j < 3 * Configuration::get().Ndigit() + 25 - m_names[i].size(); j++)
             {
                 m_txtTrj << " ";
@@ -108,9 +107,6 @@ Propagator::Propagator()
         m_txtTrj << "z [m]\n";
     }
 
-//    if (Configuration::get().Restart())
-//        m_restartFile = std::ofstream(Configuration::get().baseName() + ".rst");
-
     if (Configuration::get().Steps())
         m_stepsFile = std::ofstream(Configuration::get().baseName() + ".stp");
 
@@ -123,11 +119,13 @@ Propagator::Propagator()
 
     m_elapsedTime = 0.0;
 
-    void *dm10, *dm11;
+    void *dm10, *dm11, *dm12;
     posix_memalign(&dm10, 64, Configuration::get().MaxSubStep() * m_Npad * sizeof(double) * 6);
     posix_memalign(&dm11, 64, 6 * m_Npad * sizeof(double));
+    posix_memalign(&dm12, 64, 6 * m_Npad * sizeof(double));
     m_extD = (double*) dm10;
     m_extErr = (double*) dm11;
+    m_tmpDat = (double*) dm12;
     m_extH.resize(Configuration::get().MaxSubStep());
 }
 
@@ -621,46 +619,58 @@ void Propagator::BS_Extrapolate(const int i_est, const double h_est)
     Configuration::get().inc_BSE();
 
     m_extH[i_est - 1] = h_est;
-    memcpy(m_extD + (i_est - 1) * 6 * m_Npad + 0 * m_Npad, m_x_SubFin, 3 * m_Npad * sizeof(double));
-    memcpy(m_extD + (i_est - 1) * 6 * m_Npad + 3 * m_Npad, m_v_SubFin, 3 * m_Npad * sizeof(double));
 
-    double c[6 * m_Npad];
-    for (int i = 0; i < 6 * m_Npad; i++)
+    for (int i = 0; i < 3 * m_Npad; i++)
     {
-        c[i] = m_extD[(i_est - 1) * 6 * m_Npad + i];
-        m_extErr[i] = m_extD[(i_est - 1) * 6 * m_Npad + i];
+        m_extErr[0 * m_Npad + i] = m_x_SubFin[i];
+        m_extErr[3 * m_Npad + i] = m_v_SubFin[i];
+        m_tmpDat[0 * m_Npad + i] = m_x_SubFin[i];
+        m_tmpDat[3 * m_Npad + i] = m_v_SubFin[i];
     }
 
-    if (i_est != 1)
+    double c[6 * m_Npad];
+
+    if (i_est == 1)
     {
-        void *dm0;
-        posix_memalign(&dm0, 64, 6 * m_Npad * sizeof(double));
-        double *tmpDat = (double*) dm0;
-        memset(tmpDat, 0.0, 6 * m_Npad * sizeof(double));
+        for (int i = 0; i < 3 * m_Npad; i++)
+        {
+            m_extD[0 * m_Npad + i] = m_x_SubFin[i];
+            m_extD[3 * m_Npad + i] = m_v_SubFin[i];
+        }
+    }
+    else
+    {
+        for (int i = 0; i < 3 * m_Npad; i++)
+        {
+            c[0 * m_Npad + i] = m_x_SubFin[i];
+            c[3 * m_Npad + i] = m_v_SubFin[i];
+        }
 
         for (int k = 1; k < i_est; k++)
         {
             double delta = 1.0 / (m_extH[i_est - k - 1] - h_est);
-            double tmp1 = delta * h_est;
-            double tmp2 = delta * m_extH[i_est - k - 1];
+            double tmp1 = h_est * delta;
+            double tmp2 = m_extH[i_est - k - 1] * delta;
 
             for (int j = 0; j < 6 * m_Npad; j++)
             {
-                double tmp3 = m_extD[(i_est - k) * 6 * m_Npad + j];
-                m_extD[(i_est - k) * 6 * m_Npad + j] = m_extErr[j];
+                double tmp3 = m_extD[(k - 1) * 6 * m_Npad + j];
+                m_extD[(k - 1) * 6 * m_Npad + j] = m_extErr[j];
                 delta = c[j] - tmp3;
                 m_extErr[j] = tmp1 * delta;
                 c[j] = tmp2 * delta;
-                tmpDat[j] += m_extErr[j];
+                m_tmpDat[j] += m_extErr[j];
             }
         }
-        memcpy(m_extD + (i_est - 1) * 6 * m_Npad, m_extErr, 6 * m_Npad * sizeof(double));
 
-        memcpy(m_x_SubFin, tmpDat + m_Npad * 0, 3 * m_Npad * sizeof(double));
-        memcpy(m_v_SubFin, tmpDat + m_Npad * 3, 3 * m_Npad * sizeof(double));
-
-        free(tmpDat);
+        for (int i = 0; i < 6 * m_Npad; i++)
+        {
+            m_extD[(i_est - 1) * 6 * m_Npad + i] = m_extErr[i];
+        }
     }
+
+    memcpy(m_x_SubFin, m_tmpDat + m_Npad * 0, 3 * m_Npad * sizeof(double));
+    memcpy(m_v_SubFin, m_tmpDat + m_Npad * 3, 3 * m_Npad * sizeof(double));
 }
 
 void Propagator::RK4F_LargeStep()
