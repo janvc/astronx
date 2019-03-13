@@ -238,9 +238,9 @@ int Configuration::init(int argnum, char *arguments[])
     m_Nobj = m_masses.size();
 
     // calculate the total mass
-    m_Mtot = 0.0;
-    for (int i = 0; i < m_Nobj; i++)
-        m_Mtot += m_masses[i];
+//    m_Mtot = 0.0;
+//    for (int i = 0; i < m_Nobj; i++)
+//        m_Mtot += m_masses[i];
 
     // open the output file
     m_outputFileName = m_baseName + ".out";

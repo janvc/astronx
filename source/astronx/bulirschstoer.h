@@ -19,15 +19,22 @@
  */
 
 
+#ifndef BULIRSCHSTOER_H
+#define BULIRSCHSTOER_H
+
 #include "propagator.h"
 
 
 namespace Astronx
 {
 
-Propagator::Propagator()
+class BulirschStoer : public Propagator
 {
+public:
+    BulirschStoer();
+    void largeStep();
+};
 
 }
 
-}
+#endif // BULIRSCHSTOER_H

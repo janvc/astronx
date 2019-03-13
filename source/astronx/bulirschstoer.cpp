@@ -19,13 +19,13 @@
  */
 
 
-#include "propagator.h"
+#include "bulirschstoer.h"
 
 
 namespace Astronx
 {
 
-Propagator::Propagator()
+BulirschStoer::BulirschStoer()
 {
 
 }

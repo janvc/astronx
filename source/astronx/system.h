@@ -19,15 +19,38 @@
  */
 
 
+#ifndef SYSTEM_H
+#define SYSTEM_H
+
+#include <array>
+#include <vector>
 #include "propagator.h"
 
 
 namespace Astronx
 {
 
-Propagator::Propagator()
+class System
 {
+public:
+    System();
+    std::array<double,3> com();
+    std::array<double,3> linMom();
+    std::array<double,3> angMom();
+    void shiftCom();
+    void shiftMom();
+
+private:
+    int m_Nobj;             // number of objects
+    int m_Npad;             // padded array length, divisible by 4
+    double m_totMass;       // total mass of the system
+    double m_elapsedTime;   // the time
+    double *m_masses;       // masses of objects
+    double *m_x;            // (starting) positions
+    double *m_v;            // (starting) velocities
+    std::vector<std::string> m_names;   // object names
+};
 
 }
 
-}
+#endif // SYSTEM_H

@@ -81,7 +81,10 @@ set(acc_test_SOURCES
 set(castronx_SOURCES
     astronx.cpp
     configuration.cpp
+    oldpropagator.cpp
+    system.cpp
     propagator.cpp
+    bulirschstoer.cpp
     )
 
 add_executable(fastronx ${fastronx_SOURCES})

@@ -22,7 +22,7 @@
 #include <iostream>
 #include <iomanip>
 #include "configuration.h"
-#include "propagator.h"
+#include "oldpropagator.h"
 
 int main(int argc, char *argv[])
 {
@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
         std::cout << "AstronX: A program for the simulation of celestial mechanics.\n"
                   << "Copyright 2012-2018 Jan von Cosel. Astronx is free software.\n";
 
-    Astronx::Propagator prop;
+    Astronx::OldPropagator prop;
 
     out << "\n\n\n\n\n";
     out << "------------------------------------\n";
