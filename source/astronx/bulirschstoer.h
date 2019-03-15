@@ -32,6 +32,7 @@ class BulirschStoer : public Propagator
 {
 public:
     BulirschStoer();
+    ~BulirschStoer();
     void largeStep();
 };
 

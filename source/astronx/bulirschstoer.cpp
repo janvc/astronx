@@ -19,6 +19,8 @@
  */
 
 
+#include <iostream>
+#include "propagator.h"
 #include "bulirschstoer.h"
 
 
@@ -26,8 +28,17 @@ namespace Astronx
 {
 
 BulirschStoer::BulirschStoer()
+    : Propagator()
 {
+}
 
+BulirschStoer::~BulirschStoer()
+{
+}
+
+void BulirschStoer::largeStep()
+{
+    std::cout << "this is BulirschStoer::largeStep()\n";
 }
 
 }

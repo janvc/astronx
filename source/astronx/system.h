@@ -34,20 +34,29 @@ class System
 {
 public:
     System();
-    std::array<double,3> com();
-    std::array<double,3> linMom();
-    std::array<double,3> angMom();
+    ~System();
+
+    double totMass() const;
+
+    std::array<double,3> com() const;
+    std::array<double,3> linMom() const;
+    std::array<double,3> angMom() const;
     void shiftCom();
     void shiftMom();
+
+    void propagate();
 
 private:
     int m_Nobj;             // number of objects
     int m_Npad;             // padded array length, divisible by 4
+
     double m_totMass;       // total mass of the system
     double m_elapsedTime;   // the time
-    double *m_masses;       // masses of objects
-    double *m_x;            // (starting) positions
-    double *m_v;            // (starting) velocities
+
+    double *m_masses;   // masses of objects
+    double *m_xLarge;   // positions and velocities
+    double *m_vLarge;   // between large propagation steps
+
     std::vector<std::string> m_names;   // object names
 };
 

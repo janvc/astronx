@@ -30,6 +30,7 @@ class Propagator
 {
 public:
     Propagator();
+    virtual ~Propagator();
     virtual void largeStep();
 };
 

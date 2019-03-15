@@ -27,7 +27,14 @@ namespace Astronx
 
 Propagator::Propagator()
 {
+}
 
+Propagator::~Propagator()
+{
+}
+
+void Propagator::largeStep()
+{
 }
 
 }
