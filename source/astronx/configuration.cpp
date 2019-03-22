@@ -242,9 +242,25 @@ int Configuration::init(int argnum, char *arguments[])
 //    for (int i = 0; i < m_Nobj; i++)
 //        m_Mtot += m_masses[i];
 
-    // open the output file
+    // open the output files
     m_outputFileName = m_baseName + ".out";
     m_outputFile = std::ofstream(m_outputFileName);
+    m_binTrjFile = std::ofstream(m_baseName + ".bin.trj", std::ios::binary);
+
+    if (m_textTrj)
+    {
+        m_txtTrjFile = std::ofstream(m_baseName + ".txt.trj");
+    }
+
+    if (m_steps)
+    {
+        m_stepsFile = std::ofstream(m_baseName + ".txt.trj");
+    }
+
+    if (m_restart)
+    {
+        m_restartFile = std::ofstream(m_baseName + ".txt.trj");
+    }
 
     m_N_BS_LargeStep = 0;
 
@@ -439,6 +455,26 @@ double Configuration::MaxInc()
 std::ofstream &Configuration::outputFile()
 {
     return m_outputFile;
+}
+
+std::ofstream &Configuration::binTrjFile()
+{
+    return m_binTrjFile;
+}
+
+std::ofstream &Configuration::txtTrjFile()
+{
+    return m_txtTrjFile;
+}
+
+std::ofstream &Configuration::stepsFile()
+{
+    return m_stepsFile;
+}
+
+std::ofstream &Configuration::restartFile()
+{
+    return m_restartFile;
 }
 
 int Configuration::Nobj()

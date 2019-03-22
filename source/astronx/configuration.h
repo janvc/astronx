@@ -51,6 +51,10 @@ public:
     double RedMax();
     double MaxInc();
     std::ofstream &outputFile();
+    std::ofstream &binTrjFile();
+    std::ofstream &txtTrjFile();
+    std::ofstream &stepsFile();
+    std::ofstream &restartFile();
     int Nobj();
     int MaxSubStep();
     int IncThres();
@@ -134,9 +138,13 @@ private:
     std::vector<double> m_VY0;          // initial velocity along y
     std::vector<double> m_VZ0;          // initial velocity along z
 
-    std::ofstream m_outputFile;         // stream corresponding to the output file
-
     IntType m_IntType;
+
+    std::ofstream m_outputFile;         // stream corresponding to the output file
+    std::ofstream m_binTrjFile;         // stream corresponding to the trajectory file
+    std::ofstream m_txtTrjFile;         // stream corresponding to the text trajectory file
+    std::ofstream m_stepsFile;          // stream corresponding to the steps file
+    std::ofstream m_restartFile;        // stream corresponding to the restart file
 };
 
 } // namespace Astronx

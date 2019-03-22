@@ -19,6 +19,7 @@
  */
 
 
+#include <iomanip>
 #include "system.h"
 #include "configuration.h"
 #include "propagator.h"
@@ -60,6 +61,54 @@ System::System()
     for (int i = 0; i < m_Nobj; i++)
     {
         m_totMass += m_masses[i];
+    }
+
+    if (Configuration::get().TextTrj())
+    {
+        std::ofstream &txtTrj = Configuration::get().txtTrjFile();
+
+        txtTrj << "# trajectory in gnuplot-friendly text form\n";
+        txtTrj << "#\n";
+        txtTrj << "# time               ";
+        for (int i = 0; i < m_Nobj - 1; i++)
+        {
+            txtTrj << m_names[i];
+            for (int j = 0; j < 3 * Configuration::get().Ndigit() + 25 - m_names[i].size(); j++)
+            {
+                txtTrj << " ";
+            }
+        }
+        txtTrj << std::setw(30) << m_names[m_Nobj - 1] << "\n";
+        txtTrj << "#                    ";
+        for (int i = 0; i < m_Nobj - 1; i++)
+        {
+            txtTrj << "x [m]";
+            for (int j = 0; j < Configuration::get().Ndigit() + 3; j++)
+            {
+                txtTrj << " ";
+            }
+            txtTrj << "y [m]";
+            for (int j = 0; j < Configuration::get().Ndigit() + 3; j++)
+            {
+                txtTrj << " ";
+            }
+            txtTrj << "z [m]";
+            for (int j = 0; j < Configuration::get().Ndigit() + 4; j++)
+            {
+                txtTrj << " ";
+            }
+        }
+        txtTrj << "x [m]";
+        for (int j = 0; j < Configuration::get().Ndigit() + 3; j++)
+        {
+            txtTrj << " ";
+        }
+        txtTrj << "y [m]";
+        for (int j = 0; j < Configuration::get().Ndigit() + 3; j++)
+        {
+            txtTrj << " ";
+        }
+        txtTrj << "z [m]\n";
     }
 }
 
@@ -136,6 +185,49 @@ void System::shiftMom()
         m_vLarge[1 * m_Npad + i] -= mom[1] / m_totMass;
         m_vLarge[2 * m_Npad + i] -= mom[2] / m_totMass;
     }
+}
+
+void System::writeToTrj()
+{
+    if (Configuration::get().TextTrj())
+    {
+        std::ofstream &txtTrj = Configuration::get().txtTrjFile();
+
+        txtTrj << std::uppercase << std::setprecision(10) << std::scientific << std::setw(18) << m_elapsedTime;
+
+        int prec = Configuration::get().Ndigit();
+        int width = prec + 8;
+        for (int i = 0; i < m_Nobj; i++)
+        {
+            txtTrj << " "
+                   << std::setprecision(prec) << std::setw(width) << m_xLarge[0 * m_Npad + i]
+                   << std::setprecision(prec) << std::setw(width) << m_xLarge[1 * m_Npad + i]
+                   << std::setprecision(prec) << std::setw(width) << m_xLarge[2 * m_Npad + i];
+        }
+        txtTrj << "\n";
+    }
+
+    std::ofstream &binTrj = Configuration::get().binTrjFile();
+    binTrj.write((char*) &m_elapsedTime, sizeof(double));
+
+    for (int i = 0; i < m_Nobj; i++)
+    {
+        binTrj.write((char*) &m_xLarge[0 * m_Npad + i], sizeof(double));
+        binTrj.write((char*) &m_xLarge[1 * m_Npad + i], sizeof(double));
+        binTrj.write((char*) &m_xLarge[2 * m_Npad + i], sizeof(double));
+    }
+    for (int i = 0; i < m_Nobj; i++)
+    {
+        binTrj.write((char*) &m_vLarge[0 * m_Npad + i], sizeof(double));
+        binTrj.write((char*) &m_vLarge[1 * m_Npad + i], sizeof(double));
+        binTrj.write((char*) &m_vLarge[2 * m_Npad + i], sizeof(double));
+    }
+}
+
+void System::writeStatus()
+{
+    printf("\r Simulated %9.3e out of %9.3e seconds.", m_elapsedTime, Configuration::get().tfinal());
+    fflush(stdout);
 }
 
 void System::propagate()
