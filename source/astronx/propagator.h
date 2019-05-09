@@ -32,6 +32,7 @@ public:
     Propagator();
     virtual ~Propagator();
     virtual void largeStep();
+    virtual void writeOutputLine();
 };
 
 }

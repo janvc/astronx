@@ -21,6 +21,7 @@
 
 #include <iostream>
 #include "propagator.h"
+#include "configuration.h"
 #include "bulirschstoer.h"
 
 
@@ -30,6 +31,17 @@ namespace Astronx
 BulirschStoer::BulirschStoer()
     : Propagator()
 {
+    std::ofstream &out = Configuration::get().outputFile();
+
+    out << "                          ***************************************\n";
+    out << "                          * USING THE BULIRSCH-STOER INTEGRATOR *\n";
+    out << "                          ***************************************\n\n";
+
+    out << "       elapsed time      large steps      BS steps      small steps      cpu time [ms]\n";
+    out << "                         good    bad\n";
+
+    if (Configuration::get().Verbose())
+        std::cout << " Starting propagation with the Bulirsch-Stoer integrator\n";
 }
 
 BulirschStoer::~BulirschStoer()
@@ -39,6 +51,26 @@ BulirschStoer::~BulirschStoer()
 void BulirschStoer::largeStep()
 {
     std::cout << "this is BulirschStoer::largeStep()\n";
+
+    if (Configuration::get().Steps())
+    {
+        std::ofstream &stepsFile = Configuration::get().stepsFile();
+        stepsFile << "# trying propagation with step:" << std::setw(20) << m_timeStep << "\n";
+    }
+}
+
+void BulirschStoer::writeOutputLine()
+{
+    std::cout << "this is BulirschStoer::writeOutputLine()\n";
+
+    if (Configuration::get().Steps())
+    {
+        std::ofstream &stepsFile = Configuration::get().stepsFile();
+        stepsFile << "# successful / failed steps:" << m_N_ok << m_N_fail << "\n";
+        stepsFile << "#\n";
+        stepsFile << "######################################################################\n";
+        stepsFile << "#\n";
+    }
 }
 
 }

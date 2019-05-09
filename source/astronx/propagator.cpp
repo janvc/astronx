@@ -37,4 +37,8 @@ void Propagator::largeStep()
 {
 }
 
+void Propagator::writeOutputLine()
+{
+}
+
 }

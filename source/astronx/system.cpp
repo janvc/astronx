@@ -230,8 +230,50 @@ void System::writeStatus()
     fflush(stdout);
 }
 
+void System::writeRestart()
+{
+    std::ofstream resFile(Configuration::get().baseName() + ".rst");
+    resFile << m_elapsedTime << "\n";
+
+    for (int i = 0; i < m_Nobj; i++)
+        resFile << m_masses[i]
+                << m_xLarge[0 * m_Npad + i]
+                << m_xLarge[1 * m_Npad + i]
+                << m_xLarge[2 * m_Npad + i]
+                << m_vLarge[0 * m_Npad + i]
+                << m_vLarge[1 * m_Npad + i]
+                << m_vLarge[2 * m_Npad + i] << "\n";
+
+    resFile.close();
+}
+
 void System::propagate()
 {
+    std::ofstream &out = Configuration::get().outputFile();
+
+    // write the initial conditions:
+    out << "----------------------------------\n";
+    out << "INITIAL COORDINATES AND VELOCITIES\n";
+    out << "----------------------------------\n\n";
+
+    out << "    name      mass (kg)       X (m)      Y (m)      Z (m)     V_x (m/s)  V_y (m/s)  V_z (m/s)\n\n";
+
+    for (int i = 0; i < m_Nobj; i++)
+    {
+        out << std::setw(10) << m_names[i] << std::setprecision(3) << std::setw(13) << m_masses[i]
+            << std::setw(13) << m_xLarge[0 * m_Npad + i]
+            << std::setw(11) << m_xLarge[1 * m_Npad + i]
+            << std::setw(11) << m_xLarge[2 * m_Npad + i]
+            << std::setw(13) << m_vLarge[0 * m_Npad + i]
+            << std::setw(11) << m_vLarge[1 * m_Npad + i]
+            << std::setw(11) << m_vLarge[2 * m_Npad + i] << "\n";
+    }
+    out << "\n\n";
+
+    out << "  ----------------------------------------------------------------------------------\n";
+    out << "                                  STARTING THE PROPAGATION\n";
+    out << "  ----------------------------------------------------------------------------------\n\n";
+
     Propagator *prop;
 
     switch (Configuration::get().intType()) {
@@ -242,7 +284,31 @@ void System::propagate()
         break;
     }
 
-    prop->largeStep();
+    while (true)
+    {
+        writeToTrj();
+
+        if (Configuration::get().Verbose())
+            writeStatus();
+
+        if (Configuration::get().Restart())
+            writeRestart();
+
+        if (m_elapsedTime >= Configuration::get().tfinal())
+            break;
+
+        if (Configuration::get().Steps())
+        {
+            std::ofstream &stepsFile = Configuration::get().stepsFile();
+            stepsFile << "# elapsed time:" << std::scientific << std::setprecision(9) << std::setw(20) << std::uppercase << m_elapsedTime << "\n";
+        }
+
+        // get start time
+        prop->largeStep();
+        // get end time
+
+        prop->writeOutputLine();
+    }
 }
 
 }

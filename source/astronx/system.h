@@ -49,6 +49,7 @@ public:
 private:
     void writeToTrj();      // write current configuration to file
     void writeStatus();     // write current status to stdout
+    void writeRestart();    // write current configuration to restart file
 
     int m_Nobj;             // number of objects
     int m_Npad;             // padded array length, divisible by 4

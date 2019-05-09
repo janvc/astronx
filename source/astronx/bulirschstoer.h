@@ -34,6 +34,7 @@ public:
     BulirschStoer();
     ~BulirschStoer();
     void largeStep();
+    void writeOutputLine();
 };
 
 }
