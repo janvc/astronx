@@ -5,7 +5,7 @@ option(REALLY_FAST "Use unsafe math optimizations" OFF)
 
 set(CMAKE_Fortran_FLAGS "-std=f2008 -fall-intrinsics -Wall -Wextra --pedantic -cpp")
 set(CMAKE_C_FLAGS "-Wall -Wextra --pedantic -mavx")
-set(CMAKE_CXX_FLAGS "-Wall -Wextra --pedantic")
+set(CMAKE_CXX_FLAGS "-std=c++11 -Wall -Wextra --pedantic")
 
 set(CMAKE_Fortran_FLAGS_DEBUG "-ggdb3 -O0 -ffpe-trap=invalid,zero,overflow")
 set(CMAKE_C_FLAGS_DEBUG "-ggdb3 -O0")

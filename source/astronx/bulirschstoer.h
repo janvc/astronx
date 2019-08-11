@@ -33,8 +33,22 @@ class BulirschStoer : public Propagator
 public:
     BulirschStoer();
     ~BulirschStoer();
-    void largeStep();
+
+    void largeStep(double *x, double *v);
+    bool oneStep();
+
     void writeOutputLine();
+
+private:
+    int m_N_ok;
+    int m_N_fail;
+    int m_nsteps;
+
+    double m_delta;
+    double m_doneStep;
+
+    double *m_x_BSLtmp;
+    double *m_v_BSLtmp;
 };
 
 }

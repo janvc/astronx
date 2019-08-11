@@ -304,8 +304,10 @@ void System::propagate()
         }
 
         // get start time
-        prop->largeStep();
+        prop->largeStep(m_xLarge, m_vLarge);
         // get end time
+
+        m_elapsedTime += Configuration::get().tout();
 
         prop->writeOutputLine();
     }

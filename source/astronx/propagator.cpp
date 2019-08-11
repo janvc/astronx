@@ -19,21 +19,24 @@
  */
 
 
+#include "configuration.h"
 #include "propagator.h"
 
 
 namespace Astronx
 {
 
-Propagator::Propagator()
+Propagator::Propagator(const int Npad)
 {
+    m_Npad = Npad;
+    m_timeStep = Configuration::get().tout();
 }
 
 Propagator::~Propagator()
 {
 }
 
-void Propagator::largeStep()
+void Propagator::largeStep(double *x, double *v)
 {
 }
 

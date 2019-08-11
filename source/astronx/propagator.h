@@ -29,10 +29,14 @@ namespace Astronx
 class Propagator
 {
 public:
-    Propagator();
+    Propagator(const int Npad);
     virtual ~Propagator();
-    virtual void largeStep();
+    virtual void largeStep(double *x, double *v);
     virtual void writeOutputLine();
+
+protected:
+    double m_Npad;
+    double m_timeStep;
 };
 
 }

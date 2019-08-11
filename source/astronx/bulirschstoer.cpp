@@ -20,6 +20,9 @@
 
 
 #include <iostream>
+#include <iomanip>
+#include <cmath>
+#include <stdlib.h>
 #include "propagator.h"
 #include "configuration.h"
 #include "bulirschstoer.h"
@@ -31,6 +34,15 @@ namespace Astronx
 BulirschStoer::BulirschStoer()
     : Propagator()
 {
+    m_N_ok = 0;
+    m_N_fail = 0;
+
+    void *dm0, *dm1;
+    posix_memalign(&dm0, 64, 3 * m_Npad * sizeof(double));
+    posix_memalign(&dm1, 64, 3 * m_Npad * sizeof(double));
+    m_x_BSLtmp = (double*) dm0;
+    m_v_BSLtmp = (double*) dm1;
+
     std::ofstream &out = Configuration::get().outputFile();
 
     out << "                          ***************************************\n";
@@ -48,7 +60,7 @@ BulirschStoer::~BulirschStoer()
 {
 }
 
-void BulirschStoer::largeStep()
+void BulirschStoer::largeStep(double *x, double *v)
 {
     std::cout << "this is BulirschStoer::largeStep()\n";
 
@@ -57,6 +69,45 @@ void BulirschStoer::largeStep()
         std::ofstream &stepsFile = Configuration::get().stepsFile();
         stepsFile << "# trying propagation with step:" << std::setw(20) << m_timeStep << "\n";
     }
+
+    double internalElapsedTime = 0.0;
+
+    while (true)
+    {
+        if (! Configuration::get().UnRes())
+        {
+            if (internalElapsedTime + m_timeStep + Configuration::get().minStep() > Configuration::get().tout())
+                m_timeStep = Configuration::get().tout() - internalElapsedTime;
+        }
+
+        bool success = oneStep();
+
+        if (success)
+        {
+            if (m_nsteps <= Configuration::get().IncThres())
+            {
+                double factor = std::pow(Configuration::get().Eps() / m_delta, 1.0 / m_nsteps);
+                m_timeStep = m_doneStep * std::min(factor, Configuration::get().MaxInc());
+            }
+            m_N_ok++;
+        }
+        else
+        {
+            m_N_fail++;
+            m_timeStep = m_doneStep;
+        }
+
+        internalElapsedTime += m_doneStep;
+
+        if (internalElapsedTime >= Configuration::get().tout())
+        {
+            break;
+        }
+    }
+}
+
+bool BulirschStoer::oneStep()
+{
 }
 
 void BulirschStoer::writeOutputLine()
