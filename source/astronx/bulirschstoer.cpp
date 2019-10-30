@@ -31,8 +31,8 @@
 namespace Astronx
 {
 
-BulirschStoer::BulirschStoer()
-    : Propagator()
+BulirschStoer::BulirschStoer(const int Npad)
+    : Propagator(Npad)
 {
     m_N_ok = 0;
     m_N_fail = 0;

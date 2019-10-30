@@ -31,7 +31,7 @@ namespace Astronx
 class BulirschStoer : public Propagator
 {
 public:
-    BulirschStoer();
+    BulirschStoer(const int Npad);
     ~BulirschStoer();
 
     void largeStep(double *x, double *v);
