@@ -49,6 +49,7 @@ private:
 
     double *m_x_BSLtmp;
     double *m_v_BSLtmp;
+    double *m_a_BSStart;
 };
 
 }

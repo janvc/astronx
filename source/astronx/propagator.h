@@ -35,6 +35,9 @@ public:
     virtual void writeOutputLine();
 
 protected:
+    void acceleration(double *__restrict__ x, double *__restrict__ a);
+    double radiusOfGyration(double *__restrict__ x);
+
     double m_Npad;
     double m_timeStep;
 };

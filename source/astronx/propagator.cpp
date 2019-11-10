@@ -44,4 +44,63 @@ void Propagator::writeOutputLine()
 {
 }
 
+void Propagator::acceleration(double *__restrict__ x, double *__restrict__ a)
+{
+    int i, j;
+
+    for (j = 0; j < m_Nobj; j++)
+    {
+        a[0 * m_Npad + j] = 0.0;
+        a[1 * m_Npad + j] = 0.0;
+        a[2 * m_Npad + j] = 0.0;
+    }
+
+    for (i = 0; i < m_Nobj - 1; i++)
+    {
+        for (j = i + 1; j < m_Nobj; j++)
+        {
+            double dX = x[0 * m_Npad + j] - x[0 * m_Npad + i];
+            double dY = x[1 * m_Npad + j] - x[1 * m_Npad + i];
+            double dZ = x[2 * m_Npad + j] - x[2 * m_Npad + i];
+            double R2 = dX * dX + dY * dY + dZ * dZ;
+            double tmpFac = PhyCon::G / (R2 * sqrt(R2));
+            a[0 * m_Npad + i] += m_masses[j] * tmpFac * dX;
+            a[1 * m_Npad + i] += m_masses[j] * tmpFac * dY;
+            a[2 * m_Npad + i] += m_masses[j] * tmpFac * dZ;
+            a[0 * m_Npad + j] -= m_masses[i] * tmpFac * dX;
+            a[1 * m_Npad + j] -= m_masses[i] * tmpFac * dY;
+            a[2 * m_Npad + j] -= m_masses[i] * tmpFac * dZ;
+        }
+    }
+}
+
+double Propagator::radiusOfGyration(double *__restrict__ x)
+{
+    // calculate geometric center:
+    double cx, cy, cz;
+    for (int i = 0; i < m_Nobj; i++)
+    {
+        cx += x[0 * m_Npad + i];
+        cy += x[1 * m_Npad + i];
+        cz += x[2 * m_Npad + i];
+    }
+    cx /= m_Nobj;
+    cy /= m_Nobj;
+    cz /= m_Nobj;
+
+    double gyr = 0.0;
+    for (int i = 0; i < m_Nobj; i++)
+    {
+        double dist = 0.0;
+        dist += (x[0 * m_Npad + i] - cx) * (x[0 * m_Npad + i] - cx);
+        dist += (x[1 * m_Npad + i] - cy) * (x[1 * m_Npad + i] - cy);
+        dist += (x[2 * m_Npad + i] - cz) * (x[2 * m_Npad + i] - cz);
+
+        gyr += std::sqrt(dist);
+    }
+    gyr /= m_Nobj;
+
+    return gyr;
+}
+
 }

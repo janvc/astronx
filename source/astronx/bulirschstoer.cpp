@@ -26,6 +26,7 @@
 #include "propagator.h"
 #include "configuration.h"
 #include "bulirschstoer.h"
+#include "acceleration.h"
 
 
 namespace Astronx
@@ -37,11 +38,13 @@ BulirschStoer::BulirschStoer(const int Npad)
     m_N_ok = 0;
     m_N_fail = 0;
 
-    void *dm0, *dm1;
+    void *dm0, *dm1, *dm2;
     posix_memalign(&dm0, 64, 3 * m_Npad * sizeof(double));
     posix_memalign(&dm1, 64, 3 * m_Npad * sizeof(double));
+    posix_memalign(&dm2, 64, 3 * m_Npad * sizeof(double));
     m_x_BSLtmp = (double*) dm0;
     m_v_BSLtmp = (double*) dm1;
+    m_a_BSStart = (double*) dm2;
 
     std::ofstream &out = Configuration::get().outputFile();
 
@@ -64,6 +67,9 @@ void BulirschStoer::largeStep(double *x, double *v)
 {
     std::cout << "this is BulirschStoer::largeStep()\n";
 
+    m_x_BSLtmp = x;
+    m_v_BSLtmp = v;
+
     if (Configuration::get().Steps())
     {
         std::ofstream &stepsFile = Configuration::get().stepsFile();
@@ -76,8 +82,11 @@ void BulirschStoer::largeStep(double *x, double *v)
     {
         if (! Configuration::get().UnRes())
         {
-            if (internalElapsedTime + m_timeStep + Configuration::get().minStep() > Configuration::get().tout())
+            if (internalElapsedTime + m_timeStep + Configuration::get().minStep()
+                    > Configuration::get().tout())
+            {
                 m_timeStep = Configuration::get().tout() - internalElapsedTime;
+            }
         }
 
         bool success = oneStep();
@@ -108,6 +117,47 @@ void BulirschStoer::largeStep(double *x, double *v)
 
 bool BulirschStoer::oneStep()
 {
+    std::cout << "this is BulirschStoer::largeStep()\n";
+
+    acceleration(m_x_BSLtmp, m_a_BSStart);
+    double gyr = radiusOfGyration(m_x_BSLtmp);
+    double v_avg = 0.0;
+    for (int i = 0; i < Configuration::get().Nobj(); i++)
+    {
+        v_avg += std::abs(m_v_BSLtmp[0 * m_Npad + i])
+               + std::abs(m_v_BSLtmp[1 * m_Npad + i])
+               + std::abs(m_v_BSLtmp[2 * m_Npad + i]);
+    }
+    v_avg /= (3 * m_Nobj);
+
+    double trialStep = m_timeStep;
+
+    if (Configuration::get().Steps())
+    {
+        m_stepsFile << "#          Time            Stepsize      Substeps       Error\n";
+    }
+
+    // possible loop structure:
+    //
+    // finished = false;
+    // success = false;     // did we converge with the trial step?
+    // while (!finished)
+    // {
+    //     for (i from 1 to maxsubstep)
+    //     {
+    //         substeps;
+    //         extrapolate;
+    //         if (error < eps)
+    //         {
+    //             finished = true;
+    //             if (step == trialstep)
+    //                 success = true;
+    //             break;
+    //         }
+    //     }
+    //     if (!success)
+    //         reduce stepsize;
+    // }
 }
 
 void BulirschStoer::writeOutputLine()
