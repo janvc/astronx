@@ -38,13 +38,23 @@ BulirschStoer::BulirschStoer(const int Npad)
     m_N_ok = 0;
     m_N_fail = 0;
 
-    void *dm0, *dm1, *dm2;
+    void *dm0, *dm1, *dm2, *dm3, *dm4, *dm5, *dm6, *dm7;
     posix_memalign(&dm0, 64, 3 * m_Npad * sizeof(double));
     posix_memalign(&dm1, 64, 3 * m_Npad * sizeof(double));
     posix_memalign(&dm2, 64, 3 * m_Npad * sizeof(double));
+    posix_memalign(&dm3, 64, 3 * m_Npad * sizeof(double));
+    posix_memalign(&dm4, 64, 3 * m_Npad * sizeof(double));
+    posix_memalign(&dm5, 64, 3 * m_Npad * sizeof(double));
+    posix_memalign(&dm6, 64, 3 * m_Npad * sizeof(double));
+    posix_memalign(&dm7, 64, 3 * m_Npad * sizeof(double));
     m_x_BSLtmp = (double*) dm0;
     m_v_BSLtmp = (double*) dm1;
-    m_a_BSStart = (double*) dm2;
+    m_x_SubStep = (double*) dm2;
+    m_v_SubStep = (double*) dm3;
+    m_x_SubFin = (double*) dm4;
+    m_v_SubFin = (double*) dm5;
+    m_a_BSStart = (double*) dm6;
+    m_a_SubInt = (double*) dm7;
 
     std::ofstream &out = Configuration::get().outputFile();
 
@@ -137,6 +147,19 @@ bool BulirschStoer::oneStep()
         m_stepsFile << "#          Time            Stepsize      Substeps       Error\n";
     }
 
+    bool finished = false;
+    bool success = true;
+    while (!finished)
+    {
+        for (int i = 1; i <= Configuration::get().MaxSubStep(); i++)
+        {
+            subSteps(i, trialStep);
+
+            double extStep = (trialStep / i) * (trialStep / i);
+
+            extrapolate(i, extStep);
+        }
+    }
     // possible loop structure:
     //
     // finished = false;
@@ -158,6 +181,63 @@ bool BulirschStoer::oneStep()
     //     if (!success)
     //         reduce stepsize;
     // }
+}
+
+void BulirschStoer::subSteps(const int nSteps, const double stepSize)
+{
+    double smallStep = stepSize / nSteps;
+
+    /*
+     * the first step
+     */
+    for (int i = 0; i < m_Nobj; i++)
+    {
+        m_x_SubStep[0 * m_Npad + i] = smallStep * (m_v_BSLtmp[0 * m_Npad + i] + 0.5 * smallStep * m_a_BSStart[0 * m_Npad + i]);
+        m_x_SubStep[1 * m_Npad + i] = smallStep * (m_v_BSLtmp[1 * m_Npad + i] + 0.5 * smallStep * m_a_BSStart[1 * m_Npad + i]);
+        m_x_SubStep[2 * m_Npad + i] = smallStep * (m_v_BSLtmp[2 * m_Npad + i] + 0.5 * smallStep * m_a_BSStart[2 * m_Npad + i]);
+        m_x_SubFin[0 * m_Npad + i] = m_x_BSLtmp[0 * m_Npad + i] + m_x_SubStep[0 * m_Npad + i];
+        m_x_SubFin[1 * m_Npad + i] = m_x_BSLtmp[1 * m_Npad + i] + m_x_SubStep[1 * m_Npad + i];
+        m_x_SubFin[2 * m_Npad + i] = m_x_BSLtmp[2 * m_Npad + i] + m_x_SubStep[2 * m_Npad + i];
+        m_a_SubInt[0 * m_Npad + i] = m_a_BSStart[0 * m_Npad + i];
+        m_a_SubInt[1 * m_Npad + i] = m_a_BSStart[1 * m_Npad + i];
+        m_a_SubInt[2 * m_Npad + i] = m_a_BSStart[2 * m_Npad + i];
+    }
+
+    /*
+     * the remaining steps
+     */
+    for (int i = 2; i <= nSteps; i++)
+    {
+        acceleration(m_x_SubFin, m_a_SubInt);
+
+        /*
+         * accumulate the step to reduce roundoff error according to p. 726 Numerical recipes in Fortran 77
+         */
+        for (int j = 0; j < m_Nobj; j++)
+        {
+            m_x_SubStep[0 * m_Npad + j] += smallStep * smallStep * m_a_SubInt[0 * m_Npad + j];
+            m_x_SubStep[1 * m_Npad + j] += smallStep * smallStep * m_a_SubInt[1 * m_Npad + j];
+            m_x_SubStep[2 * m_Npad + j] += smallStep * smallStep * m_a_SubInt[2 * m_Npad + j];
+            m_x_SubFin[0 * m_Npad + j] += m_x_SubStep[0 * m_Npad + j];
+            m_x_SubFin[1 * m_Npad + j] += m_x_SubStep[1 * m_Npad + j];
+            m_x_SubFin[2 * m_Npad + j] += m_x_SubStep[2 * m_Npad + j];
+        }
+    }
+
+    /*
+     * calculate the velocity at the end of the intervall
+     */
+    acceleration(m_x_SubFin, m_a_SubInt);
+    for (int i = 0; i < m_Nobj; i++)
+    {
+        m_v_SubFin[0 * m_Npad + i] = (m_x_SubStep[0 * m_Npad + i] / smallStep) + 0.5 * smallStep * m_a_SubInt[0 * m_Npad + i];
+        m_v_SubFin[1 * m_Npad + i] = (m_x_SubStep[1 * m_Npad + i] / smallStep) + 0.5 * smallStep * m_a_SubInt[1 * m_Npad + i];
+        m_v_SubFin[2 * m_Npad + i] = (m_x_SubStep[2 * m_Npad + i] / smallStep) + 0.5 * smallStep * m_a_SubInt[2 * m_Npad + i];
+    }
+}
+
+void BulirschStoer::extrapolate(const int stepNum, const double squaredStep)
+{
 }
 
 void BulirschStoer::writeOutputLine()

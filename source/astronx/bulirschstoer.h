@@ -36,6 +36,8 @@ public:
 
     void largeStep(double *x, double *v);
     bool oneStep();
+    void subSteps(const int nSteps, const double stepSize);
+    void extrapolate(const int stepNum, const double squaredStep);
 
     void writeOutputLine();
 
@@ -49,7 +51,12 @@ private:
 
     double *m_x_BSLtmp;
     double *m_v_BSLtmp;
+    double *m_x_SubStep;
+    double *m_v_SubStep;
+    double *m_x_SubFin;
+    double *m_v_SubFin;
     double *m_a_BSStart;
+    double *m_a_SubInt;
 };
 
 }
