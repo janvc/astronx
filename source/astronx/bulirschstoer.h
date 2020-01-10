@@ -57,6 +57,13 @@ private:
     double *m_v_SubFin;
     double *m_a_BSStart;
     double *m_a_SubInt;
+
+    // auxiliary data for Bulirsch-Stoer extrapolation
+    double *m_extD;
+    double *m_extErr;
+    double *m_tmpDat;
+    double *m_extC;
+    std::vector<double> m_extH;
 };
 
 }

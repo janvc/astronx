@@ -38,7 +38,7 @@ BulirschStoer::BulirschStoer(const int Npad)
     m_N_ok = 0;
     m_N_fail = 0;
 
-    void *dm0, *dm1, *dm2, *dm3, *dm4, *dm5, *dm6, *dm7;
+    void *dm0, *dm1, *dm2, *dm3, *dm4, *dm5, *dm6, *dm7, *dm8, *dm9, *dm10, *dm11;
     posix_memalign(&dm0, 64, 3 * m_Npad * sizeof(double));
     posix_memalign(&dm1, 64, 3 * m_Npad * sizeof(double));
     posix_memalign(&dm2, 64, 3 * m_Npad * sizeof(double));
@@ -47,6 +47,10 @@ BulirschStoer::BulirschStoer(const int Npad)
     posix_memalign(&dm5, 64, 3 * m_Npad * sizeof(double));
     posix_memalign(&dm6, 64, 3 * m_Npad * sizeof(double));
     posix_memalign(&dm7, 64, 3 * m_Npad * sizeof(double));
+    posix_memalign(&dm8, 64, Configuration::get().MaxSubStep() * m_Npad * sizeof(double));
+    posix_memalign(&dm9, 64, 6 * m_Npad * sizeof(double));
+    posix_memalign(&dm10, 64, 6 * m_Npad * sizeof(double));
+    posix_memalign(&dm11, 64, 6 * m_Npad * sizeof(double));
     m_x_BSLtmp = (double*) dm0;
     m_v_BSLtmp = (double*) dm1;
     m_x_SubStep = (double*) dm2;
@@ -55,6 +59,12 @@ BulirschStoer::BulirschStoer(const int Npad)
     m_v_SubFin = (double*) dm5;
     m_a_BSStart = (double*) dm6;
     m_a_SubInt = (double*) dm7;
+    m_extD = (double*) dm8;
+    m_extErr = (double*) dm9;
+    m_tmpDat = (double*) dm10;
+    m_extC = (double*) dm11;
+
+    m_extH.resize(Configuration::get().MaxSubStep());
 
     std::ofstream &out = Configuration::get().outputFile();
 
@@ -238,6 +248,59 @@ void BulirschStoer::subSteps(const int nSteps, const double stepSize)
 
 void BulirschStoer::extrapolate(const int stepNum, const double squaredStep)
 {
+    m_extH[stepNum - 1] = squaredStep;
+
+    for (int i = 0; i < 3 * m_Npad; i++)
+    {
+        m_extErr[0 * m_Npad + i] = m_x_SubFin[i];
+        m_extErr[3 * m_Npad + i] = m_v_SubFin[i];
+        m_tmpDat[0 * m_Npad + i] = m_x_SubFin[i];
+        m_tmpDat[3 * m_Npad + i] = m_v_SubFin[i];
+    }
+
+//    double m_extC[6 * m_Npad];
+
+    if (stepNum == 1)
+    {
+        for (int i = 0; i < 3 * m_Npad; i++)
+        {
+            m_extD[0 * m_Npad + i] = m_x_SubFin[i];
+            m_extD[3 * m_Npad + i] = m_v_SubFin[i];
+        }
+    }
+    else
+    {
+        for (int i = 0; i < 3 * m_Npad; i++)
+        {
+            m_extC[0 * m_Npad + i] = m_x_SubFin[i];
+            m_extC[3 * m_Npad + i] = m_v_SubFin[i];
+        }
+
+        for (int k = 1; k < stepNum; k++)
+        {
+            double delta = 1.0 / (m_extH[stepNum - k - 1] - squaredStep);
+            double tmp1 = squaredStep * delta;
+            double tmp2 = m_extH[stepNum - k - 1] * delta;
+
+            for (int j = 0; j < 6 * m_Npad; j++)
+            {
+                double tmp3 = m_extD[(k - 1) * 6 * m_Npad + j];
+                m_extD[(k - 1) * 6 * m_Npad + j] = m_extErr[j];
+                delta = m_extC[j] - tmp3;
+                m_extErr[j] = tmp1 * delta;
+                m_extC[j] = tmp2 * delta;
+                m_tmpDat[j] += m_extErr[j];
+            }
+        }
+
+        for (int i = 0; i < 6 * m_Npad; i++)
+        {
+            m_extD[(stepNum - 1) * 6 * m_Npad + i] = m_extErr[i];
+        }
+    }
+
+    memcpy(m_x_SubFin, m_tmpDat + m_Npad * 0, 3 * m_Npad * sizeof(double));
+    memcpy(m_v_SubFin, m_tmpDat + m_Npad * 3, 3 * m_Npad * sizeof(double));
 }
 
 void BulirschStoer::writeOutputLine()
