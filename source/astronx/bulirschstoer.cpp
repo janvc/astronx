@@ -26,7 +26,7 @@
 #include "propagator.h"
 #include "configuration.h"
 #include "bulirschstoer.h"
-#include "acceleration.h"
+//#include "acceleration.h"
 
 
 namespace Astronx
@@ -76,7 +76,14 @@ BulirschStoer::BulirschStoer(const int Npad)
     out << "                         good    bad\n";
 
     if (Configuration::get().Verbose())
+    {
         std::cout << " Starting propagation with the Bulirsch-Stoer integrator\n";
+    }
+
+    if (Configuration::get().Steps())
+    {
+        m_stepsFile = std::ofstream(Configuration::get().baseName() + ".stp");
+    }
 }
 
 BulirschStoer::~BulirschStoer()
@@ -142,7 +149,7 @@ bool BulirschStoer::oneStep()
     acceleration(m_x_BSLtmp, m_a_BSStart);
     double gyr = radiusOfGyration(m_x_BSLtmp);
     double v_avg = 0.0;
-    for (int i = 0; i < Configuration::get().Nobj(); i++)
+    for (int i = 0; i < m_Nobj; i++)
     {
         v_avg += std::abs(m_v_BSLtmp[0 * m_Npad + i])
                + std::abs(m_v_BSLtmp[1 * m_Npad + i])
@@ -158,7 +165,7 @@ bool BulirschStoer::oneStep()
     }
 
     bool finished = false;
-    bool success = true;
+    bool success = false;
     while (!finished)
     {
         for (int i = 1; i <= Configuration::get().MaxSubStep(); i++)
@@ -168,29 +175,58 @@ bool BulirschStoer::oneStep()
             double extStep = (trialStep / i) * (trialStep / i);
 
             extrapolate(i, extStep);
+
+            m_delta = 0.0;
+            for (int j = 0; j < 3 * m_Nobj; j++)
+            {
+                m_delta += std::abs(m_extErr[m_Npad * 0 + j] / gyr);
+                m_delta += std::abs(m_extErr[m_Npad * 3 + j] / v_avg);
+            }
+            m_delta /= 6 * m_Nobj;
+
+            m_nsteps = i;
+
+            if (Configuration::get().Steps())
+            {
+                m_stepsFile << "  " << std::setprecision(8) << std::setw(18) << m_elapsedTime
+                            << std::setprecision(5) << std::setw(17) << trialStep
+                            << std::setw(9) << i << std::setw(18) << m_delta << "\n";
+            }
+
+            if (m_delta < Configuration::get().Eps())
+            {
+                finished = true;
+
+                if (trialStep == m_timeStep)
+                {
+                    success = true;
+                }
+                break;
+            }
+        }
+
+        if (!success)
+        {
+            if (trialStep <= Configuration::get().minStep())
+            {
+                // TODO: throw a custom exception here
+                std::cout << "WARNING: No convergence with minimum stepsize. Aborting!\n";
+                m_underflow = true;
+                return success;
+            }
+
+            double factor = std::pow(Configuration::get().Eps() / m_delta, 1.0 / Configuration::get().MaxSubStep());
+            factor = std::max(std::min(factor, Configuration::get().RedMin()), Configuration::get().RedMax());
+
+            trialStep *= factor;
+            if (trialStep < Configuration::get().minStep())
+            {
+                trialStep = Configuration::get().minStep();
+            }
         }
     }
-    // possible loop structure:
-    //
-    // finished = false;
-    // success = false;     // did we converge with the trial step?
-    // while (!finished)
-    // {
-    //     for (i from 1 to maxsubstep)
-    //     {
-    //         substeps;
-    //         extrapolate;
-    //         if (error < eps)
-    //         {
-    //             finished = true;
-    //             if (step == trialstep)
-    //                 success = true;
-    //             break;
-    //         }
-    //     }
-    //     if (!success)
-    //         reduce stepsize;
-    // }
+
+    return success;
 }
 
 void BulirschStoer::subSteps(const int nSteps, const double stepSize)

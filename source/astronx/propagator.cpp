@@ -19,6 +19,7 @@
  */
 
 
+#include <cmath>
 #include "configuration.h"
 #include "propagator.h"
 
@@ -28,8 +29,13 @@ namespace Astronx
 
 Propagator::Propagator(const int Npad)
 {
+    m_Nobj = Configuration::get().Nobj();
     m_Npad = Npad;
     m_timeStep = Configuration::get().tout();
+
+    void *dm0;
+    posix_memalign(&dm0, 64, m_Npad * sizeof(double));
+    m_masses = (double*) dm0;
 }
 
 Propagator::~Propagator()
@@ -63,7 +69,7 @@ void Propagator::acceleration(double *__restrict__ x, double *__restrict__ a)
             double dY = x[1 * m_Npad + j] - x[1 * m_Npad + i];
             double dZ = x[2 * m_Npad + j] - x[2 * m_Npad + i];
             double R2 = dX * dX + dY * dY + dZ * dZ;
-            double tmpFac = PhyCon::G / (R2 * sqrt(R2));
+            double tmpFac = PhyCon::G / (R2 * std::sqrt(R2));
             a[0 * m_Npad + i] += m_masses[j] * tmpFac * dX;
             a[1 * m_Npad + i] += m_masses[j] * tmpFac * dY;
             a[2 * m_Npad + i] += m_masses[j] * tmpFac * dZ;

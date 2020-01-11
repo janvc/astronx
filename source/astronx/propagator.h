@@ -38,8 +38,11 @@ protected:
     void acceleration(double *__restrict__ x, double *__restrict__ a);
     double radiusOfGyration(double *__restrict__ x);
 
-    double m_Npad;
+    int m_Nobj;
+    int m_Npad;
     double m_timeStep;
+
+    double *m_masses;
 };
 
 }
