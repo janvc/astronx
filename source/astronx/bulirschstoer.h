@@ -31,10 +31,10 @@ namespace Astronx
 class BulirschStoer : public Propagator
 {
 public:
-    BulirschStoer(const int Npad);
+    BulirschStoer(const int Npad, System *sys);
     ~BulirschStoer();
 
-    void largeStep(double *x, double *v);
+    double largeStep(double *x, double *v);
     bool oneStep();
     void subSteps(const int nSteps, const double stepSize);
     void extrapolate(const int stepNum, const double squaredStep);

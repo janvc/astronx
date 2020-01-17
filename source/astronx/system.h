@@ -24,7 +24,6 @@
 
 #include <array>
 #include <vector>
-#include "propagator.h"
 
 
 namespace Astronx
@@ -37,6 +36,7 @@ public:
     ~System();
 
     double totMass() const;
+    double elapsedTime() const;
 
     std::array<double,3> com() const;
     std::array<double,3> linMom() const;

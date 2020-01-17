@@ -22,6 +22,7 @@
 #ifndef PROPAGATOR_H
 #define PROPAGATOR_H
 
+#include "system.h"
 
 namespace Astronx
 {
@@ -29,9 +30,9 @@ namespace Astronx
 class Propagator
 {
 public:
-    Propagator(const int Npad);
+    Propagator(const int Npad, System *sys);
     virtual ~Propagator();
-    virtual void largeStep(double *x, double *v);
+    virtual double largeStep(double *x, double *v);
     virtual void writeOutputLine();
 
 protected:
@@ -43,6 +44,8 @@ protected:
     double m_timeStep;
 
     double *m_masses;
+
+    System *m_sys;
 };
 
 }

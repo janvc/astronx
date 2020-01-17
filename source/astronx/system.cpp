@@ -121,6 +121,11 @@ double System::totMass() const
     return m_totMass;
 }
 
+double System::elapsedTime() const
+{
+    return m_elapsedTime;
+}
+
 std::array<double,3> System::com() const
 {
     std::array<double,3> result{0.0};
@@ -278,7 +283,7 @@ void System::propagate()
 
     switch (Configuration::get().intType()) {
     case BS:
-        prop = new BulirschStoer(m_Npad);
+        prop = new BulirschStoer(m_Npad, this);
         break;
     default:
         break;
@@ -304,10 +309,8 @@ void System::propagate()
         }
 
         // get start time
-        prop->largeStep(m_xLarge, m_vLarge);
+        m_elapsedTime += prop->largeStep(m_xLarge, m_vLarge);
         // get end time
-
-        m_elapsedTime += Configuration::get().tout();
 
         prop->writeOutputLine();
     }

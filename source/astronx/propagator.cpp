@@ -27,8 +27,9 @@
 namespace Astronx
 {
 
-Propagator::Propagator(const int Npad)
+Propagator::Propagator(const int Npad, System* sys)
 {
+    m_sys = sys;
     m_Nobj = Configuration::get().Nobj();
     m_Npad = Npad;
     m_timeStep = Configuration::get().tout();
@@ -42,7 +43,7 @@ Propagator::~Propagator()
 {
 }
 
-void Propagator::largeStep(double *x, double *v)
+double Propagator::largeStep(double *x, double *v)
 {
 }
 

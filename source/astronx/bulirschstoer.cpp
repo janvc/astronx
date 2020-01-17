@@ -22,7 +22,7 @@
 #include <iostream>
 #include <iomanip>
 #include <cmath>
-#include <stdlib.h>
+#include <cstring>
 #include "propagator.h"
 #include "configuration.h"
 #include "bulirschstoer.h"
@@ -32,8 +32,8 @@
 namespace Astronx
 {
 
-BulirschStoer::BulirschStoer(const int Npad)
-    : Propagator(Npad)
+BulirschStoer::BulirschStoer(const int Npad, System *sys)
+    : Propagator(Npad, sys)
 {
     m_N_ok = 0;
     m_N_fail = 0;
@@ -90,7 +90,7 @@ BulirschStoer::~BulirschStoer()
 {
 }
 
-void BulirschStoer::largeStep(double *x, double *v)
+double BulirschStoer::largeStep(double *x, double *v)
 {
     std::cout << "this is BulirschStoer::largeStep()\n";
 
@@ -140,6 +140,7 @@ void BulirschStoer::largeStep(double *x, double *v)
             break;
         }
     }
+    return internalElapsedTime;
 }
 
 bool BulirschStoer::oneStep()
@@ -188,7 +189,7 @@ bool BulirschStoer::oneStep()
 
             if (Configuration::get().Steps())
             {
-                m_stepsFile << "  " << std::setprecision(8) << std::setw(18) << m_elapsedTime
+                m_stepsFile << "  " << std::setprecision(8) << std::setw(18) << m_sys->elapsedTime()
                             << std::setprecision(5) << std::setw(17) << trialStep
                             << std::setw(9) << i << std::setw(18) << m_delta << "\n";
             }
@@ -211,7 +212,7 @@ bool BulirschStoer::oneStep()
             {
                 // TODO: throw a custom exception here
                 std::cout << "WARNING: No convergence with minimum stepsize. Aborting!\n";
-                m_underflow = true;
+//                m_underflow = true;
                 return success;
             }
 
@@ -335,8 +336,8 @@ void BulirschStoer::extrapolate(const int stepNum, const double squaredStep)
         }
     }
 
-    memcpy(m_x_SubFin, m_tmpDat + m_Npad * 0, 3 * m_Npad * sizeof(double));
-    memcpy(m_v_SubFin, m_tmpDat + m_Npad * 3, 3 * m_Npad * sizeof(double));
+    std::memcpy(m_x_SubFin, m_tmpDat + m_Npad * 0, 3 * m_Npad * sizeof(double));
+    std::memcpy(m_v_SubFin, m_tmpDat + m_Npad * 3, 3 * m_Npad * sizeof(double));
 }
 
 void BulirschStoer::writeOutputLine()
