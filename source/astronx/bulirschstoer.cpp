@@ -38,9 +38,10 @@ BulirschStoer::BulirschStoer(const int Npad, System *sys)
     m_N_ok = 0;
     m_N_fail = 0;
 
-    void *dm0, *dm1, *dm2, *dm3, *dm4, *dm5, *dm6, *dm7, *dm8, *dm9, *dm10, *dm11;
-    posix_memalign(&dm0, 64, 3 * m_Npad * sizeof(double));
-    posix_memalign(&dm1, 64, 3 * m_Npad * sizeof(double));
+    void *dm2, *dm3, *dm4, *dm5, *dm6, *dm7, *dm8, *dm9, *dm10, *dm11;
+//    void *dm0, *dm1, *dm2, *dm3, *dm4, *dm5, *dm6, *dm7, *dm8, *dm9, *dm10, *dm11;
+//    posix_memalign(&dm0, 64, 3 * m_Npad * sizeof(double));
+//    posix_memalign(&dm1, 64, 3 * m_Npad * sizeof(double));
     posix_memalign(&dm2, 64, 3 * m_Npad * sizeof(double));
     posix_memalign(&dm3, 64, 3 * m_Npad * sizeof(double));
     posix_memalign(&dm4, 64, 3 * m_Npad * sizeof(double));
@@ -51,8 +52,8 @@ BulirschStoer::BulirschStoer(const int Npad, System *sys)
     posix_memalign(&dm9, 64, 6 * m_Npad * sizeof(double));
     posix_memalign(&dm10, 64, 6 * m_Npad * sizeof(double));
     posix_memalign(&dm11, 64, 6 * m_Npad * sizeof(double));
-    m_x_BSLtmp = (double*) dm0;
-    m_v_BSLtmp = (double*) dm1;
+//    m_x_BSLtmp = (double*) dm0;
+//    m_v_BSLtmp = (double*) dm1;
     m_x_SubStep = (double*) dm2;
     m_v_SubStep = (double*) dm3;
     m_x_SubFin = (double*) dm4;
@@ -75,6 +76,7 @@ BulirschStoer::BulirschStoer(const int Npad, System *sys)
     out << "       elapsed time      large steps      BS steps      small steps      cpu time [ms]\n";
     out << "                         good    bad\n";
 
+    out.flush();
     if (Configuration::get().Verbose())
     {
         std::cout << " Starting propagation with the Bulirsch-Stoer integrator\n";
@@ -93,14 +95,27 @@ BulirschStoer::~BulirschStoer()
 double BulirschStoer::largeStep(double *x, double *v)
 {
     std::cout << "this is BulirschStoer::largeStep()\n";
+//    std::cout << "Npad = " << m_Npad << std::endl;
 
     m_x_BSLtmp = x;
     m_v_BSLtmp = v;
 
+    std::cout << "x" << std::endl;
+    for (int i = 0; i < 3 * m_Npad; i++)
+    {
+        std::cout << std::setw(5) << i << std::setprecision(10) << std::setw(20) << x[i] << std::endl;
+    }
+    std::cout << "m_x_BSLtmp" << std::endl;
+    for (int i = 0; i < 3 * m_Npad; i++)
+    {
+        std::cout << std::setw(5) << i << std::setprecision(10) << std::setw(20) << m_x_BSLtmp[i] << std::endl;
+    }
+
+//    std::cout << "# trying propagation with step:" << std::setw(20) << m_timeStep << "\n";
     if (Configuration::get().Steps())
     {
-        std::ofstream &stepsFile = Configuration::get().stepsFile();
-        stepsFile << "# trying propagation with step:" << std::setw(20) << m_timeStep << "\n";
+//        std::ofstream &stepsFile = Configuration::get().stepsFile();
+        m_stepsFile << "# trying propagation with step:" << std::setw(20) << m_timeStep << "\n";
     }
 
     double internalElapsedTime = 0.0;
@@ -145,7 +160,13 @@ double BulirschStoer::largeStep(double *x, double *v)
 
 bool BulirschStoer::oneStep()
 {
-    std::cout << "this is BulirschStoer::largeStep()\n";
+    std::cout << "this is BulirschStoer::oneStep()\n";
+
+    std::cout << "m_x_BSLtmp" << std::endl;
+    for (int i = 0; i < 3 * m_Npad; i++)
+    {
+        std::cout << std::setw(5) << i << std::setprecision(10) << std::setw(20) << m_x_BSLtmp[i] << std::endl;
+    }
 
     acceleration(m_x_BSLtmp, m_a_BSStart);
     double gyr = radiusOfGyration(m_x_BSLtmp);
@@ -159,6 +180,7 @@ bool BulirschStoer::oneStep()
     v_avg /= (3 * m_Nobj);
 
     double trialStep = m_timeStep;
+    std::cout << "timestep = " << m_timeStep << std::endl;
 
     if (Configuration::get().Steps())
     {
@@ -187,6 +209,9 @@ bool BulirschStoer::oneStep()
 
             m_nsteps = i;
 
+//            std::cout << "  " << std::setprecision(8) << std::setw(18) << m_sys->elapsedTime()
+//                        << std::setprecision(5) << std::setw(17) << trialStep
+//                        << std::setw(9) << i << std::setw(18) << m_delta << "\n";
             if (Configuration::get().Steps())
             {
                 m_stepsFile << "  " << std::setprecision(8) << std::setw(18) << m_sys->elapsedTime()
@@ -232,6 +257,9 @@ bool BulirschStoer::oneStep()
 
 void BulirschStoer::subSteps(const int nSteps, const double stepSize)
 {
+    std::cout << "this is BulirschStoer::subSteps()\n";
+    std::cout << "i = " << nSteps << " step = " << stepSize << std::endl;
+
     double smallStep = stepSize / nSteps;
 
     /*
@@ -285,6 +313,8 @@ void BulirschStoer::subSteps(const int nSteps, const double stepSize)
 
 void BulirschStoer::extrapolate(const int stepNum, const double squaredStep)
 {
+    std::cout << "this is BulirschStoer::extrapolate()\n";
+
     m_extH[stepNum - 1] = squaredStep;
 
     for (int i = 0; i < 3 * m_Npad; i++)

@@ -107,6 +107,7 @@ int main(int argc, char *argv[])
         out << " z = " << std::setprecision(8) << std::setw(15) << lm[2] << " kg*m/s\n\n\n\n";
     }
 
+    out.flush();
     sys.propagate();
 }
 

@@ -42,8 +42,8 @@ public:
     void writeOutputLine();
 
 private:
-    int m_Nobj;
-    int m_Npad;
+//    int m_Nobj;
+//    int m_Npad;
     int m_N_ok;
     int m_N_fail;
     int m_nsteps;
