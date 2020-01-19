@@ -193,12 +193,46 @@ bool BulirschStoer::oneStep()
     {
         for (int i = 1; i <= Configuration::get().MaxSubStep(); i++)
         {
+            std::cout << "m_x_SubFin before substeps" << std::endl;
+            for (int i = 0; i < 3 * m_Npad; i++)
+            {
+                std::cout << std::setw(5) << i << std::setprecision(10) << std::setw(20) << m_x_SubFin[i] << std::endl;
+            }
+            std::cout << "m_v_SubFin before substeps" << std::endl;
+            for (int i = 0; i < 3 * m_Npad; i++)
+            {
+                std::cout << std::setw(5) << i << std::setprecision(10) << std::setw(20) << m_v_SubFin[i] << std::endl;
+            }
             subSteps(i, trialStep);
-
+            std::cout << "m_x_SubFin after substeps" << std::endl;
+            for (int i = 0; i < 3 * m_Npad; i++)
+            {
+                std::cout << std::setw(5) << i << std::setprecision(10) << std::setw(20) << m_x_SubFin[i] << std::endl;
+            }
+            std::cout << "m_v_SubFin after substeps" << std::endl;
+            for (int i = 0; i < 3 * m_Npad; i++)
+            {
+                std::cout << std::setw(5) << i << std::setprecision(10) << std::setw(20) << m_v_SubFin[i] << std::endl;
+            }
             double extStep = (trialStep / i) * (trialStep / i);
 
             extrapolate(i, extStep);
 
+            std::cout << "m_x_SubFin after extrapolate" << std::endl;
+            for (int i = 0; i < 3 * m_Npad; i++)
+            {
+                std::cout << std::setw(5) << i << std::setprecision(10) << std::setw(20) << m_x_SubFin[i] << std::endl;
+            }
+            std::cout << "m_v_SubFin after extrapolate" << std::endl;
+            for (int i = 0; i < 3 * m_Npad; i++)
+            {
+                std::cout << std::setw(5) << i << std::setprecision(10) << std::setw(20) << m_v_SubFin[i] << std::endl;
+            }
+            std::cout << "m_extErr" << std::endl;
+            for (int i = 0; i < 6 * m_Npad; i++)
+            {
+                std::cout << std::setw(5) << i << std::setprecision(10) << std::setw(20) << m_extErr[i] << std::endl;
+            }
             m_delta = 0.0;
             for (int j = 0; j < 3 * m_Nobj; j++)
             {
@@ -222,6 +256,9 @@ bool BulirschStoer::oneStep()
             if (m_delta < Configuration::get().Eps())
             {
                 finished = true;
+
+                memcpy(m_x_BSLtmp, m_x_SubFin, 3 * m_Npad * sizeof(double));
+                memcpy(m_v_BSLtmp, m_v_SubFin, 3 * m_Npad * sizeof(double));
 
                 if (trialStep == m_timeStep)
                 {
@@ -283,6 +320,7 @@ void BulirschStoer::subSteps(const int nSteps, const double stepSize)
      */
     for (int i = 2; i <= nSteps; i++)
     {
+        std::cout << "doing the second loop in subSteps\n";
         acceleration(m_x_SubFin, m_a_SubInt);
 
         /*
@@ -311,11 +349,11 @@ void BulirschStoer::subSteps(const int nSteps, const double stepSize)
     }
 }
 
-void BulirschStoer::extrapolate(const int stepNum, const double squaredStep)
+void BulirschStoer::extrapolate(const int i_est, const double h_est)
 {
     std::cout << "this is BulirschStoer::extrapolate()\n";
 
-    m_extH[stepNum - 1] = squaredStep;
+    m_extH[i_est - 1] = h_est;
 
     for (int i = 0; i < 3 * m_Npad; i++)
     {
@@ -325,9 +363,9 @@ void BulirschStoer::extrapolate(const int stepNum, const double squaredStep)
         m_tmpDat[3 * m_Npad + i] = m_v_SubFin[i];
     }
 
-//    double m_extC[6 * m_Npad];
+    double extC[6 * m_Npad];
 
-    if (stepNum == 1)
+    if (i_est == 1)
     {
         for (int i = 0; i < 3 * m_Npad; i++)
         {
@@ -339,31 +377,43 @@ void BulirschStoer::extrapolate(const int stepNum, const double squaredStep)
     {
         for (int i = 0; i < 3 * m_Npad; i++)
         {
-            m_extC[0 * m_Npad + i] = m_x_SubFin[i];
-            m_extC[3 * m_Npad + i] = m_v_SubFin[i];
+            extC[0 * m_Npad + i] = m_x_SubFin[i];
+            extC[3 * m_Npad + i] = m_v_SubFin[i];
         }
 
-        for (int k = 1; k < stepNum; k++)
+        for (int k = 1; k < i_est; k++)
         {
-            double delta = 1.0 / (m_extH[stepNum - k - 1] - squaredStep);
-            double tmp1 = squaredStep * delta;
-            double tmp2 = m_extH[stepNum - k - 1] * delta;
+            std::cout << "doing the k-loop in extrapolate\n";
+            double delta = 1.0 / (m_extH[i_est - k - 1] - h_est);
+            double tmp1 = h_est * delta;
+            double tmp2 = m_extH[i_est - k - 1] * delta;
 
             for (int j = 0; j < 6 * m_Npad; j++)
             {
                 double tmp3 = m_extD[(k - 1) * 6 * m_Npad + j];
                 m_extD[(k - 1) * 6 * m_Npad + j] = m_extErr[j];
-                delta = m_extC[j] - tmp3;
+                delta = extC[j] - tmp3;
                 m_extErr[j] = tmp1 * delta;
-                m_extC[j] = tmp2 * delta;
+                extC[j] = tmp2 * delta;
                 m_tmpDat[j] += m_extErr[j];
             }
         }
 
         for (int i = 0; i < 6 * m_Npad; i++)
         {
-            m_extD[(stepNum - 1) * 6 * m_Npad + i] = m_extErr[i];
+            m_extD[(i_est - 1) * 6 * m_Npad + i] = m_extErr[i];
         }
+    }
+
+    std::cout << "m_extD\n";
+    for (int n = 0; n < 6 * m_Npad; n++)
+    {
+        std::cout << std::setw(5) << n;
+        for (int m = 0; m < Configuration::get().MaxSubStep(); m++)
+        {
+            std::cout << std::setprecision(10) << std::setw(20) << m_extD[m * 6 * m_Npad + n];
+        }
+        std::cout << std::endl;
     }
 
     std::memcpy(m_x_SubFin, m_tmpDat + m_Npad * 0, 3 * m_Npad * sizeof(double));

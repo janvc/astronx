@@ -37,7 +37,7 @@ public:
     double largeStep(double *x, double *v);
     bool oneStep();
     void subSteps(const int nSteps, const double stepSize);
-    void extrapolate(const int stepNum, const double squaredStep);
+    void extrapolate(const int i_est, const double h_est);
 
     void writeOutputLine();
 

@@ -60,17 +60,17 @@ void Propagator::writeOutputLine()
 
 void Propagator::acceleration(double *__restrict__ x, double *__restrict__ a)
 {
-    std::cout << "this is Propagator::acceleration()\n";
-    std::cout << "x" << std::endl;
-    for (int k = 0; k < 3 * m_Npad; k++)
-    {
-        std::cout << std::setw(5) << k << std::setprecision(10) << std::setw(20) << x[k] << std::endl;
-    }
-    std::cout << "m" << std::endl;
-    for (int k = 0; k < m_Npad; k++)
-    {
-        std::cout << std::setw(5) << k << std::setprecision(10) << std::setw(20) << m_masses[k] << std::endl;
-    }
+//    std::cout << "this is Propagator::acceleration()\n";
+//    std::cout << "x" << std::endl;
+//    for (int k = 0; k < 3 * m_Npad; k++)
+//    {
+//        std::cout << std::setw(5) << k << std::setprecision(10) << std::setw(20) << x[k] << std::endl;
+//    }
+//    std::cout << "m" << std::endl;
+//    for (int k = 0; k < m_Npad; k++)
+//    {
+//        std::cout << std::setw(5) << k << std::setprecision(10) << std::setw(20) << m_masses[k] << std::endl;
+//    }
     int i, j;
 
     for (j = 0; j < m_Nobj; j++)
@@ -97,11 +97,11 @@ void Propagator::acceleration(double *__restrict__ x, double *__restrict__ a)
             a[2 * m_Npad + j] -= m_masses[i] * tmpFac * dZ;
         }
     }
-    std::cout << "a" << std::endl;
-    for (int k = 0; k < 3 * m_Npad; k++)
-    {
-        std::cout << std::setw(5) << k << std::setprecision(10) << std::setw(20) << a[k] << std::endl;
-    }
+//    std::cout << "a" << std::endl;
+//    for (int k = 0; k < 3 * m_Npad; k++)
+//    {
+//        std::cout << std::setw(5) << k << std::setprecision(10) << std::setw(20) << a[k] << std::endl;
+//    }
 }
 
 double Propagator::radiusOfGyration(double *__restrict__ x)
