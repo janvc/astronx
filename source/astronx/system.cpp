@@ -32,7 +32,6 @@ namespace Astronx
 
 System::System()
 {
-    std::cout << "this is System::System()\n";
     m_Nobj = Configuration::get().Nobj();
     m_elapsedTime = 0.0;
 
@@ -58,16 +57,6 @@ System::System()
         m_masses[i] = Configuration::get().masses()[i];
         m_names = Configuration::get().names();
     }
-//    std::cout << "m_xLarge\n";
-//    for (int i = 0; i < 3 * m_Npad; i++)
-//    {
-//        std::cout << std::setw(5) << i << std::setprecision(10) << std::setw(20) << m_xLarge[i] << std::endl;
-//    }
-//    std::cout << "m_vLarge\n";
-//    for (int i = 0; i < 3 * m_Npad; i++)
-//    {
-//        std::cout << std::setw(5) << i << std::setprecision(10) << std::setw(20) << m_vLarge[i] << std::endl;
-//    }
 
     // calculate the total mass
     m_totMass = 0.0;
@@ -184,13 +173,6 @@ std::array<double,3> System::angMom() const
 
 void System::shiftCom()
 {
-    std::cout << "this is System::shiftCom()\n";
-//    std::cout << "m_xLarge" << std::endl;
-//    for (int i = 0; i < 3 * m_Npad; i++)
-//    {
-//        std::cout << std::setw(5) << i << std::setprecision(10) << std::setw(20) << m_xLarge[i] << std::endl;
-//    }
-
     std::array<double,3> com = this->com();
 
     for (int i = 0; i < m_Nobj; i++)
@@ -199,11 +181,6 @@ void System::shiftCom()
         m_xLarge[1 * m_Npad + i] -= com[1];
         m_xLarge[2 * m_Npad + i] -= com[2];
     }
-//    std::cout << "m_xLarge" << std::endl;
-//    for (int i = 0; i < 3 * m_Npad; i++)
-//    {
-//        std::cout << std::setw(5) << i << std::setprecision(10) << std::setw(20) << m_xLarge[i] << std::endl;
-//    }
 }
 
 void System::shiftMom()
@@ -280,7 +257,6 @@ void System::writeRestart()
 
 void System::propagate()
 {
-    std::cout << "this is System::propagate()\n";
     std::ofstream &out = Configuration::get().outputFile();
 
     // write the initial conditions:
@@ -338,11 +314,6 @@ void System::propagate()
         }
 
         // get start time
-        std::cout << "m_xLarge\n";
-        for (int i = 0; i < 3 * m_Npad; i++)
-        {
-            std::cout << std::setw(5) << i << std::setprecision(10) << std::setw(20) << m_xLarge[i] << std::endl;
-        }
         m_elapsedTime += prop->largeStep(m_xLarge, m_vLarge);
         // get end time
 

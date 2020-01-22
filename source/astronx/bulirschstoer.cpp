@@ -39,21 +39,16 @@ BulirschStoer::BulirschStoer(const int Npad, System *sys)
     m_N_fail = 0;
 
     void *dm2, *dm3, *dm4, *dm5, *dm6, *dm7, *dm8, *dm9, *dm10, *dm11;
-//    void *dm0, *dm1, *dm2, *dm3, *dm4, *dm5, *dm6, *dm7, *dm8, *dm9, *dm10, *dm11;
-//    posix_memalign(&dm0, 64, 3 * m_Npad * sizeof(double));
-//    posix_memalign(&dm1, 64, 3 * m_Npad * sizeof(double));
     posix_memalign(&dm2, 64, 3 * m_Npad * sizeof(double));
     posix_memalign(&dm3, 64, 3 * m_Npad * sizeof(double));
     posix_memalign(&dm4, 64, 3 * m_Npad * sizeof(double));
     posix_memalign(&dm5, 64, 3 * m_Npad * sizeof(double));
     posix_memalign(&dm6, 64, 3 * m_Npad * sizeof(double));
     posix_memalign(&dm7, 64, 3 * m_Npad * sizeof(double));
-    posix_memalign(&dm8, 64, Configuration::get().MaxSubStep() * m_Npad * sizeof(double));
+    posix_memalign(&dm8, 64, Configuration::get().MaxSubStep() * 6 * m_Npad * sizeof(double));
     posix_memalign(&dm9, 64, 6 * m_Npad * sizeof(double));
     posix_memalign(&dm10, 64, 6 * m_Npad * sizeof(double));
     posix_memalign(&dm11, 64, 6 * m_Npad * sizeof(double));
-//    m_x_BSLtmp = (double*) dm0;
-//    m_v_BSLtmp = (double*) dm1;
     m_x_SubStep = (double*) dm2;
     m_v_SubStep = (double*) dm3;
     m_x_SubFin = (double*) dm4;
@@ -94,27 +89,12 @@ BulirschStoer::~BulirschStoer()
 
 double BulirschStoer::largeStep(double *x, double *v)
 {
-    std::cout << "this is BulirschStoer::largeStep()\n";
-//    std::cout << "Npad = " << m_Npad << std::endl;
-
     m_x_BSLtmp = x;
     m_v_BSLtmp = v;
 
-    std::cout << "x" << std::endl;
-    for (int i = 0; i < 3 * m_Npad; i++)
-    {
-        std::cout << std::setw(5) << i << std::setprecision(10) << std::setw(20) << x[i] << std::endl;
-    }
-    std::cout << "m_x_BSLtmp" << std::endl;
-    for (int i = 0; i < 3 * m_Npad; i++)
-    {
-        std::cout << std::setw(5) << i << std::setprecision(10) << std::setw(20) << m_x_BSLtmp[i] << std::endl;
-    }
-
-//    std::cout << "# trying propagation with step:" << std::setw(20) << m_timeStep << "\n";
     if (Configuration::get().Steps())
     {
-//        std::ofstream &stepsFile = Configuration::get().stepsFile();
+        m_stepsFile << "# elapsed time:" << std::scientific << std::setprecision(9) << std::setw(20) << std::uppercase << m_sys->elapsedTime() << "\n";
         m_stepsFile << "# trying propagation with step:" << std::setw(20) << m_timeStep << "\n";
     }
 
@@ -160,14 +140,6 @@ double BulirschStoer::largeStep(double *x, double *v)
 
 bool BulirschStoer::oneStep()
 {
-    std::cout << "this is BulirschStoer::oneStep()\n";
-
-    std::cout << "m_x_BSLtmp" << std::endl;
-    for (int i = 0; i < 3 * m_Npad; i++)
-    {
-        std::cout << std::setw(5) << i << std::setprecision(10) << std::setw(20) << m_x_BSLtmp[i] << std::endl;
-    }
-
     acceleration(m_x_BSLtmp, m_a_BSStart);
     double gyr = radiusOfGyration(m_x_BSLtmp);
     double v_avg = 0.0;
@@ -180,7 +152,6 @@ bool BulirschStoer::oneStep()
     v_avg /= (3 * m_Nobj);
 
     double trialStep = m_timeStep;
-    std::cout << "timestep = " << m_timeStep << std::endl;
 
     if (Configuration::get().Steps())
     {
@@ -193,46 +164,12 @@ bool BulirschStoer::oneStep()
     {
         for (int i = 1; i <= Configuration::get().MaxSubStep(); i++)
         {
-            std::cout << "m_x_SubFin before substeps" << std::endl;
-            for (int i = 0; i < 3 * m_Npad; i++)
-            {
-                std::cout << std::setw(5) << i << std::setprecision(10) << std::setw(20) << m_x_SubFin[i] << std::endl;
-            }
-            std::cout << "m_v_SubFin before substeps" << std::endl;
-            for (int i = 0; i < 3 * m_Npad; i++)
-            {
-                std::cout << std::setw(5) << i << std::setprecision(10) << std::setw(20) << m_v_SubFin[i] << std::endl;
-            }
             subSteps(i, trialStep);
-            std::cout << "m_x_SubFin after substeps" << std::endl;
-            for (int i = 0; i < 3 * m_Npad; i++)
-            {
-                std::cout << std::setw(5) << i << std::setprecision(10) << std::setw(20) << m_x_SubFin[i] << std::endl;
-            }
-            std::cout << "m_v_SubFin after substeps" << std::endl;
-            for (int i = 0; i < 3 * m_Npad; i++)
-            {
-                std::cout << std::setw(5) << i << std::setprecision(10) << std::setw(20) << m_v_SubFin[i] << std::endl;
-            }
+
             double extStep = (trialStep / i) * (trialStep / i);
 
             extrapolate(i, extStep);
 
-            std::cout << "m_x_SubFin after extrapolate" << std::endl;
-            for (int i = 0; i < 3 * m_Npad; i++)
-            {
-                std::cout << std::setw(5) << i << std::setprecision(10) << std::setw(20) << m_x_SubFin[i] << std::endl;
-            }
-            std::cout << "m_v_SubFin after extrapolate" << std::endl;
-            for (int i = 0; i < 3 * m_Npad; i++)
-            {
-                std::cout << std::setw(5) << i << std::setprecision(10) << std::setw(20) << m_v_SubFin[i] << std::endl;
-            }
-            std::cout << "m_extErr" << std::endl;
-            for (int i = 0; i < 6 * m_Npad; i++)
-            {
-                std::cout << std::setw(5) << i << std::setprecision(10) << std::setw(20) << m_extErr[i] << std::endl;
-            }
             m_delta = 0.0;
             for (int j = 0; j < 3 * m_Nobj; j++)
             {
@@ -243,9 +180,6 @@ bool BulirschStoer::oneStep()
 
             m_nsteps = i;
 
-//            std::cout << "  " << std::setprecision(8) << std::setw(18) << m_sys->elapsedTime()
-//                        << std::setprecision(5) << std::setw(17) << trialStep
-//                        << std::setw(9) << i << std::setw(18) << m_delta << "\n";
             if (Configuration::get().Steps())
             {
                 m_stepsFile << "  " << std::setprecision(8) << std::setw(18) << m_sys->elapsedTime()
@@ -256,6 +190,7 @@ bool BulirschStoer::oneStep()
             if (m_delta < Configuration::get().Eps())
             {
                 finished = true;
+                m_doneStep = trialStep;
 
                 memcpy(m_x_BSLtmp, m_x_SubFin, 3 * m_Npad * sizeof(double));
                 memcpy(m_v_BSLtmp, m_v_SubFin, 3 * m_Npad * sizeof(double));
@@ -274,7 +209,6 @@ bool BulirschStoer::oneStep()
             {
                 // TODO: throw a custom exception here
                 std::cout << "WARNING: No convergence with minimum stepsize. Aborting!\n";
-//                m_underflow = true;
                 return success;
             }
 
@@ -294,9 +228,6 @@ bool BulirschStoer::oneStep()
 
 void BulirschStoer::subSteps(const int nSteps, const double stepSize)
 {
-    std::cout << "this is BulirschStoer::subSteps()\n";
-    std::cout << "i = " << nSteps << " step = " << stepSize << std::endl;
-
     double smallStep = stepSize / nSteps;
 
     /*
@@ -320,7 +251,6 @@ void BulirschStoer::subSteps(const int nSteps, const double stepSize)
      */
     for (int i = 2; i <= nSteps; i++)
     {
-        std::cout << "doing the second loop in subSteps\n";
         acceleration(m_x_SubFin, m_a_SubInt);
 
         /*
@@ -351,8 +281,6 @@ void BulirschStoer::subSteps(const int nSteps, const double stepSize)
 
 void BulirschStoer::extrapolate(const int i_est, const double h_est)
 {
-    std::cout << "this is BulirschStoer::extrapolate()\n";
-
     m_extH[i_est - 1] = h_est;
 
     for (int i = 0; i < 3 * m_Npad; i++)
@@ -383,7 +311,6 @@ void BulirschStoer::extrapolate(const int i_est, const double h_est)
 
         for (int k = 1; k < i_est; k++)
         {
-            std::cout << "doing the k-loop in extrapolate\n";
             double delta = 1.0 / (m_extH[i_est - k - 1] - h_est);
             double tmp1 = h_est * delta;
             double tmp2 = m_extH[i_est - k - 1] * delta;
@@ -405,32 +332,18 @@ void BulirschStoer::extrapolate(const int i_est, const double h_est)
         }
     }
 
-    std::cout << "m_extD\n";
-    for (int n = 0; n < 6 * m_Npad; n++)
-    {
-        std::cout << std::setw(5) << n;
-        for (int m = 0; m < Configuration::get().MaxSubStep(); m++)
-        {
-            std::cout << std::setprecision(10) << std::setw(20) << m_extD[m * 6 * m_Npad + n];
-        }
-        std::cout << std::endl;
-    }
-
     std::memcpy(m_x_SubFin, m_tmpDat + m_Npad * 0, 3 * m_Npad * sizeof(double));
     std::memcpy(m_v_SubFin, m_tmpDat + m_Npad * 3, 3 * m_Npad * sizeof(double));
 }
 
 void BulirschStoer::writeOutputLine()
 {
-    std::cout << "this is BulirschStoer::writeOutputLine()\n";
-
     if (Configuration::get().Steps())
     {
-        std::ofstream &stepsFile = Configuration::get().stepsFile();
-        stepsFile << "# successful / failed steps:" << m_N_ok << m_N_fail << "\n";
-        stepsFile << "#\n";
-        stepsFile << "######################################################################\n";
-        stepsFile << "#\n";
+        m_stepsFile << "# successful / failed steps:" << m_N_ok << m_N_fail << "\n";
+        m_stepsFile << "#\n";
+        m_stepsFile << "######################################################################\n";
+        m_stepsFile << "#\n";
     }
 }
 
