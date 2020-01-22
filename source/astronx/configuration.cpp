@@ -237,30 +237,10 @@ int Configuration::init(int argnum, char *arguments[])
 
     m_Nobj = m_masses.size();
 
-    // calculate the total mass
-//    m_Mtot = 0.0;
-//    for (int i = 0; i < m_Nobj; i++)
-//        m_Mtot += m_masses[i];
-
     // open the output files
     m_outputFileName = m_baseName + ".out";
     m_outputFile = std::ofstream(m_outputFileName);
     m_binTrjFile = std::ofstream(m_baseName + ".bin.trj", std::ios::binary);
-
-    if (m_textTrj)
-    {
-        m_txtTrjFile = std::ofstream(m_baseName + ".txt.trj");
-    }
-
-    if (m_steps)
-    {
-        m_stepsFile = std::ofstream(m_baseName + ".txt.trj");
-    }
-
-    if (m_restart)
-    {
-        m_restartFile = std::ofstream(m_baseName + ".txt.trj");
-    }
 
     m_N_BS_LargeStep = 0;
 
@@ -273,9 +253,6 @@ void Configuration::setDefaults()
     m_IncThres   =  8;
     m_Ndigit     = 10;
     m_Nstep      =  5;
-//    m_tFinal     =  0.0;
-//    m_tOut       =  0.0;
-//    m_InitStep   =  0.0;
     m_eps        =  1.0e-6;
     m_epsThres   =  0.9;
     m_MinStep    =  1.0e2;

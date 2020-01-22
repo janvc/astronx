@@ -67,51 +67,51 @@ System::System()
 
     if (Configuration::get().TextTrj())
     {
-        std::ofstream &txtTrj = Configuration::get().txtTrjFile();
+        m_txtTrj = std::ofstream(Configuration::get().baseName() + ".txt.trj");
 
-        txtTrj << "# trajectory in gnuplot-friendly text form\n";
-        txtTrj << "#\n";
-        txtTrj << "# time               ";
+        m_txtTrj << "# trajectory in gnuplot-friendly text form\n";
+        m_txtTrj << "#\n";
+        m_txtTrj << "# time               ";
         for (int i = 0; i < m_Nobj - 1; i++)
         {
-            txtTrj << m_names[i];
+            m_txtTrj << m_names[i];
             for (int j = 0; j < 3 * Configuration::get().Ndigit() + 25 - m_names[i].size(); j++)
             {
-                txtTrj << " ";
+                m_txtTrj << " ";
             }
         }
-        txtTrj << std::setw(30) << m_names[m_Nobj - 1] << "\n";
-        txtTrj << "#                    ";
+        m_txtTrj << std::setw(30) << m_names[m_Nobj - 1] << "\n";
+        m_txtTrj << "#                    ";
         for (int i = 0; i < m_Nobj - 1; i++)
         {
-            txtTrj << "x [m]";
+            m_txtTrj << "x [m]";
             for (int j = 0; j < Configuration::get().Ndigit() + 3; j++)
             {
-                txtTrj << " ";
+                m_txtTrj << " ";
             }
-            txtTrj << "y [m]";
+            m_txtTrj << "y [m]";
             for (int j = 0; j < Configuration::get().Ndigit() + 3; j++)
             {
-                txtTrj << " ";
+                m_txtTrj << " ";
             }
-            txtTrj << "z [m]";
+            m_txtTrj << "z [m]";
             for (int j = 0; j < Configuration::get().Ndigit() + 4; j++)
             {
-                txtTrj << " ";
+                m_txtTrj << " ";
             }
         }
-        txtTrj << "x [m]";
+        m_txtTrj << "x [m]";
         for (int j = 0; j < Configuration::get().Ndigit() + 3; j++)
         {
-            txtTrj << " ";
+            m_txtTrj << " ";
         }
-        txtTrj << "y [m]";
+        m_txtTrj << "y [m]";
         for (int j = 0; j < Configuration::get().Ndigit() + 3; j++)
         {
-            txtTrj << " ";
+            m_txtTrj << " ";
         }
-        txtTrj << "z [m]\n";
-        txtTrj.flush();
+        m_txtTrj << "z [m]\n";
+        m_txtTrj.flush();
     }
 }
 
@@ -199,20 +199,18 @@ void System::writeToTrj()
 {
     if (Configuration::get().TextTrj())
     {
-        std::ofstream &txtTrj = Configuration::get().txtTrjFile();
-
-        txtTrj << std::uppercase << std::setprecision(10) << std::scientific << std::setw(18) << m_elapsedTime;
+        m_txtTrj << std::uppercase << std::setprecision(10) << std::scientific << std::setw(18) << m_elapsedTime;
 
         int prec = Configuration::get().Ndigit();
         int width = prec + 8;
         for (int i = 0; i < m_Nobj; i++)
         {
-            txtTrj << " "
-                   << std::setprecision(prec) << std::setw(width) << m_xLarge[0 * m_Npad + i]
-                   << std::setprecision(prec) << std::setw(width) << m_xLarge[1 * m_Npad + i]
-                   << std::setprecision(prec) << std::setw(width) << m_xLarge[2 * m_Npad + i];
+            m_txtTrj << " "
+                     << std::setprecision(prec) << std::setw(width) << m_xLarge[0 * m_Npad + i]
+                     << std::setprecision(prec) << std::setw(width) << m_xLarge[1 * m_Npad + i]
+                     << std::setprecision(prec) << std::setw(width) << m_xLarge[2 * m_Npad + i];
         }
-        txtTrj << "\n";
+        m_txtTrj << "\n";
     }
 
     std::ofstream &binTrj = Configuration::get().binTrjFile();

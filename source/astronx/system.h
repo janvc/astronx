@@ -24,6 +24,7 @@
 
 #include <array>
 #include <vector>
+#include <fstream>
 
 
 namespace Astronx
@@ -62,6 +63,8 @@ private:
     double *m_vLarge;   // between large propagation steps
 
     std::vector<std::string> m_names;   // object names
+
+    std::ofstream m_txtTrj;
 };
 
 }
