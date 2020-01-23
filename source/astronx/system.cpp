@@ -21,6 +21,7 @@
 
 #include <iostream>
 #include <iomanip>
+#include <sys/time.h>
 #include "system.h"
 #include "configuration.h"
 #include "propagator.h"
@@ -253,6 +254,13 @@ void System::writeRestart()
     resFile.close();
 }
 
+void System::getWalltime(double *wcTime)
+{
+    struct timeval tp;
+    gettimeofday(&tp, NULL);
+    *wcTime = (double) (tp.tv_sec + tp.tv_usec / 1000000.0);
+}
+
 void System::propagate()
 {
     std::ofstream &out = Configuration::get().outputFile();
@@ -282,6 +290,8 @@ void System::propagate()
 
     out.flush();
 
+    double totalBegin;
+    getWalltime(&totalBegin);
     Propagator *prop;
 
     switch (Configuration::get().intType()) {
@@ -297,13 +307,19 @@ void System::propagate()
         writeToTrj();
 
         if (Configuration::get().Verbose())
+        {
             writeStatus();
+        }
 
         if (Configuration::get().Restart())
+        {
             writeRestart();
+        }
 
         if (m_elapsedTime >= Configuration::get().tfinal())
+        {
             break;
+        }
 
         if (Configuration::get().Steps())
         {
@@ -311,12 +327,25 @@ void System::propagate()
             stepsFile << "# elapsed time:" << std::scientific << std::setprecision(9) << std::setw(20) << std::uppercase << m_elapsedTime << "\n";
         }
 
-        // get start time
+        double t0, t1;
+        getWalltime(&t0);
         m_elapsedTime += prop->largeStep(m_xLarge, m_vLarge);
-        // get end time
+        getWalltime(&t1);
+        double cpuTimeUsed = t1 - t0;
 
-        prop->writeOutputLine();
+        prop->writeOutputLine(cpuTimeUsed);
     }
+
+    double totalEnd;
+    getWalltime(&totalEnd);
+
+    prop->writeSummary();
+
+    out << "  ----------------------------------------------------------------------------------\n";
+    out << "                                 FINISHED THE PROPAGATION\n";
+    out << "                           total cpu time:"
+        << std::fixed << std::setprecision(3) << std::setw(12) << totalEnd - totalBegin << " seconds\n";
+    out << "  ----------------------------------------------------------------------------------\n";
 }
 
 }

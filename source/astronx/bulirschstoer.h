@@ -39,15 +39,23 @@ public:
     void subSteps(const int nSteps, const double stepSize);
     void extrapolate(const int i_est, const double h_est);
 
-    void writeOutputLine();
+    void writeOutputLine(const double cpuTimeUsed);
+    void writeSummary();
 
 private:
-    int m_N_ok;
-    int m_N_fail;
+    int m_NlargeOk;
+    int m_NlargeFail;
+    int m_NBSSteps;
+    int m_NsmallSteps;
+    int m_NlargeOkTotal;
+    int m_NlargeFailTotal;
+    int m_NBSStepsTotal;
+    int m_NsmallStepsTotal;
     int m_nsteps;
 
     double m_delta;
     double m_doneStep;
+    double m_internalElapsedTime;
 
     double *m_x_BSLtmp;
     double *m_v_BSLtmp;

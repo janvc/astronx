@@ -33,7 +33,8 @@ public:
     Propagator(const int Npad, System *sys);
     virtual ~Propagator();
     virtual double largeStep(double *x, double *v);
-    virtual void writeOutputLine();
+    virtual void writeOutputLine(const double cpuTimeUsed);
+    virtual void writeSummary();
 
 protected:
     void acceleration(double *__restrict__ x, double *__restrict__ a);

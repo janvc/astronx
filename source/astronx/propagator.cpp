@@ -53,7 +53,11 @@ double Propagator::largeStep(double *x, double *v)
 {
 }
 
-void Propagator::writeOutputLine()
+void Propagator::writeOutputLine(const double cpuTimeUsed)
+{
+}
+
+void Propagator::writeSummary()
 {
 }
 

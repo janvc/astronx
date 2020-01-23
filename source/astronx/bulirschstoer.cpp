@@ -35,8 +35,10 @@ namespace Astronx
 BulirschStoer::BulirschStoer(const int Npad, System *sys)
     : Propagator(Npad, sys)
 {
-    m_N_ok = 0;
-    m_N_fail = 0;
+    m_NlargeOkTotal = 0;
+    m_NlargeFailTotal = 0;
+    m_NBSStepsTotal = 0;
+    m_NsmallStepsTotal = 0;
 
     void *dm2, *dm3, *dm4, *dm5, *dm6, *dm7, *dm8, *dm9, *dm10, *dm11;
     posix_memalign(&dm2, 64, 3 * m_Npad * sizeof(double));
@@ -89,25 +91,30 @@ BulirschStoer::~BulirschStoer()
 
 double BulirschStoer::largeStep(double *x, double *v)
 {
+    m_NlargeOk = 0;
+    m_NlargeFail = 0;
+    m_NBSSteps = 0;
+    m_NsmallSteps = 0;
+
     m_x_BSLtmp = x;
     m_v_BSLtmp = v;
 
     if (Configuration::get().Steps())
     {
         m_stepsFile << "# elapsed time:" << std::scientific << std::setprecision(9) << std::setw(20) << std::uppercase << m_sys->elapsedTime() << "\n";
-        m_stepsFile << "# trying propagation with step:" << std::setw(20) << m_timeStep << "\n";
+        m_stepsFile << "# trying propagation with step:" << std::setw(19) << m_timeStep << "\n";
     }
 
-    double internalElapsedTime = 0.0;
+    m_internalElapsedTime = 0.0;
 
     while (true)
     {
         if (! Configuration::get().UnRes())
         {
-            if (internalElapsedTime + m_timeStep + Configuration::get().minStep()
+            if (m_internalElapsedTime + m_timeStep + Configuration::get().minStep()
                     > Configuration::get().tout())
             {
-                m_timeStep = Configuration::get().tout() - internalElapsedTime;
+                m_timeStep = Configuration::get().tout() - m_internalElapsedTime;
             }
         }
 
@@ -120,22 +127,28 @@ double BulirschStoer::largeStep(double *x, double *v)
                 double factor = std::pow(Configuration::get().Eps() / m_delta, 1.0 / m_nsteps);
                 m_timeStep = m_doneStep * std::min(factor, Configuration::get().MaxInc());
             }
-            m_N_ok++;
+            m_NlargeOk++;
         }
         else
         {
-            m_N_fail++;
+            m_NlargeFail++;
             m_timeStep = m_doneStep;
         }
 
-        internalElapsedTime += m_doneStep;
+        m_internalElapsedTime += m_doneStep;
 
-        if (internalElapsedTime >= Configuration::get().tout())
+        if (m_internalElapsedTime >= Configuration::get().tout())
         {
             break;
         }
     }
-    return internalElapsedTime;
+
+    m_NlargeOkTotal += m_NlargeOk;
+    m_NlargeFailTotal += m_NlargeFail;
+    m_NBSStepsTotal += m_NBSSteps;
+    m_NsmallStepsTotal += m_NsmallSteps;
+
+    return m_internalElapsedTime;
 }
 
 bool BulirschStoer::oneStep()
@@ -162,6 +175,8 @@ bool BulirschStoer::oneStep()
     bool success = false;
     while (!finished)
     {
+        m_NBSSteps++;
+
         for (int i = 1; i <= Configuration::get().MaxSubStep(); i++)
         {
             subSteps(i, trialStep);
@@ -182,7 +197,7 @@ bool BulirschStoer::oneStep()
 
             if (Configuration::get().Steps())
             {
-                m_stepsFile << "  " << std::setprecision(8) << std::setw(18) << m_sys->elapsedTime()
+                m_stepsFile << "  " << std::setprecision(8) << std::setw(18) << m_sys->elapsedTime() + m_internalElapsedTime
                             << std::setprecision(5) << std::setw(17) << trialStep
                             << std::setw(9) << i << std::setw(18) << m_delta << "\n";
             }
@@ -277,6 +292,8 @@ void BulirschStoer::subSteps(const int nSteps, const double stepSize)
         m_v_SubFin[1 * m_Npad + i] = (m_x_SubStep[1 * m_Npad + i] / smallStep) + 0.5 * smallStep * m_a_SubInt[1 * m_Npad + i];
         m_v_SubFin[2 * m_Npad + i] = (m_x_SubStep[2 * m_Npad + i] / smallStep) + 0.5 * smallStep * m_a_SubInt[2 * m_Npad + i];
     }
+
+    m_NsmallSteps += nSteps;
 }
 
 void BulirschStoer::extrapolate(const int i_est, const double h_est)
@@ -291,8 +308,6 @@ void BulirschStoer::extrapolate(const int i_est, const double h_est)
         m_tmpDat[3 * m_Npad + i] = m_v_SubFin[i];
     }
 
-    double extC[6 * m_Npad];
-
     if (i_est == 1)
     {
         for (int i = 0; i < 3 * m_Npad; i++)
@@ -305,8 +320,8 @@ void BulirschStoer::extrapolate(const int i_est, const double h_est)
     {
         for (int i = 0; i < 3 * m_Npad; i++)
         {
-            extC[0 * m_Npad + i] = m_x_SubFin[i];
-            extC[3 * m_Npad + i] = m_v_SubFin[i];
+            m_extC[0 * m_Npad + i] = m_x_SubFin[i];
+            m_extC[3 * m_Npad + i] = m_v_SubFin[i];
         }
 
         for (int k = 1; k < i_est; k++)
@@ -319,9 +334,9 @@ void BulirschStoer::extrapolate(const int i_est, const double h_est)
             {
                 double tmp3 = m_extD[(k - 1) * 6 * m_Npad + j];
                 m_extD[(k - 1) * 6 * m_Npad + j] = m_extErr[j];
-                delta = extC[j] - tmp3;
+                delta = m_extC[j] - tmp3;
                 m_extErr[j] = tmp1 * delta;
-                extC[j] = tmp2 * delta;
+                m_extC[j] = tmp2 * delta;
                 m_tmpDat[j] += m_extErr[j];
             }
         }
@@ -336,14 +351,44 @@ void BulirschStoer::extrapolate(const int i_est, const double h_est)
     std::memcpy(m_v_SubFin, m_tmpDat + m_Npad * 3, 3 * m_Npad * sizeof(double));
 }
 
-void BulirschStoer::writeOutputLine()
+void BulirschStoer::writeOutputLine(const double cpuTimeUsed)
 {
+    std::ofstream &out = Configuration::get().outputFile();
+
+    out << "       " << std::scientific << std::setprecision(5) << std::setw(11) << m_sys->elapsedTime()
+        << "      " << std::setw(5) << m_NlargeOk << "  " << std::setw(5) << m_NlargeFail
+        << "         " << std::setw(5) << m_NBSSteps << "         " << std::setw(7) << m_NsmallSteps
+        << "        " << std::fixed << std::setprecision(1) << std::setw(7) << cpuTimeUsed * 1000.0 << std::endl;
+
     if (Configuration::get().Steps())
     {
-        m_stepsFile << "# successful / failed steps:" << m_N_ok << m_N_fail << "\n";
+        m_stepsFile << "# successful / failed steps:" << std::setw(5) << m_NlargeOk << "," << std::setw(4) << m_NlargeFail << "\n";
         m_stepsFile << "#\n";
         m_stepsFile << "######################################################################\n";
         m_stepsFile << "#\n";
+        m_stepsFile.flush();
+    }
+}
+
+void BulirschStoer::writeSummary()
+{
+    std::ofstream &out = Configuration::get().outputFile();
+
+    out << std::endl;
+    out << "       *****************************************************************\n";
+    out << "       *                  SUMMARY OF THE CALCULATION                   *\n";
+    out << "       *                                                               *\n";
+    out << "       * total time [s]     large steps      BS steps      small steps *\n";
+    out << "       *                    good    bad                                *\n";
+    out << "       *" << std::scientific << std::setprecision(3) << std::setw(10) << m_sys->elapsedTime()
+        << "      " << std::setw(8) << m_NlargeOkTotal << std::setw(7) << m_NlargeFailTotal
+        << "      " << std::setw(8) << m_NBSStepsTotal << "      " << std::setw(10) << m_NsmallStepsTotal << "  *\n";
+    out << "       *****************************************************************\n";
+    out << std::endl;
+
+    if (Configuration::get().Steps())
+    {
+        m_stepsFile << "# Simulation done!" << std::endl;
     }
 }
 
