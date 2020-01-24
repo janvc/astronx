@@ -84,6 +84,7 @@ set(castronx_SOURCES
     oldpropagator.cpp
     system.cpp
     propagator.cpp
+    stepsizeunderflow.cpp
     bulirschstoer.cpp
     )
 

@@ -109,5 +109,28 @@ int main(int argc, char *argv[])
 
     out.flush();
     sys.propagate();
+
+    out << "----------------------------------------------------------\n";
+    out << "CENTRE OF GRAVITY AND LINEAR MOMENTUM AFTER THE SIMULATION\n";
+    out << "----------------------------------------------------------\n";
+    out << std::endl;
+
+    cog = sys.com();
+    out << "Location of the centre of gravity:\n";
+    out << " x = " << std::setprecision(8) << std::setw(15) << cog[0] << " m\n";
+    out << " y = " << std::setprecision(8) << std::setw(15) << cog[1] << " m\n";
+    out << " z = " << std::setprecision(8) << std::setw(15) << cog[2] << " m\n\n";
+
+    lm = sys.linMom();
+    out << "Total linear momentum:\n";
+    out << " x = " << std::setprecision(8) << std::setw(15) << lm[0] << " kg*m/s\n";
+    out << " y = " << std::setprecision(8) << std::setw(15) << lm[1] << " kg*m/s\n";
+    out << " z = " << std::setprecision(8) << std::setw(15) << lm[2] << " kg*m/s\n\n";
+
+    am = sys.angMom();
+    out << "Total angular momentum:\n";
+    out << " x = " << std::setprecision(8) << std::setw(15) << am[0] << " kg*m^2/s\n";
+    out << " y = " << std::setprecision(8) << std::setw(15) << am[1] << " kg*m^2/s\n";
+    out << " z = " << std::setprecision(8) << std::setw(15) << am[2] << " kg*m^2/s\n\n\n\n";
 }
 
