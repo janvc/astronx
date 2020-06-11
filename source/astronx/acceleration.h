@@ -18,21 +18,20 @@
  *
  */
 
-#ifndef ACCEL_H
-#define ACCEL_H
+#ifndef ACCELERATION_H
+#define ACCELERATION_H
 
+namespace Astronx {
 
-void acc_1c_(int *restrict Nobj, double *restrict x, double *restrict a, const double *restrict G, double *restrict mass);
-void acc_2c_(int *restrict Nobj, double *restrict x, double *restrict a, const double *restrict G, double *restrict mass);
-void acc_2c2_(int *restrict Nobj,
-              double *restrict xx, double *restrict xy, double *restrict xz,
-              double *restrict ax, double *restrict ay, double *restrict az,
-              const double *restrict G, double *restrict mass);
-void acc_2c2avx_(int *restrict Nobj,
-                 double *restrict xx, double *restrict xy, double *restrict xz,
-                 double *restrict ax, double *restrict ay, double *restrict az,
-                 const double *restrict G, double *restrict mass);
-void acc_co1_(int *restrict Nobj, double *restrict x, double *restrict a, const double *restrict G, double *restrict mass);
-void acc_co2_(int *restrict Nobj, double *restrict x, double *restrict a, const double *restrict G, double *restrict mass);
+class Acceleration
+{
+public:
+    static void acceleration;
 
-#endif // ACCEL_H
+private:
+    void acc_ser(double *__restrict__ x, double *__restrict__ a);
+};
+
+}
+
+#endif // ACCELERATION_H
