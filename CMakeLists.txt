@@ -21,5 +21,5 @@ set(CMAKE_MODULE_PATH
 )
 
 add_subdirectory(source)
-add_subdirectory(doc)
+#add_subdirectory(doc)
 #set_target_properties(astronx PROPERTIES LINKER_LANGUAGE Fortran)

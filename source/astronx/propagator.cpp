@@ -58,6 +58,10 @@ Propagator::Propagator()
     }
 
     m_binTrj = std::ofstream(Configuration::get().baseName() + ".bin.trj", std::ios::binary);
+    for (int i = 0;i < m_Nobj; i++)
+    {
+        m_binTrj.write((char*) &m_masses[i], sizeof (double));
+    }
 
     if (Configuration::get().TextTrj())
     {
