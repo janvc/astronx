@@ -42,6 +42,61 @@ Propagator::Propagator(const int Npad, System* sys)
     for (int i = 0; i < m_Nobj; i++)
     {
         m_masses[i] = Configuration::get().masses()[i];
+        m_names = Configuration::get().names();
+    }
+
+    m_binTrj = std::ofstream(Configuration::get().baseName() + ".bin.trj", std::ios::binary);
+    for (int i = 0;i < m_Nobj; i++)
+    {
+        m_binTrj.write((char*) &m_masses[i], sizeof (double));
+    }
+
+    if (Configuration::get().TextTrj())
+    {
+        m_txtTrj = std::ofstream(Configuration::get().baseName() + ".txt.trj");
+
+        m_txtTrj << "# trajectory in gnuplot-friendly text form\n";
+        m_txtTrj << "#\n";
+        m_txtTrj << "# time               ";
+        for (int i = 0; i < m_Nobj - 1; i++)
+        {
+            m_txtTrj << m_names[i];
+            for (int j = 0; j < 3 * Configuration::get().Ndigit() + 25 - m_names[i].size(); j++)
+            {
+                m_txtTrj << " ";
+            }
+        }
+        m_txtTrj << std::setw(30) << m_names[m_Nobj - 1] << "\n";
+        m_txtTrj << "#                    ";
+        for (int i = 0; i < m_Nobj - 1; i++)
+        {
+            m_txtTrj << "x [m]";
+            for (int j = 0; j < Configuration::get().Ndigit() + 3; j++)
+            {
+                m_txtTrj << " ";
+            }
+            m_txtTrj << "y [m]";
+            for (int j = 0; j < Configuration::get().Ndigit() + 3; j++)
+            {
+                m_txtTrj << " ";
+            }
+            m_txtTrj << "z [m]";
+            for (int j = 0; j < Configuration::get().Ndigit() + 4; j++)
+            {
+                m_txtTrj << " ";
+            }
+        }
+        m_txtTrj << "x [m]";
+        for (int j = 0; j < Configuration::get().Ndigit() + 3; j++)
+        {
+            m_txtTrj << " ";
+        }
+        m_txtTrj << "y [m]";
+        for (int j = 0; j < Configuration::get().Ndigit() + 3; j++)
+        {
+            m_txtTrj << " ";
+        }
+        m_txtTrj << "z [m]\n";
     }
 }
 
