@@ -22,9 +22,34 @@
 #include <iostream>
 #include <fstream>
 #include <boost/program_options.hpp>
+#include <eigen3/Eigen/Core>
+
+Eigen::Matrix3d euler2rot(const double psi, const double theta, const double phi)
+{
+    Eigen::Matrix3d rot;
+
+    rot(0,0) =  std::cos(psi) * std::cos(phi) - std::cos(theta) * std::sin(phi) * std::sin(psi);
+    rot(0,1) =  std::sin(psi) * std::cos(phi) + std::cos(theta) * std::sin(phi) * std::cos(psi);
+    rot(0,2) =  std::sin(phi) * std::sin(theta);
+    rot(1,0) = -std::cos(psi) * std::sin(phi) - std::cos(theta) * std::cos(phi) * std::sin(psi);
+    rot(1,1) = -std::sin(psi) * std::sin(phi) + std::cos(theta) * std::cos(phi) * std::cos(psi);
+    rot(1,2) =  std::cos(phi) * std::sin(theta);
+    rot(2,0) =  std::sin(theta) * std::sin(psi);
+    rot(2,1) = -std::sin(theta) * std::cos(psi);
+    rot(2,2) =  std::cos(theta);
+
+    return rot;
+}
+
 
 int main(int argc, char *argv[])
 {
+    // TODO:
+    // 1) set up position vector in local (orbit) coordinate system
+    // 2) get transformation matrix to global coordinate system
+    // 3) rotate position vector
+    // 4) deal with velocity
+
     const double G = 6.6726e-11;
 
     double periapsis;
@@ -32,6 +57,9 @@ int main(int argc, char *argv[])
     double semiMajorAxis;
     double centralMass;
     double trueAnomaly;
+    double inclination;
+    double longitudeOfAscendingNode;
+    double argumentOfPeriapsis;
     namespace po = boost::program_options;
     po::options_description desc("Allowed options");
     desc.add_options()
@@ -41,6 +69,9 @@ int main(int argc, char *argv[])
             ("trueanomaly,t", po::value<double>(&trueAnomaly), "true anomaly of orbit")
             ("semimajoraxis,a", po::value<double>(&semiMajorAxis), "semi-major axis of orbit")
             ("centralmass,m", po::value<double>(&centralMass), "mass of the central body")
+            ("inclination,i", po::value<double>(&inclination), "inclination of the orbit")
+            ("lonasc,l", po::value<double>(&inclination), "longitude of the orbit's ascending node")
+            ("argper,b", po::value<double>(&inclination), "argument (angle) of orbit's periapsis")
             ;
 
     po::variables_map vm;
@@ -93,6 +124,8 @@ int main(int argc, char *argv[])
               << distance << " " << 0 << " " << 0 << " "
               << 0 << " " << speed << " " << 0
               << std::endl;
+
+    Eigen::Matrix3d rotMat = euler2rot(longitudeOfAscendingNode, inclination, argumentOfPeriapsis);
 
     return 0;
 }
