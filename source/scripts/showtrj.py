@@ -30,25 +30,25 @@ import math
 
 def gyrate(Nobj, frame):
     gr = 0.0
-    for i in range(Nobj):
-        vecLen = math.sqrt(float(frame[3 * i + 1 + 0]) * float(frame[3 * i + 1 + 0]) \
-                         + float(frame[3 * i + 1 + 1]) * float(frame[3 * i + 1 + 1]) \
-                         + float(frame[3 * i + 1 + 2]) * float(frame[3 * i + 1 + 2]))
+    for j in range(Nobj):
+        vecLen = math.sqrt(float(frame[3 * j + 1 + 0]) * float(frame[3 * j + 1 + 0]) \
+                         + float(frame[3 * j + 1 + 1]) * float(frame[3 * j + 1 + 1]) \
+                         + float(frame[3 * j + 1 + 2]) * float(frame[3 * j + 1 + 2]))
         gr += vecLen
 
     gr /= float(Nobj)
     return gr
 
 if __name__ == "__main__":
-    nameDir = sys.argv[1]
+    trjName = sys.argv[1]
     viewAxis = sys.argv[2].lower()
 
     # open the trajectory file and find the
     # maximum values to set the plot boundaries
-    with open(nameDir + "/text_trj") as trjFile:
+    with open(trjName) as trjFile:
         tmpData = trjFile.readlines()
 
-    Nobj = (len(tmpData[4].split()) - 1) / 3
+    Nobj = int((len(tmpData[4].split()) - 1) / 3)
     Nframes = len(tmpData) - 4
     print(Nframes)
 
@@ -96,11 +96,11 @@ if __name__ == "__main__":
         plotFile.write("do for [ii=1:{0}] {{\n".format(Nframes - 1))
         plotFile.write('    set title sprintf("frame %i", ii)\n')
         if viewAxis == "x":
-            plotFile.write('    p for [jj=1:{0}] "{1}/text_trj" every ::ii::ii u (column(3*(jj-1)+3)):(column(3*(jj-1)+4)) w p pt 7 ps 2\n'.format(Nobj, nameDir))
+            plotFile.write('    p for [jj=1:{0}] "{1}" every ::ii::ii u (column(3*(jj-1)+3)):(column(3*(jj-1)+4)) w p pt 7 ps 2\n'.format(Nobj, trjName))
         elif viewAxis == "y":
-            plotFile.write('    p for [jj=1:{0}] "{1}/text_trj" every ::ii::ii u (column(3*(jj-1)+2)):(column(3*(jj-1)+4)) w p pt 7 ps 2\n'.format(Nobj, nameDir))
+            plotFile.write('    p for [jj=1:{0}] "{1}" every ::ii::ii u (column(3*(jj-1)+2)):(column(3*(jj-1)+4)) w p pt 7 ps 2\n'.format(Nobj, trjName))
         elif viewAxis == "z":
-            plotFile.write('    p for [jj=1:{0}] "{1}/text_trj" every ::ii::ii u (column(3*(jj-1)+2)):(column(3*(jj-1)+3)) w p pt 7 ps 2\n'.format(Nobj, nameDir))
-        plotFile.write("    pause 0.04\n")
+            plotFile.write('    p for [jj=1:{0}] "{1}" every ::ii::ii u (column(3*(jj-1)+2)):(column(3*(jj-1)+3)) w p pt 7 ps 2\n'.format(Nobj, trjName))
+        #plotFile.write("    pause 0.04\n")
         plotFile.write("}\n")
 

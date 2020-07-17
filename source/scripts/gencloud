@@ -25,6 +25,8 @@ import math
 import sys
 import random
 
+gravConst = 6.6726e-11
+
 random.seed()
 
 print("Enter the number of objects:")
@@ -32,9 +34,6 @@ Nobj = int(input(">>> "))
 
 print("Enter the maximum allowable mass [kg]:")
 maxMass = float(input(">>> "))
-
-print("Enter the maximum allowable velocity [m/s]:")
-maxVel = float(input(">>> "))
 
 print("Choose the mass distribution:")
 print(" (1) uniform")
@@ -98,9 +97,6 @@ if (cloudType == 1):    # rectangular cartesian
         x.append(-dX + 2.0 * random.random() * dX)
         y.append(-dY + 2.0 * random.random() * dY)
         z.append(-dZ + 2.0 * random.random() * dZ)
-        vx.append(-maxVel + 2.0 * random.random() * maxVel)
-        vy.append(-maxVel + 2.0 * random.random() * maxVel)
-        vz.append(-maxVel + 2.0 * random.random() * maxVel)
 elif (cloudType == 2):  # rectangular polar
     while (len(x) < Nobj):
         radius = math.sqrt(dX**2 + dY**2 + dZ**2)
@@ -114,9 +110,6 @@ elif (cloudType == 2):  # rectangular polar
             x.append(xTmp)
             y.append(yTmp)
             z.append(zTmp)
-            vx.append(-maxVel + 2.0 * random.random() * maxVel)
-            vy.append(-maxVel + 2.0 * random.random() * maxVel)
-            vz.append(-maxVel + 2.0 * random.random() * maxVel)
 elif (cloudType == 3):  # spherical cartesian
     while (len(x) < Nobj):
         xTmp = -radius + 2.0 * radius * random.random()
@@ -126,9 +119,6 @@ elif (cloudType == 3):  # spherical cartesian
             x.append(xTmp)
             y.append(yTmp)
             z.append(zTmp)
-            vx.append(-maxVel + 2.0 * random.random() * maxVel)
-            vy.append(-maxVel + 2.0 * random.random() * maxVel)
-            vz.append(-maxVel + 2.0 * random.random() * maxVel)
 elif (cloudType == 4):  # spherical polar
     for i in range(Nobj):
         r = radius * random.random()
@@ -137,9 +127,38 @@ elif (cloudType == 4):  # spherical polar
         x.append(r * math.sin(theta) * math.cos(phi))
         y.append(r * math.sin(theta) * math.sin(phi))
         z.append(r * math.cos(theta))
-        vx.append(-maxVel + 2.0 * random.random() * maxVel)
-        vy.append(-maxVel + 2.0 * random.random() * maxVel)
-        vz.append(-maxVel + 2.0 * random.random() * maxVel)
+
+# calculate the total potential energy
+ePot = 0.0
+for i in range(Nobj):
+    for j in range(i+1, Nobj):
+        dist = math.sqrt((x[j] - x[i])**2 + (y[j] - y[i])**2 + (z[j] - z[i])**2)
+        ePot -= gravConst * masses[i] * masses[j] / dist
+
+print("total potential energy: ", ePot)
+
+totMass = 0.0
+for i in range(Nobj):
+    totMass += masses[i]
+avgMass = totMass / Nobj
+
+# the average kinetic energy should be equal to -0.5*ePot divided by the number of objects
+eKin = -0.5 * ePot / Nobj
+
+# the maximum velocity is twice the average in a uniform distribution
+maxVel = 2.0 * math.sqrt(2.0 * eKin / avgMass)
+
+for i in range(Nobj):
+    vx.append(-maxVel + 2.0 * random.random() * maxVel)
+    vy.append(-maxVel + 2.0 * random.random() * maxVel)
+    vz.append(-maxVel + 2.0 * random.random() * maxVel)
+
+# calculate the kinetic energy:
+actualEKin = 0.0
+for i in range(Nobj):
+    speedSquared = vx[i] * vx[i] + vy[i] * vy[i] + vz[i] * vz[i]
+    actualEKin += 0.5 * masses[i] * speedSquared
+print("total kinetic energy: ", actualEKin)
 
 outputFile = open(outputFileName, "w")
 for i in range(Nobj):
