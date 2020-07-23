@@ -22,7 +22,7 @@
 #include <iostream>
 #include <fstream>
 #include <boost/program_options.hpp>
-#include <eigen3/Eigen/Core>
+#include <eigen3/Eigen/Dense>
 
 Eigen::Matrix3d euler2rot(const double psi, const double theta, const double phi)
 {
