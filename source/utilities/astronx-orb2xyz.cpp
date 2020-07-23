@@ -113,24 +113,8 @@ int main(int argc, char *argv[])
                 distance * std::sin(trueAnomaly),   // y coordinate
                 0.0);                               // z coordinate is always zero
 
-    std::cout << "local Vector:\n" << localPosition << std::endl;
+    std::cout << "local position:\n" << localPosition << std::endl;
 
-
-    /*
-     * create the rotation matrix and transform the position vector
-     */
-    Eigen::Matrix3d rotMat = euler2rot(longitudeOfAscendingNode, inclination, argumentOfPeriapsis);
-    std::cout << "rotation matrix:\n" << rotMat << std::endl;
-
-    Eigen::Vector3d globalPosition = rotMat * localPosition;
-    std::cout << "global Vector:\n" << globalPosition << std::endl;
-
-    // calculate the speed at the periapsis
-    if (! vm.count("centralmass"))
-    {
-        std::cerr << "Mass of central object not given\n";
-        return 1;
-    }
 
     /*
      * the speed along an eliptical depends on the central body's mass M and the distance r
@@ -142,6 +126,44 @@ int main(int argc, char *argv[])
      * where G is the gravitational constant and a is the semi-major-axis
      */
     double speed = std::sqrt(G * centralMass * ((2.0 / distance) - (1.0 / semiMajorAxis)));
+
+
+    /*
+     * the flight path angle gamma is the angle between the velocity vector and the vector
+     * that is perpendicular to the position vector
+     */
+    double tanGamma = eccentricity * std::sin(trueAnomaly) / (1.0 + eccentricity * std::cos(trueAnomaly));
+    double gamma = std::atan(tanGamma);
+
+    std::cout << "gamma: " << gamma / deg2rad << std::endl;
+
+
+    /*
+     * the angle between the velocity vector and the x axis is given by
+     *
+     * pi/4 + theta - gamma
+     */
+    double velAngle = M_PI / 2.0 + trueAnomaly - gamma;
+
+    Eigen::Vector3d localVelocity(
+                speed * std::cos(velAngle),
+                speed * std::sin(velAngle),
+                0.0);
+
+    std::cout << "local velocity:\n" << localVelocity << std::endl;
+
+
+    /*
+     * create the rotation matrix and transform the vectors
+     */
+    Eigen::Matrix3d rotMat = euler2rot(longitudeOfAscendingNode, inclination, argumentOfPeriapsis);
+    std::cout << "rotation matrix:\n" << rotMat << std::endl;
+
+    Eigen::Vector3d globalPosition = rotMat.inverse() * localPosition;
+    std::cout << "global position:\n" << globalPosition << std::endl;
+
+    Eigen::Vector3d globalVelocity = rotMat.inverse() * localVelocity;
+    std::cout << "global velocity:\n" << globalVelocity << std::endl;
 
     std::cout << "name mass "
               << globalPosition(0) << " " << globalPosition(1) << " " << globalPosition(2) << " "
