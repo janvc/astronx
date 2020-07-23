@@ -49,26 +49,30 @@ int main(int argc, char *argv[])
     // 2) get transformation matrix to global coordinate system
     // 3) rotate position vector
     // 4) deal with velocity
+    //
+    // do we actually need the periapsis?
 
     const double G = 6.6726e-11;
+    const double deg2rad = M_PI / 180.0;
 
     double periapsis;
-    double eccentricity;
+    double eccentricity = 0.0;
     double semiMajorAxis;
     double centralMass;
-    double trueAnomaly;
-    double inclination;
-    double longitudeOfAscendingNode;
-    double argumentOfPeriapsis;
+    double trueAnomaly = 0.0;
+    double inclination = 0.0;
+    double longitudeOfAscendingNode = 0.0;
+    double argumentOfPeriapsis = 0.0;
+
     namespace po = boost::program_options;
     po::options_description desc("Allowed options");
     desc.add_options()
             ("help,h", "produce this help message")
+            ("centralmass,m", po::value<double>(&centralMass)->required(), "mass of the central body")
+            ("semimajoraxis,a", po::value<double>(&semiMajorAxis)->required(), "semi-major axis of orbit")
             ("periapsis,p", po::value<double>(&periapsis), "periapsis of orbit")
             ("eccentricity,e", po::value<double>(&eccentricity), "eccentricity of orbit")
             ("trueanomaly,t", po::value<double>(&trueAnomaly), "true anomaly of orbit")
-            ("semimajoraxis,a", po::value<double>(&semiMajorAxis), "semi-major axis of orbit")
-            ("centralmass,m", po::value<double>(&centralMass), "mass of the central body")
             ("inclination,i", po::value<double>(&inclination), "inclination of the orbit")
             ("lonasc,l", po::value<double>(&inclination), "longitude of the orbit's ascending node")
             ("argper,b", po::value<double>(&inclination), "argument (angle) of orbit's periapsis")
@@ -78,17 +82,15 @@ int main(int argc, char *argv[])
     po::store(po::parse_command_line(argc, argv, desc), vm);
     po::notify(vm);
 
-    // if the periapsis is not given, calculate it
-    if (! vm.count("periapsis"))
-    {
-        if (! (vm.count("semimajoraxis") and vm.count("eccentricity")))
-        {
-            std::cerr << "Periapsis not given. We need the semi-major axis and the eccentricity to calculate the position\n";
-            return 1;
-        }
 
-        periapsis = semiMajorAxis * (1.0 - eccentricity);
-    }
+    /*
+     * transform the angles to radians
+     */
+    trueAnomaly *= deg2rad;
+    inclination *= deg2rad;
+    longitudeOfAscendingNode *= deg2rad;
+    argumentOfPeriapsis *= deg2rad;
+
 
     /*
      * the distance between the focal point (central body) and the satelite is given by
@@ -101,6 +103,27 @@ int main(int argc, char *argv[])
      */
     double distance = semiMajorAxis * (1.0 - eccentricity * eccentricity)
                                     / (1.0 + eccentricity * std::cos(trueAnomaly));
+
+
+    /*
+     * calculate the position vector in the orbital coordinage system
+     */
+    Eigen::Vector3d localPosition(
+                distance * std::cos(trueAnomaly),   // x coordinate
+                distance * std::sin(trueAnomaly),   // y coordinate
+                0.0);                               // z coordinate is always zero
+
+    std::cout << "local Vector:\n" << localPosition << std::endl;
+
+
+    /*
+     * create the rotation matrix and transform the position vector
+     */
+    Eigen::Matrix3d rotMat = euler2rot(longitudeOfAscendingNode, inclination, argumentOfPeriapsis);
+    std::cout << "rotation matrix:\n" << rotMat << std::endl;
+
+    Eigen::Vector3d globalPosition = rotMat * localPosition;
+    std::cout << "global Vector:\n" << globalPosition << std::endl;
 
     // calculate the speed at the periapsis
     if (! vm.count("centralmass"))
@@ -121,11 +144,11 @@ int main(int argc, char *argv[])
     double speed = std::sqrt(G * centralMass * ((2.0 / distance) - (1.0 / semiMajorAxis)));
 
     std::cout << "name mass "
-              << distance << " " << 0 << " " << 0 << " "
+              << globalPosition(0) << " " << globalPosition(1) << " " << globalPosition(2) << " "
               << 0 << " " << speed << " " << 0
               << std::endl;
 
-    Eigen::Matrix3d rotMat = euler2rot(longitudeOfAscendingNode, inclination, argumentOfPeriapsis);
+
 
     return 0;
 }
