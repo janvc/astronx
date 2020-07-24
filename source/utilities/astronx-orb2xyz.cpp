@@ -22,7 +22,7 @@
 #include <iostream>
 #include <fstream>
 #include <boost/program_options.hpp>
-#include <eigen3/Eigen/Dense>
+#include <eigen3/Eigen/Core>
 
 Eigen::Matrix3d euler2rot(const double psi, const double theta, const double phi)
 {
@@ -113,8 +113,6 @@ int main(int argc, char *argv[])
                 distance * std::sin(trueAnomaly),   // y coordinate
                 0.0);                               // z coordinate is always zero
 
-    std::cout << "local position:\n" << localPosition << std::endl;
-
 
     /*
      * the speed along an eliptical depends on the central body's mass M and the distance r
@@ -135,8 +133,6 @@ int main(int argc, char *argv[])
     double tanGamma = eccentricity * std::sin(trueAnomaly) / (1.0 + eccentricity * std::cos(trueAnomaly));
     double gamma = std::atan(tanGamma);
 
-    std::cout << "gamma: " << gamma / deg2rad << std::endl;
-
 
     /*
      * the angle between the velocity vector and the x axis is given by
@@ -150,24 +146,19 @@ int main(int argc, char *argv[])
                 speed * std::sin(velAngle),
                 0.0);
 
-    std::cout << "local velocity:\n" << localVelocity << std::endl;
-
 
     /*
      * create the rotation matrix and transform the vectors
      */
     Eigen::Matrix3d rotMat = euler2rot(longitudeOfAscendingNode, inclination, argumentOfPeriapsis);
-    std::cout << "rotation matrix:\n" << rotMat << std::endl;
 
-    Eigen::Vector3d globalPosition = rotMat.inverse() * localPosition;
-    std::cout << "global position:\n" << globalPosition << std::endl;
+    Eigen::Vector3d globalPosition = rotMat.transpose() * localPosition;
 
-    Eigen::Vector3d globalVelocity = rotMat.inverse() * localVelocity;
-    std::cout << "global velocity:\n" << globalVelocity << std::endl;
+    Eigen::Vector3d globalVelocity = rotMat.transpose() * localVelocity;
 
     std::cout << "name mass "
               << globalPosition(0) << " " << globalPosition(1) << " " << globalPosition(2) << " "
-              << 0 << " " << speed << " " << 0
+              << globalVelocity(0) << " " << globalVelocity(1) << " " << globalVelocity(2)
               << std::endl;
 
 
