@@ -74,8 +74,8 @@ int main(int argc, char *argv[])
             ("eccentricity,e", po::value<double>(&eccentricity), "eccentricity of orbit")
             ("trueanomaly,t", po::value<double>(&trueAnomaly), "true anomaly of orbit")
             ("inclination,i", po::value<double>(&inclination), "inclination of the orbit")
-            ("lonasc,l", po::value<double>(&inclination), "longitude of the orbit's ascending node")
-            ("argper,b", po::value<double>(&inclination), "argument (angle) of orbit's periapsis")
+            ("lonasc,l", po::value<double>(&longitudeOfAscendingNode), "longitude of the orbit's ascending node")
+            ("argper,b", po::value<double>(&argumentOfPeriapsis), "argument (angle) of orbit's periapsis")
             ;
 
     po::variables_map vm;
