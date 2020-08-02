@@ -51,5 +51,14 @@ int main(int argc, char *argv[])
 
     std::ifstream trjFile = std::ifstream(trjFileName, std::ios::binary);
 
+    double *testData = new double[10];
+
+    trjFile.read(reinterpret_cast<char*>(testData), 10 * sizeof(double));
+
+    for (int i = 0; i < 10; i++)
+    {
+        std::cout << testData[i] << std::endl;
+    }
+
     return 0;
 }
