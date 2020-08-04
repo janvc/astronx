@@ -47,6 +47,10 @@ protected:
     double *m_masses;
 
     System *m_sys;
+
+    std::vector<std::string> m_names;
+    std::ofstream m_binTrj;
+    std::ofstream m_txtTrj;
 };
 
 }
