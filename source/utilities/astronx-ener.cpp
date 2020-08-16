@@ -50,12 +50,15 @@ int main(int argc, char *argv[])
     std::cout << "the trajectory file is " << trjFileName << std::endl;
 
     std::ifstream trjFile = std::ifstream(trjFileName, std::ios::binary);
+    int Nobj;
 
-    double *testData = new double[10];
+    double *testData = new double[50];
 
-    trjFile.read(reinterpret_cast<char*>(testData), 10 * sizeof(double));
+    trjFile.read(reinterpret_cast<char*>(&Nobj), sizeof(int));
+    trjFile.read(reinterpret_cast<char*>(testData), 50 * sizeof(double));
 
-    for (int i = 0; i < 10; i++)
+    std::cout << Nobj << std::endl;
+    for (int i = 0; i < 50; i++)
     {
         std::cout << testData[i] << std::endl;
     }
