@@ -50,17 +50,80 @@ int main(int argc, char *argv[])
     std::cout << "the trajectory file is " << trjFileName << std::endl;
 
     std::ifstream trjFile = std::ifstream(trjFileName, std::ios::binary);
+
+    /*
+     * get the length of the file
+     */
+    trjFile.seekg(0, trjFile.end);
+    int length = trjFile.tellg();
+    trjFile.seekg(0, trjFile.beg);
+
+    /*
+     * read the number of objects
+     */
     int Nobj;
-
-    double *testData = new double[50];
-
     trjFile.read(reinterpret_cast<char*>(&Nobj), sizeof(int));
-    trjFile.read(reinterpret_cast<char*>(testData), 50 * sizeof(double));
 
-    std::cout << Nobj << std::endl;
-    for (int i = 0; i < 50; i++)
+    /*
+     * determine the number of frames
+     */
+    double nFrames = (length - 4 - (8 * Nobj)) / ((48 * Nobj) + 8);
+
+    /*
+     * read the masses
+     */
+    double *buffer = new double[Nobj];
+    trjFile.read(reinterpret_cast<char*>(buffer), Nobj * sizeof(double));
+    std::vector<double> masses(buffer, buffer + Nobj);
+    delete[] buffer;
+
+    /*
+     * iterate over the frames
+     */
+    double elapsedTime;
+    for (int i = 0; i < nFrames; i++)
     {
-        std::cout << testData[i] << std::endl;
+        trjFile.read(reinterpret_cast<char*>(&elapsedTime), sizeof(double));
+
+        buffer = new double[3 * Nobj];
+        trjFile.read(reinterpret_cast<char*>(buffer), 3 * Nobj * sizeof(double));
+        std::vector<double> x(buffer, buffer + 3 * Nobj);
+
+        trjFile.read(reinterpret_cast<char*>(buffer), 3 * Nobj * sizeof(double));
+        std::vector<double> v(buffer, buffer + 3 * Nobj);
+        delete[] buffer;
+
+        /*
+         * calculate the potential energy
+         */
+        double ePot = 0.0;
+        for (int j = 0; j < Nobj; j++)
+        {
+            for (int k = j + 1; k < Nobj; k++)
+            {
+                double dx = x[3 * k + 0] - x[3 * j + 0];
+                double dy = x[3 * k + 1] - x[3 * j + 1];
+                double dz = x[3 * k + 2] - x[3 * j + 2];
+                double dist = std::sqrt(dx * dx + dy * dy + dz * dz);
+
+                ePot -= masses[j] * masses[k] / dist;
+            }
+        }
+        ePot *= 6.6726e-11;
+
+        /*
+         * calculate the kinetic energy
+         */
+        double eKin = 0.0;
+        for (int j = 0; j < Nobj; j++)
+        {
+            eKin += 0.5 * masses[j]
+                    * (v[3 * j + 0] * v[3 * j + 0]
+                     + v[3 * j + 1] * v[3 * j + 1]
+                     + v[3 * j + 2] * v[3 * j + 2]);
+        }
+
+        std::cout << elapsedTime << " " << ePot << " " << eKin << std::endl;
     }
 
     return 0;
