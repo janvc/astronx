@@ -343,6 +343,11 @@ void Propagator::propagate()
         clock_t t1 = clock();
         double runTime = ((double) (t1 - t0)) / CLOCKS_PER_SEC;
 
+        if (m_underflow)
+        {
+            break;
+        }
+
         if (Configuration::get().Steps())
         {
             m_stepsFile << "# successful / failed steps:" << m_N_ok << m_N_fail << "\n";
@@ -456,6 +461,11 @@ void Propagator::BS_LargeStep()
         }
 
         bool success = BS_OneStep();
+
+        if (m_underflow)
+        {
+            return;
+        }
 
         if (success)
         {
