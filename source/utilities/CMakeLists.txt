@@ -1,6 +1,8 @@
 find_package(Boost COMPONENTS system filesystem program_options REQUIRED)
 
 set(ener_SOURCES
+    trajectoryframe.cpp
+    trajectory.cpp
     astronx-ener.cpp
     )
 

@@ -18,10 +18,13 @@
  *
  */
 
+
 #include <string>
 #include <iostream>
 #include <fstream>
+#include <vector>
 #include <boost/program_options.hpp>
+#include "trajectory.h"
 
 int main(int argc, char *argv[])
 {
@@ -47,51 +50,20 @@ int main(int argc, char *argv[])
         trjFileName = vm["input"].as<std::string>();
     }
 
-    std::cout << "the trajectory file is " << trjFileName << std::endl;
-
-    std::ifstream trjFile = std::ifstream(trjFileName, std::ios::binary);
-
-    /*
-     * get the length of the file
-     */
-    trjFile.seekg(0, trjFile.end);
-    int length = trjFile.tellg();
-    trjFile.seekg(0, trjFile.beg);
-
-    /*
-     * read the number of objects
-     */
-    int Nobj;
-    trjFile.read(reinterpret_cast<char*>(&Nobj), sizeof(int));
-
-    /*
-     * determine the number of frames
-     */
-    double nFrames = (length - 4 - (8 * Nobj)) / ((48 * Nobj) + 8);
-
-    /*
-     * read the masses
-     */
-    double *buffer = new double[Nobj];
-    trjFile.read(reinterpret_cast<char*>(buffer), Nobj * sizeof(double));
-    std::vector<double> masses(buffer, buffer + Nobj);
-    delete[] buffer;
+    Trajectory trj(trjFileName);
+    int Nobj = trj.nObj();
+    int nFrames = trj.nFrames();
+    std::vector<double> masses = trj.readMasses();
 
     /*
      * iterate over the frames
      */
-    double elapsedTime;
     for (int i = 0; i < nFrames; i++)
     {
-        trjFile.read(reinterpret_cast<char*>(&elapsedTime), sizeof(double));
-
-        buffer = new double[3 * Nobj];
-        trjFile.read(reinterpret_cast<char*>(buffer), 3 * Nobj * sizeof(double));
-        std::vector<double> x(buffer, buffer + 3 * Nobj);
-
-        trjFile.read(reinterpret_cast<char*>(buffer), 3 * Nobj * sizeof(double));
-        std::vector<double> v(buffer, buffer + 3 * Nobj);
-        delete[] buffer;
+        TrajectoryFrame frame = trj.readNextFrame();
+        double elapsedTime = frame.getElapsedTime();
+        std::vector<double> x = frame.getX();
+        std::vector<double> v = frame.getV();
 
         /*
          * calculate the potential energy
