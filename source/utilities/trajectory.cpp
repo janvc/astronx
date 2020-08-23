@@ -74,14 +74,14 @@ TrajectoryFrame Trajectory::readNextFrame()
     double *buffer = new double[3 * m_nObj];
     m_trjFile.read(reinterpret_cast<char*>(buffer), 3 * m_nObj * sizeof(double));
     std::vector<double> newX;
-    for (int i = 0; i < m_nObj; i++)
+    for (int i = 0; i < 3 * m_nObj; i++)
     {
         newX.push_back(buffer[i]);
     }
 
     m_trjFile.read(reinterpret_cast<char*>(buffer), 3 * m_nObj * sizeof(double));
     std::vector<double> newV;
-    for (int i = 0; i < m_nObj; i++)
+    for (int i = 0; i < 3 * m_nObj; i++)
     {
         newV.push_back(buffer[i]);
     }
