@@ -133,6 +133,8 @@ Propagator::Propagator()
 
     m_elapsedTime = 0.0;
 
+    m_underflow = false;
+
     void *dm10, *dm11, *dm12;
     posix_memalign(&dm10, 64, Configuration::get().MaxSubStep() * m_Npad * sizeof(double) * 6);
     posix_memalign(&dm11, 64, 6 * m_Npad * sizeof(double));
