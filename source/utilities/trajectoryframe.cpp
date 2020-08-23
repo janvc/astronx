@@ -52,5 +52,5 @@ void TrajectoryFrame::setX(std::vector<double> newX)
 
 void TrajectoryFrame::setV(std::vector<double> newV)
 {
-    x = newV;
+    v = newV;
 }
