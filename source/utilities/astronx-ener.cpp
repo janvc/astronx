@@ -21,6 +21,7 @@
 
 #include <string>
 #include <iostream>
+#include <iomanip>
 #include <fstream>
 #include <vector>
 #include <boost/program_options.hpp>
@@ -29,11 +30,13 @@
 int main(int argc, char *argv[])
 {
     std::string trjFileName;
+    int digits = 8;
     namespace po = boost::program_options;
     po::options_description desc("Allowed options");
     desc.add_options()
             ("help,h", "produce this help message")
             ("input,i", po::value<std::string>(&trjFileName), "the trajectory file")
+            ("digits,d", po::value<int>(&digits), "number of digits in the output")
             ;
 
     po::positional_options_description pos_desc;
@@ -95,7 +98,12 @@ int main(int argc, char *argv[])
                      + v[3 * j + 2] * v[3 * j + 2]);
         }
 
-        std::cout << elapsedTime << " " << ePot << " " << eKin << std::endl;
+        std::cout << std::scientific
+                  << std::setprecision(digits) << std::setw(digits + 8) << elapsedTime
+                  << std::setprecision(digits) << std::setw(digits + 8) << ePot
+                  << std::setprecision(digits) << std::setw(digits + 8) << eKin
+                  << std::setprecision(digits) << std::setw(digits + 8) << ePot + eKin
+                  << std::endl;
     }
 
     return 0;
