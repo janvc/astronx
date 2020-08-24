@@ -33,12 +33,14 @@ int main(int argc, char *argv[])
     int digits = 8;
     bool printLinearMomentum = false;
     bool printAngularMomentum = false;
+    bool polar = false;
     namespace po = boost::program_options;
     po::options_description desc("Allowed options");
     desc.add_options()
             ("help,h", "produce this help message")
-            ("linear,l", "produce this help message")
-            ("angular,a", "produce this help message")
+            ("linear,l", "print linear momentum")
+            ("angular,a", "print angular momentum")
+            ("polar,p", "use polar coordinates")
             ("input,i", po::value<std::string>(&trjFileName), "the trajectory file")
             ("digits,d", po::value<int>(&digits), "number of digits in the output")
             ;
@@ -59,6 +61,7 @@ int main(int argc, char *argv[])
 
     printLinearMomentum = vm.count("linear");
     printAngularMomentum = vm.count("angular");
+    polar = vm.count("polar");
 
     Trajectory trj(trjFileName);
     int Nobj = trj.nObj();
@@ -92,18 +95,27 @@ int main(int argc, char *argv[])
                 double py = v[3 * j + 1] * masses[j];
                 double pz = v[3 * j + 2] * masses[j];
 
-                std::cout << std::setprecision(digits) << std::setw(digits + 8) << px
-                          << std::setprecision(digits) << std::setw(digits + 8) << py
-                          << std::setprecision(digits) << std::setw(digits + 8) << pz;
-
                 pxTot += px;
                 pyTot += py;
                 pzTot += pz;
+
+                double p = std::sqrt(px * px + py * py + pz * pz);
+                double theta = std::acos(pz / p);
+                double phi = std::atan2(py, px);
+
+                std::cout << std::setprecision(digits) << std::setw(digits + 8) << (!polar ? px : p)
+                          << std::setprecision(digits) << std::setw(digits + 8) << (!polar ? py : theta)
+                          << std::setprecision(digits) << std::setw(digits + 8) << (!polar ? pz : phi);
+
             }
 
-            std::cout << std::setprecision(digits) << std::setw(digits + 8) << pxTot
-                      << std::setprecision(digits) << std::setw(digits + 8) << pyTot
-                      << std::setprecision(digits) << std::setw(digits + 8) << pzTot;
+            double pTot = std::sqrt(pxTot * pxTot + pyTot * pyTot + pzTot * pzTot);
+            double thetaTot = std::acos(pzTot / pTot);
+            double phiTot = std::atan2(pyTot, pxTot);
+
+            std::cout << std::setprecision(digits) << std::setw(digits + 8) << (!polar ? pxTot : pTot)
+                      << std::setprecision(digits) << std::setw(digits + 8) << (!polar ? pyTot : thetaTot)
+                      << std::setprecision(digits) << std::setw(digits + 8) << (!polar ? pzTot : phiTot);
         }
 
 
@@ -123,19 +135,28 @@ int main(int argc, char *argv[])
                 double ly = masses[j] * (x[3 * j + 2] * v[3 * j + 0] - x[3 * j + 0] * v[3 * j + 2]);
                 double lz = masses[j] * (x[3 * j + 0] * v[3 * j + 1] - x[3 * j + 1] * v[3 * j + 0]);
 
-                std::cout << std::setprecision(digits) << std::setw(digits + 8) << lx
-                          << std::setprecision(digits) << std::setw(digits + 8) << ly
-                          << std::setprecision(digits) << std::setw(digits + 8) << lz;
-
                 lxTot += lx;
                 lyTot += ly;
                 lzTot += lz;
+
+                double l = std::sqrt(lx * lx + ly * ly + lz * lz);
+                double theta = std::acos(lz / l);
+                double phi = std::atan2(ly, lx);
+
+                std::cout << std::setprecision(digits) << std::setw(digits + 8) << (!polar ? lx : l)
+                          << std::setprecision(digits) << std::setw(digits + 8) << (!polar ? ly : theta)
+                          << std::setprecision(digits) << std::setw(digits + 8) << (!polar ? lz : phi);
             }
 
-            std::cout << std::setprecision(digits) << std::setw(digits + 8) << lxTot
-                      << std::setprecision(digits) << std::setw(digits + 8) << lyTot
-                      << std::setprecision(digits) << std::setw(digits + 8) << lzTot;
+            double lTot = std::sqrt(lxTot * lxTot + lyTot * lyTot + lzTot * lzTot);
+            double thetaTot = std::acos(lzTot / lTot);
+            double phiTot = std::atan2(lyTot, lxTot);
+
+            std::cout << std::setprecision(digits) << std::setw(digits + 8) << (!polar ? lxTot : lTot)
+                      << std::setprecision(digits) << std::setw(digits + 8) << (!polar ? lyTot : thetaTot)
+                      << std::setprecision(digits) << std::setw(digits + 8) << (!polar ? lzTot : phiTot);
         }
+    }
 
     return 0;
 }
