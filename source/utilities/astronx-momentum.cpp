@@ -156,6 +156,8 @@ int main(int argc, char *argv[])
                       << std::setprecision(digits) << std::setw(digits + 8) << (!polar ? lyTot : thetaTot)
                       << std::setprecision(digits) << std::setw(digits + 8) << (!polar ? lzTot : phiTot);
         }
+
+        std::cout << std::endl;
     }
 
     return 0;
