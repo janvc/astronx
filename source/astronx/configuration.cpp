@@ -459,6 +459,11 @@ int Configuration::Nobj()
     return m_Nobj;
 }
 
+int Configuration::Npad()
+{
+    return m_Npad;
+}
+
 int Configuration::MaxSubStep()
 {
     return m_MaxSubStep;

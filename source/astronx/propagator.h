@@ -30,7 +30,7 @@ namespace Astronx
 class Propagator
 {
 public:
-    Propagator(const int Npad, System *sys);
+    Propagator(System *sys);
     virtual ~Propagator();
     virtual double largeStep(double *x, double *v);
     virtual void writeOutputLine(const double cpuTimeUsed);

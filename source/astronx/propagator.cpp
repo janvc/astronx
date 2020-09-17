@@ -28,11 +28,11 @@
 namespace Astronx
 {
 
-Propagator::Propagator(const int Npad, System* sys)
+Propagator::Propagator(System* sys)
 {
     m_sys = sys;
     m_Nobj = Configuration::get().Nobj();
-    m_Npad = Npad;
+    m_Npad = Configuration::get().Npad();
     m_timeStep = Configuration::get().initStep();
 
     void *dm0;

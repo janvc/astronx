@@ -297,7 +297,7 @@ void System::propagate()
 
     switch (Configuration::get().intType()) {
     case BS:
-        prop = new BulirschStoer(m_Npad, this);
+        prop = new BulirschStoer(this);
         break;
     default:
         break;

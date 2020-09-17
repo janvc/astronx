@@ -27,14 +27,13 @@
 #include "configuration.h"
 #include "bulirschstoer.h"
 #include "stepsizeunderflow.h"
-//#include "acceleration.h"
 
 
 namespace Astronx
 {
 
-BulirschStoer::BulirschStoer(const int Npad, System *sys)
-    : Propagator(Npad, sys)
+BulirschStoer::BulirschStoer(System *sys)
+    : Propagator(sys)
 {
     m_NlargeOkTotal = 0;
     m_NlargeFailTotal = 0;

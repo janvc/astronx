@@ -56,6 +56,7 @@ public:
     std::ofstream &stepsFile();
     std::ofstream &restartFile();
     int Nobj();
+    int Npad();
     int MaxSubStep();
     int IncThres();
     int Ndigit();
@@ -98,6 +99,7 @@ private:
 
     // here comes the data:
     int m_Nobj;         // number of objects
+    int m_Npad;         // Nobj increased to be divisible by 4 (AVX register length)
     int m_MaxSubStep;   // max. no. of substeps in one BS step
     int m_IncThres;     // no. of substeps below which the stepsize will be increased
     int m_Ndigit;       // no. of significant digits in text trajectory

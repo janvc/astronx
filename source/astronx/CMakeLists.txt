@@ -68,20 +68,19 @@ set(fastronx_SOURCES
     propagate.f90
     astronx.f90
     write_status.c
-    acceleration.c
+    acceleration_old.c
     )
 
 set(acc_test_SOURCES
     modules.f90
     acceleration.f90
-    acceleration.c
+    acceleration_old.c
     acc_test.f90
     )
 
 set(castronx_SOURCES
     astronx.cpp
     configuration.cpp
-    oldpropagator.cpp
     system.cpp
     propagator.cpp
     stepsizeunderflow.cpp
@@ -91,8 +90,8 @@ set(castronx_SOURCES
 add_executable(fastronx ${fastronx_SOURCES})
 add_executable(castronx ${castronx_SOURCES})
 add_executable(acc_test ${acc_test_SOURCES})
-add_executable(acc_test2_std acceleration.c acc_test2.c)
-add_executable(acc_test2_avx acceleration.c acc_test2.c)
+add_executable(acc_test2_std acceleration_old.c acc_test2.c)
+add_executable(acc_test2_avx acceleration_old.c acc_test2.c)
 target_link_libraries(acc_test2_std m)
 target_link_libraries(acc_test2_avx m)
 target_link_libraries(castronx ${Boost_LIBRARIES})
