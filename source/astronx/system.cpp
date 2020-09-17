@@ -35,10 +35,8 @@ namespace Astronx
 System::System()
 {
     m_Nobj = Configuration::get().Nobj();
+    m_Npad = Configuration::get().Npad();
     m_elapsedTime = 0.0;
-
-    // make sure the array length is divisible by 4 (AVX register length)
-    m_Npad = m_Nobj % 4 == 0 ? m_Nobj : ((m_Nobj / 4) + 1) * 4;
 
     void *dm0, *dm1, *dm2;
     posix_memalign(&dm0, 64, 3 * m_Npad * sizeof(double));

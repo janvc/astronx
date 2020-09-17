@@ -237,6 +237,9 @@ int Configuration::init(int argnum, char *arguments[])
 
     m_Nobj = m_masses.size();
 
+    // make sure the array length is divisible by 4 (AVX register length)
+    m_Npad = m_Nobj % 4 == 0 ? m_Nobj : ((m_Nobj / 4) + 1) * 4;
+
     // open the output files
     m_outputFileName = m_baseName + ".out";
     m_outputFile = std::ofstream(m_outputFileName);
