@@ -44,14 +44,6 @@ Eigen::Matrix3d euler2rot(const double psi, const double theta, const double phi
 
 int main(int argc, char *argv[])
 {
-    // TODO:
-    // 1) set up position vector in local (orbit) coordinate system
-    // 2) get transformation matrix to global coordinate system
-    // 3) rotate position vector
-    // 4) deal with velocity
-    //
-    // do we actually need the periapsis?
-
     const double G = 6.6726e-11;
     const double deg2rad = M_PI / 180.0;
 
@@ -106,7 +98,7 @@ int main(int argc, char *argv[])
 
 
     /*
-     * calculate the position vector in the orbital coordinage system
+     * calculate the position vector in the orbital coordinate system
      */
     Eigen::Vector3d localPosition(
                 distance * std::cos(trueAnomaly),   // x coordinate
@@ -115,7 +107,7 @@ int main(int argc, char *argv[])
 
 
     /*
-     * the speed along an eliptical depends on the central body's mass M and the distance r
+     * the speed along an eliptical orbit depends on the central body's mass M and the distance r
      *           ___________________
      *          /     (  2     1  )
      *    v =  /  G M ( --- - --- )
@@ -128,7 +120,13 @@ int main(int argc, char *argv[])
 
     /*
      * the flight path angle gamma is the angle between the velocity vector and the vector
-     * that is perpendicular to the position vector
+     * that is perpendicular to the position vector and is given by
+     *
+     *                 e sin(n)
+     * tan(gamma) = --------------
+     *               1 + e cos(n)
+     *
+     * where e is the eccentricity and n is the true anomaly
      */
     double tanGamma = eccentricity * std::sin(trueAnomaly) / (1.0 + eccentricity * std::cos(trueAnomaly));
     double gamma = std::atan(tanGamma);
@@ -141,10 +139,13 @@ int main(int argc, char *argv[])
      */
     double velAngle = M_PI / 2.0 + trueAnomaly - gamma;
 
+    /*
+     * calculate the velocity vector in the orbital coordinate system
+     */
     Eigen::Vector3d localVelocity(
-                speed * std::cos(velAngle),
-                speed * std::sin(velAngle),
-                0.0);
+                speed * std::cos(velAngle), // x
+                speed * std::sin(velAngle), // y
+                0.0);                       // z is always zero
 
 
     /*
