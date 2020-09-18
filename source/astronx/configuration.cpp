@@ -237,14 +237,13 @@ int Configuration::init(int argnum, char *arguments[])
 
     m_Nobj = m_masses.size();
 
-    // calculate the total mass
-    m_Mtot = 0.0;
-    for (int i = 0; i < m_Nobj; i++)
-        m_Mtot += m_masses[i];
+    // make sure the array length is divisible by 4 (AVX register length)
+    m_Npad = m_Nobj % 4 == 0 ? m_Nobj : ((m_Nobj / 4) + 1) * 4;
 
-    // open the output file
+    // open the output files
     m_outputFileName = m_baseName + ".out";
     m_outputFile = std::ofstream(m_outputFileName);
+    m_binTrjFile = std::ofstream(m_baseName + ".bin.trj", std::ios::binary);
 
     m_N_BS_LargeStep = 0;
 
@@ -257,9 +256,6 @@ void Configuration::setDefaults()
     m_IncThres   =  8;
     m_Ndigit     = 10;
     m_Nstep      =  5;
-//    m_tFinal     =  0.0;
-//    m_tOut       =  0.0;
-//    m_InitStep   =  0.0;
     m_eps        =  1.0e-6;
     m_epsThres   =  0.9;
     m_MinStep    =  1.0e2;
@@ -441,9 +437,34 @@ std::ofstream &Configuration::outputFile()
     return m_outputFile;
 }
 
+std::ofstream &Configuration::binTrjFile()
+{
+    return m_binTrjFile;
+}
+
+std::ofstream &Configuration::txtTrjFile()
+{
+    return m_txtTrjFile;
+}
+
+std::ofstream &Configuration::stepsFile()
+{
+    return m_stepsFile;
+}
+
+std::ofstream &Configuration::restartFile()
+{
+    return m_restartFile;
+}
+
 int Configuration::Nobj()
 {
     return m_Nobj;
+}
+
+int Configuration::Npad()
+{
+    return m_Npad;
 }
 
 int Configuration::MaxSubStep()

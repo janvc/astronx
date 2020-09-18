@@ -19,36 +19,15 @@
  */
 
 
-#ifndef PROPAGATOR_H
-#define PROPAGATOR_H
+#ifndef STEPSIZEUNDERFLOW_H
+#define STEPSIZEUNDERFLOW_H
 
-#include "system.h"
+#include <exception>
 
-namespace Astronx
-{
-
-class Propagator
+class StepsizeUnderflow : public std::exception
 {
 public:
-    Propagator(System *sys);
-    virtual ~Propagator();
-    virtual double largeStep(double *x, double *v);
-    virtual void writeOutputLine(const double cpuTimeUsed);
-    virtual void writeSummary();
-
-protected:
-    void acceleration(double *__restrict__ x, double *__restrict__ a);
-    double radiusOfGyration(double *__restrict__ x);
-
-    int m_Nobj;
-    int m_Npad;
-    double m_timeStep;
-
-    double *m_masses;
-
-    System *m_sys;
+    const char *what() const throw();
 };
 
-}
-
-#endif // PROPAGATOR_H
+#endif // STEPSIZEUNDERFLOW_H

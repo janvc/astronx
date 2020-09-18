@@ -19,36 +19,9 @@
  */
 
 
-#ifndef PROPAGATOR_H
-#define PROPAGATOR_H
+#include "stepsizeunderflow.h"
 
-#include "system.h"
-
-namespace Astronx
+const char *StepsizeUnderflow::what() const throw()
 {
-
-class Propagator
-{
-public:
-    Propagator(System *sys);
-    virtual ~Propagator();
-    virtual double largeStep(double *x, double *v);
-    virtual void writeOutputLine(const double cpuTimeUsed);
-    virtual void writeSummary();
-
-protected:
-    void acceleration(double *__restrict__ x, double *__restrict__ a);
-    double radiusOfGyration(double *__restrict__ x);
-
-    int m_Nobj;
-    int m_Npad;
-    double m_timeStep;
-
-    double *m_masses;
-
-    System *m_sys;
-};
-
+    return "WARNING: No convergence with minimum stepsize. Aborting!";
 }
-
-#endif // PROPAGATOR_H
