@@ -26,6 +26,8 @@
 #include "configuration.h"
 #include "propagator.h"
 #include "bulirschstoer.h"
+#include "rungekutta4.h"
+#include "leapfrog.h"
 #include "stepsizeunderflow.h"
 
 
@@ -296,6 +298,9 @@ void System::propagate()
     switch (Configuration::get().intType()) {
     case BS:
         prop = new BulirschStoer(this);
+        break;
+    case RK4:
+        prop = new RungeKutta4(this);
         break;
     default:
         break;

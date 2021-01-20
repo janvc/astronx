@@ -60,6 +60,7 @@ public:
     int MaxSubStep();
     int IncThres();
     int Ndigit();
+    int nSteps();
     std::vector<double> XX0();
     std::vector<double> XY0();
     std::vector<double> XZ0();
@@ -103,7 +104,7 @@ private:
     int m_MaxSubStep;   // max. no. of substeps in one BS step
     int m_IncThres;     // no. of substeps below which the stepsize will be increased
     int m_Ndigit;       // no. of significant digits in text trajectory
-    int m_Nstep;        // no. of steps in rk4fix
+    int m_nSteps;       // no. of steps in rk4
 
     // counters for function calls
     int m_N_BS_LargeStep;

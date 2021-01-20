@@ -85,6 +85,8 @@ set(castronx_SOURCES
     propagator.cpp
     stepsizeunderflow.cpp
     bulirschstoer.cpp
+    rungekutta4.cpp
+    leapfrog.cpp
     )
 
 add_executable(fastronx ${fastronx_SOURCES})
