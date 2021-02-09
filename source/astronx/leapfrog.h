@@ -46,11 +46,11 @@ private:
     double m_stepSize;
     double m_internalElapsedTime;
 
-    double *m_xLFtmp;
-    double *m_vLFtmp;
+    double *m_x;
+    double *m_v;
 
     double *m_v12;
-    double *m_a0;
+    double *m_a;
     double *m_x2;
 };
 

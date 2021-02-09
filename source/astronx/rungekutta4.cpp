@@ -49,8 +49,8 @@ RungeKutta4::RungeKutta4(System *sys)
     posix_memalign(&dm13, 64, 3 * m_Npad * sizeof(double));
     posix_memalign(&dm14, 64, 3 * m_Npad * sizeof(double));
     posix_memalign(&dm15, 64, 3 * m_Npad * sizeof(double));
-    m_xRKtmp = (double*) dm1;
-    m_vRKtmp = (double*) dm2;
+    m_x0 = (double*) dm1;
+    m_v0 = (double*) dm2;
     m_a0 = (double*) dm3;
     m_x1 = (double*) dm4;
     m_v1 = (double*) dm5;
@@ -83,35 +83,35 @@ RungeKutta4::~RungeKutta4()
 
 double RungeKutta4::largeStep(double *x, double *v)
 {
-    m_xRKtmp = x;
-    m_vRKtmp = v;
+    m_x0 = x;
+    m_v0 = v;
 
     m_internalElapsedTime = 0.0;
 
     for (int i = 0; i < Configuration::get().nSteps(); i++)
     {
         // first substep:
-        acceleration(m_xRKtmp, m_a0);
+        acceleration(m_x0, m_a0);
         for (int j = 0; j < 3 * m_Npad; j++)
         {
-            m_x1[j] = m_xRKtmp[j] + 0.5 * m_stepSize * m_vRKtmp[j];
-            m_v1[j] = m_vRKtmp[j] + 0.5 * m_stepSize * m_a0[j];
+            m_x1[j] = m_x0[j] + 0.5 * m_stepSize * m_v0[j];
+            m_v1[j] = m_v0[j] + 0.5 * m_stepSize * m_a0[j];
         }
 
         // second substep:
         acceleration(m_x1, m_a1);
         for (int j = 0; j < 3 * m_Npad; j++)
         {
-            m_x2[j] = m_xRKtmp[j] + 0.5 * m_stepSize * m_v1[j];
-            m_v2[j] = m_vRKtmp[j] + 0.5 * m_stepSize * m_a1[j];
+            m_x2[j] = m_x0[j] + 0.5 * m_stepSize * m_v1[j];
+            m_v2[j] = m_v0[j] + 0.5 * m_stepSize * m_a1[j];
         }
 
         // third substep:
         acceleration(m_x2, m_a2);
         for (int j = 0; j < 3 * m_Npad; j++)
         {
-            m_x3[j] = m_xRKtmp[j] + m_stepSize * m_v2[j];
-            m_v3[j] = m_vRKtmp[j] + m_stepSize * m_a2[j];
+            m_x3[j] = m_x0[j] + m_stepSize * m_v2[j];
+            m_v3[j] = m_v0[j] + m_stepSize * m_a2[j];
         }
 
         // fourth substep:
@@ -120,8 +120,8 @@ double RungeKutta4::largeStep(double *x, double *v)
         // calculate new values
         for (int j = 0; j < 3 * m_Npad; j++)
         {
-            m_xRKtmp[j] += m_stepSize * (m_vRKtmp[j] + 2.0 * m_v1[j] + 2.0 * m_v2[j] + m_v3[j]) / 6.0;
-            m_vRKtmp[j] += m_stepSize * (m_a0[j] + 2.0 * m_a1[j] + 2.0 * m_a2[j] + m_a3[j]) / 6.0;
+            m_x0[j] += m_stepSize * (m_v0[j] + 2.0 * m_v1[j] + 2.0 * m_v2[j] + m_v3[j]) / 6.0;
+            m_v0[j] += m_stepSize * (m_a0[j] + 2.0 * m_a1[j] + 2.0 * m_a2[j] + m_a3[j]) / 6.0;
         }
 
         m_internalElapsedTime += m_stepSize;

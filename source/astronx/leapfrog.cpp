@@ -30,18 +30,13 @@ namespace Astronx
 LeapFrog::LeapFrog(System *sys)
     : Propagator(sys)
 {
-    void *dm1, *dm3, *dm5;
-    void *dm2, *dm4;
+    void *dm1, *dm2, *dm3;
     posix_memalign(&dm1, 64, 3 * m_Npad * sizeof(double));
     posix_memalign(&dm2, 64, 3 * m_Npad * sizeof(double));
     posix_memalign(&dm3, 64, 3 * m_Npad * sizeof(double));
-    posix_memalign(&dm4, 64, 3 * m_Npad * sizeof(double));
-    posix_memalign(&dm5, 64, 3 * m_Npad * sizeof(double));
-    m_xLFtmp = (double*) dm1;
-    m_vLFtmp = (double*) dm2;
-    m_v12 = (double*) dm3;
-    m_a0 = (double*) dm4;
-    m_x2 = (double*) dm5;
+    m_x = (double*) dm1;
+    m_v = (double*) dm2;
+    m_a = (double*) dm3;
 
     m_stepSize = Configuration::get().tout() / Configuration::get().nSteps();
 
@@ -66,16 +61,16 @@ LeapFrog::~LeapFrog()
  */
 double LeapFrog::largeStep(double *x, double *v)
 {
-    m_xLFtmp = x;
-    m_vLFtmp = v;
+    m_x = x;
+    m_v = v;
 
     m_internalElapsedTime = 0.0;
 
     // do the initial half-step for the velocity:
-    acceleration(m_xLFtmp, m_a0);
+    acceleration(m_x, m_a);
     for (int j = 0; j < 3 * m_Npad; j++)
     {
-        m_v12[j] = m_vLFtmp[j] + 0.5 * m_stepSize * m_a0[j];
+        m_v[j] += 0.5 * m_a[j] * m_stepSize;
     }
 
     // do the remaining steps except for the last one
@@ -84,14 +79,32 @@ double LeapFrog::largeStep(double *x, double *v)
         // position
         for (int j = 0; j < 3 * m_Npad; j++)
         {
-            m_xLFtmp[j] += m_v12[j] * m_stepSize;
+            m_x[j] += m_v[j] * m_stepSize;
         }
 
         // velocity
+        acceleration(m_x, m_a);
         for (int j = 0; j < 3 * m_Npad; j++)
         {
+            m_v[j] += m_a[j] * m_stepSize;
         }
+
+        m_internalElapsedTime += m_stepSize;
     }
+
+    // do one more full position step and one half velocity step
+    for (int j = 0; j < 3 * m_Npad; j++)
+    {
+        m_x[j] += m_v[j] + m_stepSize;
+    }
+    acceleration(m_x, m_a);
+    for (int j = 0; j < 3 * m_Npad; j++)
+    {
+        m_v[j] += 0.5 * m_a[j] * m_stepSize;
+    }
+    m_internalElapsedTime += m_stepSize;
+
+    return m_internalElapsedTime;
 }
 
 void LeapFrog::writeOutputLine(const double cpuTimeUsed)

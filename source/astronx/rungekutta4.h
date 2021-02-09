@@ -45,8 +45,8 @@ private:
     double m_stepSize;
     double m_internalElapsedTime;
 
-    double *m_xRKtmp;
-    double *m_vRKtmp;
+    double *m_x0;
+    double *m_v0;
     double *m_a0;
 
     double *m_x1;
