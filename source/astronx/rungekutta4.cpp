@@ -75,6 +75,11 @@ RungeKutta4::RungeKutta4(System *sys)
     out << "                           ************************************\n\n";
 
     out << "       elapsed time       steps      cpu time [ms]\n";
+
+    if (Configuration::get().Verbose())
+    {
+        std::cout << " Starting propagation with the Runge-Kutta integrator of fourth order\n";
+    }
 }
 
 RungeKutta4::~RungeKutta4()

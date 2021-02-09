@@ -155,7 +155,7 @@ int Configuration::init(int argnum, char *arguments[])
         std::cerr << "Error: tout not specified\n";
         return -4;
     }
-    if ((m_IntType == RK4) && m_steps)
+    if ((m_IntType == Integrators::RK4) && m_steps)
     {
         std::cerr << "Note: steps file makes no sense with a fixed-step integrator.\n";
         m_steps = false;
@@ -270,7 +270,7 @@ void Configuration::setDefaults()
     m_steps      = false;
     m_textTrj    = false;
     m_UnResProp  = false;
-    m_IntType    = BS;
+    m_IntType    = Integrators::BS;
 }
 
 int Configuration::parseInputLine(std::string &inputLine)
@@ -372,15 +372,19 @@ int Configuration::parseInputLine(std::string &inputLine)
     {
         if (valuestring == "bs")
         {
-            m_IntType = BS;
+            m_IntType = Integrators::BS;
         }
         else if (valuestring == "rk4")
         {
-            m_IntType = RK4;
+            m_IntType = Integrators::RK4;
+        }
+        else if (valuestring == "leapfrog")
+        {
+            m_IntType = Integrators::LeapFrog;
         }
         else
         {
-            throw std::invalid_argument("unknown integrator type:" + valuestring);
+            throw std::invalid_argument("unknown integrator type: " + valuestring);
         }
     }
     else if (keystring == "begin_coords")
@@ -608,7 +612,7 @@ void Configuration::listParas()
     m_outputFile << "\n\n\n";
 }
 
-IntType Configuration::intType()
+Integrators::IntType Configuration::intType()
 {
     return m_IntType;
 }

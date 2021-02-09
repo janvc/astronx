@@ -19,6 +19,7 @@
  */
 
 
+#include <iostream>
 #include "propagator.h"
 #include "configuration.h"
 #include "leapfrog.h"
@@ -47,6 +48,11 @@ LeapFrog::LeapFrog(System *sys)
     out << "                         *********************************\n\n";
 
     out << "       elapsed time       steps      cpu time [ms]\n";
+
+    if (Configuration::get().Verbose())
+    {
+        std::cout << " Starting propagation with the Leapfrog integrator\n";
+    }
 }
 
 LeapFrog::~LeapFrog()
