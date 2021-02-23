@@ -65,6 +65,25 @@ System::System()
         m_totMass += m_masses[i];
     }
 
+    /*
+     * The format of the binary trajectory is as follows:
+     * - number of objects (int)
+     * - vector with masses of all objects (double)
+     * - for each frame:
+     *   - elapsed time (double)
+     *   - vector with positions of all objects (double)
+     *   - vector with velocities of all objects (double)
+     */
+    std::ofstream &binTrj = Configuration::get().binTrjFile();
+    binTrj.write((char*) &m_Nobj, sizeof(int));
+    for (int i = 0; i < m_Nobj; i++)
+    {
+        binTrj.write((char*) &m_masses[i], sizeof(double));
+    }
+
+    /*
+     * Initialize the text trajectory
+     */
     if (Configuration::get().TextTrj())
     {
         m_txtTrj = std::ofstream(Configuration::get().baseName() + ".txt.trj");
