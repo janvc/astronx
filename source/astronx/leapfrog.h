@@ -43,6 +43,8 @@ public:
     void writeSummary();
 
 private:
+    long m_nSteps;
+
     double m_stepSize;
     double m_internalElapsedTime;
 

@@ -21,7 +21,6 @@
 
 #include <iostream>
 #include <iomanip>
-#include "propagator.h"
 #include "configuration.h"
 #include "rungekutta4.h"
 
@@ -70,11 +69,11 @@ RungeKutta4::RungeKutta4(System *sys)
 
     std::ofstream &out = Configuration::get().outputFile();
 
-    out << "                           ************************************\n";
-    out << "                           * USING THE RUNGE-KUTTA INTEGRATOR *\n";
-    out << "                           ************************************\n\n";
+    out << "                    *************************************************\n";
+    out << "                    * USING THE FOURTH ORDER RUNGE-KUTTA INTEGRATOR *\n";
+    out << "                    *************************************************\n\n";
 
-    out << "       elapsed time       steps      cpu time [ms]\n";
+    out << "       elapsed time            steps                                     cpu time [ms]\n\n";
 
     if (Configuration::get().Verbose())
     {
@@ -141,8 +140,9 @@ void RungeKutta4::writeOutputLine(const double cpuTimeUsed)
     std::ofstream &out = Configuration::get().outputFile();
 
     out << "       " << std::scientific << std::setprecision(5) << std::setw(11) << m_sys->elapsedTime()
-        << " " << Configuration::get().nSteps()
-        << "        " << std::fixed << std::setprecision(1) << std::setw(7) << cpuTimeUsed * 1000.0 << std::endl;
+        << "        " << std::setw(10) << Configuration::get().nSteps()
+        << "                                      "
+        << std::fixed << std::setprecision(1) << std::setw(7) << cpuTimeUsed * 1000.0 << std::endl;
 }
 
 void RungeKutta4::writeSummary()
@@ -150,12 +150,14 @@ void RungeKutta4::writeSummary()
     std::ofstream &out = Configuration::get().outputFile();
 
     out << std::endl;
-    out << "       ****************************************\n";
-    out << "       *      SUMMARY OF THE CALCULATION      *\n";
-    out << "       *                                      *\n";
-    out << "       * total time [s]     Runge-Kutta steps *\n";
-    out << "       *" << std::scientific << std::setprecision(3) << std::setw(10) << m_sys->elapsedTime() << "  *\n";
-    out << "       ****************************************\n";
+    out << "                    ****************************************\n";
+    out << "                    *     SUMMARY OF THE CALCULATION       *\n";
+    out << "                    *                                      *\n";
+    out << "                    * total time [s]     Runge-Kutta steps *\n";
+    out << "                    *                                      *\n";
+    out << "                    *" << std::scientific << std::setprecision(3) << std::setw(10) << m_sys->elapsedTime()
+        << "            " << std::setw(15) << m_nSteps << " *\n";
+    out << "                    ****************************************\n";
     out << std::endl;
 }
 

@@ -20,6 +20,11 @@ set(CMAKE_MODULE_PATH
     ${CMAKE_MODULE_PATH}
 )
 
+set(ASTRONX_INCLUDE_DIRS
+    ${astronx_SOURCE_DIR}/include
+)
+include_directories(${ASTRONX_INCLUDE_DIRS})
+
 add_subdirectory(source)
 #add_subdirectory(doc)
 #set_target_properties(astronx PROPERTIES LINKER_LANGUAGE Fortran)

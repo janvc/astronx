@@ -26,6 +26,7 @@
 #include <vector>
 #include <boost/program_options.hpp>
 #include "trajectory.h"
+#include "constants.h"
 
 int main(int argc, char *argv[])
 {
@@ -58,6 +59,8 @@ int main(int argc, char *argv[])
     int nFrames = trj.nFrames();
     std::vector<double> masses = trj.readMasses();
 
+    std::cout << "nobj " << Nobj << " nframes " << nFrames << std::endl;
+
     /*
      * iterate over the frames
      */
@@ -84,7 +87,7 @@ int main(int argc, char *argv[])
                 ePot -= masses[j] * masses[k] / dist;
             }
         }
-        ePot *= 6.6726e-11;
+        ePot *= PhyCon::G;
 
         /*
          * calculate the kinetic energy

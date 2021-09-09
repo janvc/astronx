@@ -40,7 +40,7 @@ public:
     void writeSummary();
 
 private:
-    int m_nSteps;
+    long m_nSteps;
 
     double m_stepSize;
     double m_internalElapsedTime;
