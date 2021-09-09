@@ -26,6 +26,8 @@
 #include "configuration.h"
 #include "propagator.h"
 #include "bulirschstoer.h"
+#include "rungekutta4.h"
+#include "leapfrog.h"
 #include "stepsizeunderflow.h"
 
 
@@ -313,8 +315,14 @@ void System::propagate()
     Propagator *prop;
 
     switch (Configuration::get().intType()) {
-    case BS:
+    case Integrators::BS:
         prop = new BulirschStoer(this);
+        break;
+    case Integrators::RK4:
+        prop = new RungeKutta4(this);
+        break;
+    case Integrators::LeapFrog:
+        prop = new LeapFrog(this);
         break;
     default:
         break;
@@ -395,6 +403,7 @@ void System::propagate()
             << std::setw(11) << m_vLarge[2 * m_Npad + i] << "\n";
     }
     out << "\n\n\n";
+    std::cout << std::endl;
 }
 
 }

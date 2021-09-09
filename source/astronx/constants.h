@@ -8,12 +8,15 @@ const double G = 6.6726e-11;
 
 }
 
+namespace Integrators {
+
 enum IntType
 {
     BS = 1,
-    RkQS = 2,
-    Rk4FixM = 3,
-    Rk4FixT = 4
+    RK4 = 2,
+    LeapFrog = 3
 };
+
+}
 
 #endif // CONSTANTS_H

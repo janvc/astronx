@@ -155,13 +155,15 @@ int Configuration::init(int argnum, char *arguments[])
         std::cerr << "Error: tout not specified\n";
         return -4;
     }
-    if ((m_IntType == Rk4FixM || m_IntType == Rk4FixT) && m_steps)
+    if ((m_IntType == Integrators::RK4) && m_steps)
     {
         std::cerr << "Note: steps file makes no sense with a fixed-step integrator.\n";
         m_steps = false;
     }
     if (m_InitStep == 0.0)
+    {
         m_InitStep = m_tOut;
+    }
 
     /*
      * Read the initial coordinates and velocities of the objects
@@ -255,7 +257,7 @@ void Configuration::setDefaults()
     m_MaxSubStep = 12;
     m_IncThres   =  8;
     m_Ndigit     = 10;
-    m_Nstep      =  5;
+    m_nSteps     =  5;
     m_eps        =  1.0e-6;
     m_epsThres   =  0.9;
     m_MinStep    =  1.0e2;
@@ -268,7 +270,7 @@ void Configuration::setDefaults()
     m_steps      = false;
     m_textTrj    = false;
     m_UnResProp  = false;
-    m_IntType    = BS;
+    m_IntType    = Integrators::BS;
 }
 
 int Configuration::parseInputLine(std::string &inputLine)
@@ -325,7 +327,7 @@ int Configuration::parseInputLine(std::string &inputLine)
     }
     else if (keystring == "nsteps")
     {
-        m_Nstep = std::stoi(valuestring);
+        m_nSteps = std::stoi(valuestring);
     }
     else if (keystring == "ndigit")
     {
@@ -354,24 +356,36 @@ int Configuration::parseInputLine(std::string &inputLine)
     else if (keystring == "proptype")
     {
         if (valuestring == "unrestricted")
+        {
             m_UnResProp = true;
+        }
         else if (valuestring == "normal")
+        {
             m_UnResProp = false;
+        }
         else
+        {
             throw std::invalid_argument("unknown propagation type:" + valuestring);
+        }
     }
     else if (keystring == "inttype")
     {
         if (valuestring == "bs")
-            m_IntType = BS;
-        else if (valuestring == "rkqs")
-            m_IntType = RkQS;
-        else if (valuestring == "rk4fixm")
-            m_IntType = Rk4FixM;
-        else if (valuestring == "rk4fixt")
-            m_IntType = Rk4FixT;
+        {
+            m_IntType = Integrators::BS;
+        }
+        else if (valuestring == "rk4")
+        {
+            m_IntType = Integrators::RK4;
+        }
+        else if (valuestring == "leapfrog")
+        {
+            m_IntType = Integrators::LeapFrog;
+        }
         else
-            throw std::invalid_argument("unknown integrator type:" + valuestring);
+        {
+            throw std::invalid_argument("unknown integrator type: " + valuestring);
+        }
     }
     else if (keystring == "begin_coords")
     {
@@ -482,6 +496,11 @@ int Configuration::Ndigit()
     return m_Ndigit;
 }
 
+int Configuration::nSteps()
+{
+    return m_nSteps;
+}
+
 std::vector<double> Configuration::XX0()
 {
     return m_X0;
@@ -577,7 +596,7 @@ void Configuration::listParas()
     m_outputFile << "maxsubstep  " << std::setw(3)  << m_MaxSubStep << "\n";
     m_outputFile << "inc_thres   " << std::setw(3)  << m_IncThres   << "\n";
     m_outputFile << "int_type    " << std::setw(2)  << m_IntType    << "\n";
-    m_outputFile << "nstep       " << std::setw(5)  << m_Nstep      << "\n";
+    m_outputFile << "nstep       " << std::setw(5)  << m_nSteps     << "\n";
     m_outputFile << "min_step    " << std::setw(11) << m_MinStep    << "\n";
     m_outputFile << "maxinc      " << std::setw(11) << m_MaxInc     << "\n";
     m_outputFile << "redmin      " << std::setw(11) << m_RedMin     << "\n";
@@ -593,7 +612,7 @@ void Configuration::listParas()
     m_outputFile << "\n\n\n";
 }
 
-IntType Configuration::intType()
+Integrators::IntType Configuration::intType()
 {
     return m_IntType;
 }
